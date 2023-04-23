@@ -3,14 +3,14 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/04/14 09:58:09 by sunhwang         ###   ########.fr        #
+#    Updated: 2023/04/23 15:54:56 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = miniRT
+NAME = webserv
 
 OUT_DIR		= out/
 
@@ -33,10 +33,10 @@ endif
 
 SRCS_LIST = $(addprefix $(DIR_SRC)/,					\
 			$(addprefix $(DIR_ERROR)/,	$(SRC_ERROR))	\
-			$(addprefix $(DIR_PARSE)/,	$(SRC_PARSE)))	
-	
+			$(addprefix $(DIR_PARSE)/,	$(SRC_PARSE)))
+
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
-# LDFLAGS	= 
+# LDFLAGS	=
 
 SRCS = $(addsuffix .cpp, $(DIR_SRC)/main $(SRCS_LIST))
 OBJS = $(SRCS:%.cpp=$(OUT_DIR)%.o)
@@ -57,6 +57,9 @@ fclean: clean
 re:
 	$(MAKE) fclean
 	$(MAKE) all
+
+# http:
+
 
 $(OBJS): $(OUT_DIR)%.o: %.cpp
 	@mkdir -p $(@D)
