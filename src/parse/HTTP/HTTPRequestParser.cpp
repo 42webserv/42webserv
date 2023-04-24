@@ -51,7 +51,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         return request;
     }
 
-    std::cout << "here8" << std::endl;
     return NULL;
 }
 
@@ -64,21 +63,21 @@ bool HTTPRequestParser::parseMethod()
     if (method_str == "GET")
         method_ = GET;
     else if (method_str == "HEAD")
-        method_ = POST;
+        method_ = HEAD;
     else if (method_str == "POST")
         method_ = POST;
     else if (method_str == "PUT")
-        method_ = POST;
+        method_ = PUT;
     else if (method_str == "PATCH")
-        method_ = POST;
+        method_ = PATCH;
     else if (method_str == "DELETE")
-        method_ = POST;
+        method_ = DELETE;
     else if (method_str == "CONNECT")
-        method_ = POST;
+        method_ = CONNECT;
     else if (method_str == "TRACE")
-        method_ = POST;
+        method_ = TRACE;
     else if (method_str == "OPTIONS")
-        method_ = POST;
+        method_ = OPTIONS;
     else
         return false;
     state_ = PATH;
@@ -130,7 +129,7 @@ bool HTTPRequestParser::parseHeaderValue()
     if (buffer_.substr(0, 2) == "\r\n")
     {
         buffer_.erase(0, 2);
-        state_ = BODY;
+        state_ = (method_ == GET || method_ == HEAD || method_ == DELETE || method_ == CONNECT || method_ == TRACE || method_ == OPTIONS) ? COMPLETE : BODY;
     }
     else
     {
