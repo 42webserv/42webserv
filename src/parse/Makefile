@@ -6,7 +6,7 @@
 #    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/23 15:55:35 by chanwjeo          #+#    #+#              #
-#    Updated: 2023/04/23 18:23:33 by chanwjeo         ###   ########.fr        #
+#    Updated: 2023/04/24 15:30:11 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,9 +28,9 @@ HTTP_DIR			= HTTP
 # SRC = $(addsuffix .c, $(addprefix $(MAIN_DIR), $(MAIN_SRC)))
 
 ifeq (,$(findstring http,$(MAKECMDGOALS)))
-SRC	= $(HTTP_DIR)/main $(HTTP_DIR)/HTTPRequestParser
+SRC	= $(HTTP_DIR)/main.cpp $(HTTP_DIR)/HTTPRequestParser.cpp
 else
-SRC	= $(HTTP_DIR)/main $(HTTP_DIR)/HTTPRequestParser
+SRC	= $(HTTP_DIR)/main.cpp $(HTTP_DIR)/HTTPRequestParser.cpp
 endif
 
 
@@ -69,14 +69,14 @@ $(NAME): $(OBJ)
 
 clean:
 	@rm -f $(OBJ)
-	@echo "$(CUSTOM)ex02 obj files has been deleted.$(DEF_COLOR)"
+	@echo "$(CUSTOM)parse_test obj files has been deleted.$(DEF_COLOR)"
 
 fclean:
 	@rm -f $(OBJ)
 	@rm -f $(NAME)
-	@echo "$(CUSTOM)ex02 archive files has been deleted.$(DEF_COLOR)"
+	@echo "$(CUSTOM)parse_test archive files has been deleted.$(DEF_COLOR)"
 
 re: fclean all
-	@echo "$(CUSTOM)Cleaned and rebuilt ex02.$(DEF_COLOR)"
+	@echo "$(CUSTOM)Cleaned and rebuilt parse_test.$(DEF_COLOR)"
 
 .PHONY: all clean fclean re
