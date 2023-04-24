@@ -7,7 +7,14 @@
 enum HTTPMethod
 {
     GET,
-    POST
+    HEAD,
+    POST,
+    PUT,
+    PATCH,
+    DELETE,
+    CONNECT,
+    TRACE,
+    OPTIONS
 };
 
 struct HTTPRequest

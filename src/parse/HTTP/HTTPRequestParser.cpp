@@ -63,7 +63,21 @@ bool HTTPRequestParser::parseMethod()
     std::string method_str = buffer_.substr(0, pos);
     if (method_str == "GET")
         method_ = GET;
+    else if (method_str == "HEAD")
+        method_ = POST;
     else if (method_str == "POST")
+        method_ = POST;
+    else if (method_str == "PUT")
+        method_ = POST;
+    else if (method_str == "PATCH")
+        method_ = POST;
+    else if (method_str == "DELETE")
+        method_ = POST;
+    else if (method_str == "CONNECT")
+        method_ = POST;
+    else if (method_str == "TRACE")
+        method_ = POST;
+    else if (method_str == "OPTIONS")
         method_ = POST;
     else
         return false;
