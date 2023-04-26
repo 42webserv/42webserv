@@ -1,20 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   Signal.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/17 16:36:22 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/24 20:18:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef SIGNAL_HPP
+#define SIGNAL_HPP
 
-void error_exit(const char *msg)
+#include <sys/event.h>
+#include "Socket.hpp"
+#define MAX_SIGNAL 7
+
+class Signal
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
+private:
+	unsigned int signals[MAX_SIGNAL];
+
+public:
+	Signal(std::vector<struct kevent> &event_list);
+	~Signal();
+	void handle_event(const struct kevent &event, const Socket &socket) const;
+};
+
+#endif

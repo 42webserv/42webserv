@@ -1,20 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   Directive.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/20 20:15:35 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/20 21:16:22 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef DIRECTIVE_HPP
+#define DIRECTIVE_HPP
 
-void error_exit(const char *msg)
+#include <string>
+#include <vector>
+
+struct Directive
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
+    std::string name;
+    std::string value;
+    std::vector<Directive> block;
+};
+
+#endif

@@ -3,19 +3,26 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 15:35:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/04/26 17:10:15 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequestParser.hpp"
+#include "Master.hpp"
+#include "Worker.hpp"
 
 int main(int argc, char const *argv[])
 {
     (void)argc;
     (void)argv;
+
+    Master master;
+    Worker worker(master);
+    worker.run();
+
     HTTPRequestParser parser;
     std::string http_request_post =
         "POST /example/path?request HTTP/1.1\r\n"

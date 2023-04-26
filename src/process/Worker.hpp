@@ -1,20 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/26 10:31:37 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef WORKER_HPP
+#define WORKER_HPP
 
-void error_exit(const char *msg)
+#include "Master.hpp"
+#include "Signal.hpp"
+#include "Socket.hpp"
+
+class Worker
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
+private:
+	const int kq;
+	const Socket server;
+	const Signal signal;
+	std::vector<struct kevent> &event_list;
+
+public:
+	Worker(Master &master);
+	~Worker();
+	void run();
+};
+
+#endif

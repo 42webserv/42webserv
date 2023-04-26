@@ -1,20 +1,40 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/17 17:22:20 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/20 21:38:19 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
 
-void error_exit(const char *msg)
+#include <string>
+#include <vector>
+#include "Directive.hpp"
+
+enum ConfigType
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
+	SIMPLE,
+	BLOCK
+};
+
+class Config
+{
+private:
+	Directive *parseDirective(const std::string &line);
+
+protected:
+	std::vector<Directive> directives;
+
+public:
+	Config();
+	~Config();
+	void loadFromFile(const std::string &filename);
+};
+
+#endif

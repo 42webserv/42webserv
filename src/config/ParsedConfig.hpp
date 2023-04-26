@@ -1,20 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   ParsedConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/20 21:31:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef PARSED_CONFIG_HPP
+#define PARSED_CONFIG_HPP
 
-void error_exit(const char *msg)
+#include "Config.hpp"
+
+class ParsedConfig : public Config
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
+private:
+public:
+    ParsedConfig(/* args */);
+    ~ParsedConfig();
+};
+
+ParsedConfig::ParsedConfig(/* args */)
+{
 }
+
+ParsedConfig::~ParsedConfig()
+{
+}
+
+#endif

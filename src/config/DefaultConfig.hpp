@@ -1,20 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   DefaultConfig.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/20 20:14:03 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/20 21:31:08 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef DEFAULT_CONFIG_HPP
+#define DEFAULT_CONFIG_HPP
 
-void error_exit(const char *msg)
+#include "Config.hpp"
+
+class DefaultConfig : public Config
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
+private:
+    /* data */
+public:
+    DefaultConfig(/* args */);
+    ~DefaultConfig();
+};
+
+DefaultConfig::DefaultConfig(/* args */)
+{
 }
+
+DefaultConfig::~DefaultConfig()
+{
+}
+
+#endif
