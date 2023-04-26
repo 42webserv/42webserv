@@ -6,7 +6,7 @@
 #    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/04/23 15:54:56 by chanwjeo         ###   ########.fr        #
+#    Updated: 2023/04/26 15:35:08 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,12 +18,12 @@ DIR_SRC		= src
 DIR_ERROR	= error
 DIR_PARSE	= parse
 
-SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_ERROR) $(DIR_PARSE)))
+SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_ERROR) $(DIR_PARSE) $(DIR_PARSE)/HTTP))
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -Ilib/libft -Ilib/mlx -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_ERROR	= common_error
-SRC_PARSE	= parse_config parse_request
+# SRC_ERROR	= common_error
+SRC_PARSE	= HTTP/HTTPRequestParser # parse_request
 
 ifeq (,$(findstring bonus,$(MAKECMDGOALS)))
 # SRC_WINDOW	+= draw_rt
@@ -32,8 +32,8 @@ else
 endif
 
 SRCS_LIST = $(addprefix $(DIR_SRC)/,					\
-			$(addprefix $(DIR_ERROR)/,	$(SRC_ERROR))	\
 			$(addprefix $(DIR_PARSE)/,	$(SRC_PARSE)))
+# $(addprefix $(DIR_ERROR)/,	$(SRC_ERROR))	\
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
 # LDFLAGS	=
