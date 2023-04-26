@@ -61,4 +61,5 @@ public:
     HTTPRequestParser();
 
     HTTPRequest *parse(const std::string &data);
+    void printResult(const HTTPRequest &request);
 };
