@@ -165,3 +165,33 @@ void HTTPRequestParser::reset()
     buffer_.clear();
     current_header_name_.clear();
 }
+
+void HTTPRequestParser::printResult(const HTTPRequest &result)
+{
+    std::cout << "Request method: ";
+    if (result.method == GET)
+        std::cout << "GET" << std::endl;
+    else if (result.method == HEAD)
+        std::cout << "HEAD" << std::endl;
+    else if (result.method == POST)
+        std::cout << "POST" << std::endl;
+    else if (result.method == PUT)
+        std::cout << "PUT" << std::endl;
+    else if (result.method == PATCH)
+        std::cout << "PATCH" << std::endl;
+    else if (result.method == DELETE)
+        std::cout << "DELETE" << std::endl;
+    else if (result.method == CONNECT)
+        std::cout << "CONNECT" << std::endl;
+    else if (result.method == TRACE)
+        std::cout << "TRACE" << std::endl;
+    else if (result.method == OPTIONS)
+        std::cout << "OPTIONS" << std::endl;
+    std::cout << "Request path: " << result.path << std::endl;
+    std::cout << "Request HTTP version: " << result.http_version << std::endl;
+
+    for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
+        std::cout << "Header: " << it->first << " = " << it->second << std::endl;
+
+    std::cout << "Body: " << result.body << std::endl;
+}

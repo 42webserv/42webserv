@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 18:18:25 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/04/26 15:23:50 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/04/26 16:36:54 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,32 +42,7 @@ int main()
 
     if (result)
     {
-        std::cout << "Request method: ";
-        if (result->method == GET)
-            std::cout << "GET" << std::endl;
-        else if (result->method == HEAD)
-            std::cout << "HEAD" << std::endl;
-        else if (result->method == POST)
-            std::cout << "POST" << std::endl;
-        else if (result->method == PUT)
-            std::cout << "PUT" << std::endl;
-        else if (result->method == PATCH)
-            std::cout << "PATCH" << std::endl;
-        else if (result->method == DELETE)
-            std::cout << "DELETE" << std::endl;
-        else if (result->method == CONNECT)
-            std::cout << "CONNECT" << std::endl;
-        else if (result->method == TRACE)
-            std::cout << "TRACE" << std::endl;
-        else if (result->method == OPTIONS)
-            std::cout << "OPTIONS" << std::endl;
-        std::cout << "Request path: " << result->path << std::endl;
-        std::cout << "Request HTTP version: " << result->http_version << std::endl;
-
-        for (std::map<std::string, std::string>::const_iterator it = result->headers.begin(); it != result->headers.end(); ++it)
-            std::cout << "Header: " << it->first << " = " << it->second << std::endl;
-
-        std::cout << "Body: " << result->body << std::endl;
+        parser.printResult(*result);
         delete result;
     }
     else
