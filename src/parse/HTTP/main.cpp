@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 18:18:25 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/04/24 17:12:03 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/04/26 15:23:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,8 @@ int main()
         "Accept-Encoding: gzip, deflate\r\n"
         "Connection: keep-alive\r\n"
         "\r\n";
-    // HTTPRequest *result = parser.parse(http_request_post);
-    HTTPRequest *result = parser.parse(http_request_get);
+    HTTPRequest *result = parser.parse(http_request_post);
+    // HTTPRequest *result = parser.parse(http_request_get);
 
     if (result)
     {
