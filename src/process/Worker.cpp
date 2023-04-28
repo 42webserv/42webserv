@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 16:31:04 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/04/27 14:24:53 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <sys/event.h>
 #include <unistd.h>
 #include "common_error.hpp"
+#include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), server(master.getEvents()), signal(master.getEvents()), event_list(master.getEvents()) {}
@@ -22,18 +23,15 @@ Worker::~Worker() {}
 
 void Worker::run()
 {
-	// std::vector<struct kevent> new_events;
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
 	int fd;
 	std::map<int, std::string> clients;
+	HTTPRequestParser parser;
 
 	while (true)
 	{
-		// if (!new_events.empty())
-		// 	event_list.insert(event_list.end(), new_events.begin(), new_events.end());
-		// TODO 벡터를 사용해서 넘겨주기, 그리고 한번만 kevent를 호출할지 각 함수에서 여러번 부를지 고민하기
 		// event_list	-> events we want to monitor
 		// event		-> events that were triggered
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
@@ -67,7 +65,7 @@ void Worker::run()
 				{
 					int client_fd = server.handle_event(event_list);
 					clients[client_fd].clear();
-					// 요청에 대한 처리는 이 부분에서 처리하면 될 것 같다.
+					// TODO 요청에 대한 처리는 이 부분에서 처리하면 될 것 같다.
 					clients[client_fd] = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!\n";
 				}
 				else if (clients.find(fd) != clients.end())
@@ -78,6 +76,14 @@ void Worker::run()
 					{
 						if (n < 0)
 							std::cerr << "Client read error!" << '\n';
+						HTTPRequest *result = parser.parse(clients[fd]);
+						if (result)
+						{
+							parser.printResult(*result);
+							delete result;
+						}
+						else
+							std::cout << "Failed to parse request" << std::endl;
 						server.disconnect_client(fd, clients);
 					}
 					else
@@ -92,6 +98,8 @@ void Worker::run()
 			{
 				if (clients.find(fd) != clients.end())
 				{
+					std::cout << "clients[fd]: " << clients[fd] << std::endl;
+
 					int n = write(fd, clients[fd].c_str(), clients[fd].size());
 					if (n == -1)
 					{
