@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 16:27:58 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/04/29 21:47:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,8 +70,6 @@ int Socket::handle_event(std::vector<struct kevent> &event_list) const
     std::cout << "Accept new client:" << client_fd << std::endl;
     fcntl(client_fd, F_SETFL, O_NONBLOCK);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    event_list.push_back(new_event);
-    EV_SET(&new_event, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
     event_list.push_back(new_event);
     return client_fd;
 

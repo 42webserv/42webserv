@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/27 14:24:53 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/04/29 21:52:06 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,32 +65,25 @@ void Worker::run()
 				{
 					int client_fd = server.handle_event(event_list);
 					clients[client_fd].clear();
-					// TODO 요청에 대한 처리는 이 부분에서 처리하면 될 것 같다.
-					clients[client_fd] = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!\n";
 				}
 				else if (clients.find(fd) != clients.end())
 				{
 					char buf[1024];
-					int n = read(fd, buf, sizeof(buf));
+					int n = 1;
+					while (0 < (n = read(fd, buf, sizeof(buf))))
+					{
+
+						buf[n] = '\0';
+						clients[fd] += buf;
+						std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+					}
 					if (n < 1)
 					{
 						if (n < 0)
 							std::cerr << "Client read error!" << '\n';
-						HTTPRequest *result = parser.parse(clients[fd]);
-						if (result)
-						{
-							parser.printResult(*result);
-							delete result;
-						}
-						else
-							std::cout << "Failed to parse request" << std::endl;
-						server.disconnect_client(fd, clients);
-					}
-					else
-					{
-						buf[n] = '\0';
-						clients[fd] += buf;
-						std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+						struct kevent new_event;
+						EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+						event_list.push_back(new_event);
 					}
 				}
 			}
@@ -100,14 +93,16 @@ void Worker::run()
 				{
 					std::cout << "clients[fd]: " << clients[fd] << std::endl;
 
-					int n = write(fd, clients[fd].c_str(), clients[fd].size());
-					if (n == -1)
+					HTTPRequest *result = parser.parse(clients[fd]);
+					if (result)
 					{
-						std::cerr << "Client write error!" << '\n';
-						server.disconnect_client(fd, clients);
+						parser.printResult(*result);
+						delete result;
 					}
 					else
-						clients[fd].clear();
+						std::cout << "Failed to parse request" << std::endl;
+					server.disconnect_client(fd, clients);
+					clients[fd].clear();
 				}
 				// 큰 파일 처리할 때
 				// off_t offset = (off_t)event.udata;
