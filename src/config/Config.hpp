@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 17:22:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/20 21:38:19 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/01 14:47:37 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,15 +26,18 @@ enum ConfigType
 class Config
 {
 private:
-	Directive *parseDirective(const std::string &line);
+	Directive parseDirective(const std::string &line);
+	void setBlock(std::ifstream infile, std::vector<Directive> &directive);
 
 protected:
-	std::vector<Directive> directives;
+	std::vector<Directive> _directives;
 
 public:
 	Config();
 	~Config();
 	void loadFromFile(const std::string &filename);
+	void printConfig(std::vector<Directive> directives);
+	const std::vector<Directive> getDirectives() const;
 };
 
 #endif

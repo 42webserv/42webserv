@@ -1,34 +1,38 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   CheckConfigValid.hpp                         :+:      :+:    :+:   */
+/*   NginxConfig.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/28 14:46:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/04/28 21:21:43 by seokchoi         ###   ########.fr       */
+/*   Created: 2023/05/01 00:46:56 by seokchoi          #+#    #+#             */
+/*   Updated: 2023/05/01 00:50:51 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CheckConfigValid_HPP
-#define CheckConfigValid_HPP
+#ifndef NGINXCONFIG_HPP
+#define NGINXCONFIG_HPP
 
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <stack>
+#include <vector>
+#include "Directive.hpp"
+#include <fstream>
+#include <sstream>
 
-class CheckConfigValid
+class NginxConfig
 {
 private:
-	static std::stack<std::string> _block_stack;
-	static void ParseStream(std::istream &input_stream);
-	static std::string Trim(const std::string &str);
+	std::vector<Directive> directives_;
 
 public:
-	CheckConfigValid();
-	~CheckConfigValid();
-	static bool Parse(const std::string &file_path);
+	NginxConfig() {}
+	~NginxConfig() {}
+
+	std::string Trim(const std::string &str);
+	bool Parse(const std::string &file_path);
+	std::vector<Directive> &GetDirectives();
+	void printConfig(std::vector<Directive> directives);
 };
 
-#endif // CheckConfigValid_HPP
+#endif

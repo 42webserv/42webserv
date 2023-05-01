@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 17:32:48 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/01 01:14:59 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,43 @@
 #include "HTTPRequestParser.hpp"
 #include "Master.hpp"
 #include "Worker.hpp"
+#include "Config.hpp"
+#include "CheckConfigValid.hpp"
+#include "NginxConfig.hpp"
 
 int main(int argc, char const *argv[])
 {
     (void)argc;
     (void)argv;
+
+    // Nginx Config file parsing
+    if (argc != 1 && argc != 2)
+    {
+        std::cout << "Usage: ./webserv [config_file]" << std::endl;
+        exit(1);
+    }
+    Config config;
+    if (argc == 2)
+    {
+        if (!CheckConfigValid::Parse(argv[1]))
+        {
+            std::cout << "Error: Invalid config file" << std::endl;
+            exit(1);
+        }
+        config.loadFromFile(argv[1]);
+    }
+    else
+    {
+        if (!CheckConfigValid::Parse("src/config/default.conf"))
+        {
+            std::cout << "Error: Invalid config file" << std::endl;
+            exit(1);
+        }
+        config.loadFromFile("src/config/default.conf");
+    }
+
+    std::cout << "Config: " << std::endl;
+    config.printConfig(config.getDirectives());
 
     Master master;
     Worker worker(master);
@@ -81,6 +113,5 @@ int main(int argc, char const *argv[])
     {
         std::cout << "Failed to parse request" << std::endl;
     }
-
     return 0;
 }
