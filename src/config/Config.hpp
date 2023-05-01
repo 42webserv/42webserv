@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 17:22:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/20 21:38:19 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/01 14:46:21 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include "Directive.hpp"
+#include "HTTPRequestParser.hpp"
 
 enum ConfigType
 {
@@ -35,6 +36,7 @@ public:
 	Config();
 	~Config();
 	void loadFromFile(const std::string &filename);
+	bool valid_request(const HTTPRequest &req);
 };
 
 #endif

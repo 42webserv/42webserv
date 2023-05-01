@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 21:38:29 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/21 20:41:14 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/01 14:46:54 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,4 +70,10 @@ void Config::loadFromFile(const std::string &filename)
             block_stack.pop();
     }
     infile.close();
+}
+
+bool Config::valid_request(const HTTPRequest &req)
+{
+    (void)req;
+    return false;
 }

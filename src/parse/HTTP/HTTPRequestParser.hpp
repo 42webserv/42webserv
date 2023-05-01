@@ -1,3 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/05/01 14:48:13 by sunhwang         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef HTTP_REQUEST_PARSER
+#define HTTP_REQUEST_PARSER
+
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -63,3 +78,5 @@ public:
     HTTPRequest *parse(const std::string &data);
     void printResult(const HTTPRequest &request);
 };
+
+#endif

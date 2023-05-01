@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 16:27:55 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/01 13:10:39 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ class Socket
 {
 private:
     struct sockaddr_in server_addr;
-    std::string temp_response() const;
 
 public:
     const int server_fd;
