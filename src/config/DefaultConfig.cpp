@@ -1,25 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   DefaultConfig.hpp                                  :+:      :+:    :+:   */
+/*   DefaultConfig.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/20 20:14:03 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/01 17:49:16 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/05/01 17:55:40 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef DEFAULT_CONFIG_HPP
-#define DEFAULT_CONFIG_HPP
+#include "DefaultConfig.hpp"
 
-#include "Config.hpp"
-
-class DefaultConfig : public Config
+Directive *new_dir(const std::string &name, const std::string &value)
 {
-public:
-    DefaultConfig();
-    ~DefaultConfig();
-};
+	Directive *dir = new Directive();
 
-#endif
+	dir->name = name;
+	dir->value = value;
+
+	return dir;
+}
+
+DefaultConfig::DefaultConfig()
+{
+	this->directives.clear();
+	Directive *dir = new_dir("user", "nginx");
+	this->directives.push_back(*dir);
+	delete dir;
+}
+
+DefaultConfig::~DefaultConfig()
+{
+}
