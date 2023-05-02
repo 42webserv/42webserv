@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/02 18:41:57 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/02 20:39:33 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,6 @@ std::string getResource(const std::string &path)
     //.ico파일일 경우 임의로 이미지폴더로 이동
     if (path.length() >= 4 && path.substr(path.length() - 4) == ".ico")
         root_dir = "./assets/images";
-    // std::string root_dir = "/Users/chanwoong/git/42webserv/assets/html"; // Root directory for serving static files
-    // std::cout << "path::: " << path << std::endl;
     std::string resource_path = root_dir + (path == "/" ? "/index.html" : path);
     std::ifstream resource_file(resource_path);
     if (!resource_file.good())
@@ -50,7 +48,6 @@ std::string getResource(const std::string &path)
         // Resource not found, return a 404 error response
         std::string error_message = "Resource not found";
         std::string error_header = generateErrorHeader(404, error_message);
-        // std::cout << "\nnot finded\n";
         return error_header + error_message;
     }
     std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
@@ -67,7 +64,6 @@ void requestHandler(const HTTPRequest &request, int client_fd)
         // 2. Generate a response for the requested resource.
         std::string response_body = getResource(request.path);
         std::string response_header = generateHeader(response_body);
-        // std::cout << response_header << std::endl;
         // 3. Send the response back to the client.
         write(client_fd, response_header.c_str(), response_header.length());
         write(client_fd, response_body.c_str(), response_body.length());
