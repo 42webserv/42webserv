@@ -60,24 +60,8 @@ bool HTTPRequestParser::parseMethod()
     if (pos == std::string::npos)
         return false;
     std::string method_str = buffer_.substr(0, pos);
-    if (method_str == "GET")
-        method_ = GET;
-    else if (method_str == "HEAD")
-        method_ = HEAD;
-    else if (method_str == "POST")
-        method_ = POST;
-    else if (method_str == "PUT")
-        method_ = PUT;
-    else if (method_str == "PATCH")
-        method_ = PATCH;
-    else if (method_str == "DELETE")
-        method_ = DELETE;
-    else if (method_str == "CONNECT")
-        method_ = CONNECT;
-    else if (method_str == "TRACE")
-        method_ = TRACE;
-    else if (method_str == "OPTIONS")
-        method_ = OPTIONS;
+    if (method_str == "GET" || method_str == "HEAD" || method_str == "POST" || method_str == "PUT" || method_str == "PATCH" || method_str == "DELETE" || method_str == "CONNECT" || method_str == "TRACE" || method_str == "OPTIONS")
+        method_ = method_str;
     else
         return false;
     state_ = PATH;
@@ -129,7 +113,7 @@ bool HTTPRequestParser::parseHeaderValue()
     if (buffer_.substr(0, 2) == "\r\n")
     {
         buffer_.erase(0, 2);
-        state_ = (method_ == GET || method_ == HEAD || method_ == DELETE || method_ == CONNECT || method_ == TRACE || method_ == OPTIONS) ? COMPLETE : BODY;
+        state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
     }
     else
     {
@@ -140,7 +124,7 @@ bool HTTPRequestParser::parseHeaderValue()
 
 bool HTTPRequestParser::parseBody()
 {
-    if (method_ == POST)
+    if (method_ == "POST")
     {
         std::map<std::string, std::string>::iterator it =
             headers_.find("Content-Length");
@@ -168,25 +152,7 @@ void HTTPRequestParser::reset()
 
 void HTTPRequestParser::printResult(const HTTPRequest &result)
 {
-    std::cout << "Request method: ";
-    if (result.method == GET)
-        std::cout << "GET" << std::endl;
-    else if (result.method == HEAD)
-        std::cout << "HEAD" << std::endl;
-    else if (result.method == POST)
-        std::cout << "POST" << std::endl;
-    else if (result.method == PUT)
-        std::cout << "PUT" << std::endl;
-    else if (result.method == PATCH)
-        std::cout << "PATCH" << std::endl;
-    else if (result.method == DELETE)
-        std::cout << "DELETE" << std::endl;
-    else if (result.method == CONNECT)
-        std::cout << "CONNECT" << std::endl;
-    else if (result.method == TRACE)
-        std::cout << "TRACE" << std::endl;
-    else if (result.method == OPTIONS)
-        std::cout << "OPTIONS" << std::endl;
+    std::cout << "Request method: " << result.method << std::endl;
     std::cout << "Request path: " << result.path << std::endl;
     std::cout << "Request HTTP version: " << result.http_version << std::endl;
 

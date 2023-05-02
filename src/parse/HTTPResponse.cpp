@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/02 15:18:03 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/02 16:36:09 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ std::string getResource(const std::string &path)
 void requestHandler(const HTTPRequest &request, int client_fd)
 {
     // 1. Check the HTTP method to determine the action to take.
-    if (request.method == GET)
+    if (request.method == "GET")
     {
         // 2. Generate a response for the requested resource.
         std::string response_body = getResource(request.path);
