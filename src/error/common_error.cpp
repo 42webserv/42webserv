@@ -1,18 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.hpp                                   :+:      :+:    :+:   */
+/*   common_error.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/24 15:00:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:25:51 by yje              ###   ########.fr       */
+/*   Created: 2023/05/02 15:27:34 by yje               #+#    #+#             */
+/*   Updated: 2023/05/02 15:27:35 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef COMMON_ERROR_HPP
-#define COMMON_ERROR_HPP
+#include <iostream>
+#include "common_error.hpp"
 
-void error_exit(const char *msg);
-
-#endif
+void error_exit(const char *msg)
+{
+    perror(msg);
+    exit(EXIT_FAILURE);
+}

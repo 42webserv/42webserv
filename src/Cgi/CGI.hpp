@@ -1,18 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.hpp                                   :+:      :+:    :+:   */
+/*   Cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/24 15:00:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:25:51 by yje              ###   ########.fr       */
+/*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
+/*   Updated: 2023/05/02 16:32:46 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef COMMON_ERROR_HPP
-#define COMMON_ERROR_HPP
+#ifndef CGI_HPP
+#define CGI_HPP
 
-void error_exit(const char *msg);
+#include <iostream>
+#include <map>
+#include <cctype>
+class CGI
+{
+	// private:
+	//
+public:
+	CGI(); //
+	CGI(const CGI &src); //
+	CGI &operator=(const CGI &src);
+	~CGI(void);//
+	// cgiRequest();
+	void initEnvp(const HTTPRequest& request);
+	void CGI::excuteCGI();
+	// getenv(const char *env);
 
-#endif
+	std::map<std::string, std::string> envp_;
+};
+#endif;
