@@ -1,0 +1,10 @@
+# 서버 개발하면서 자주 사용될 명령어
+
+웹서브 PID 찾기
+lsof -i:8080
+
+웹서브 프로세스 죽이기
+kill -9 PID
+
+PID 찾고 프로세스 죽이기
+lsof -i:8080 | awk 'FNR == 2 {print $2}' | xargs kill -9
