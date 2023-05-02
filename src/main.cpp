@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 15:00:33 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/02 20:41:00 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #include "Worker.hpp"
 #include "Config.hpp"
 #include "CheckConfigValid.hpp"
-#include "NginxConfig.hpp"
+#include "ParsedConfig.hpp"
 
 int main(int argc, char const *argv[])
 {
@@ -35,7 +35,7 @@ int main(int argc, char const *argv[])
         std::cout << "Usage: ./webserv [config_file]" << std::endl;
         exit(1);
     }
-    Config config;
+    ParsedConfig config;
     if (argc == 2)
     {
         if (!CheckConfigValid::Parse(argv[1]))
@@ -57,6 +57,10 @@ int main(int argc, char const *argv[])
 
     std::cout << "Config: " << std::endl;
     config.printConfig(config.getDirectives(), 0);
+    std::vector<Directive> tmp = config.getDirectives();
+    std::cout << "check : " << tmp[0].name << std::endl;
+    std::cout << "check : " << tmp.size() << std::endl;
+    std::cout << "check : " << tmp[0].block[0].name << std::endl;
 
     Master master;
     Worker worker(master);
