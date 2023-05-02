@@ -6,7 +6,7 @@
 #    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/04/26 17:09:21 by sunhwang         ###   ########.fr        #
+#    Updated: 2023/05/02 19:57:23 by sunhwang         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= Config
+SRC_CONFIG	= Config DefaultConfig
 SRC_ERROR	= common_error
 SRC_PARSE	= HTTP/HTTPRequestParser # parse_request
 SRC_PROCESS	= Master Worker
