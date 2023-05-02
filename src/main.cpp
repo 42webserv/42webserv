@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/01 01:14:59 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/02 15:00:33 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ int main(int argc, char const *argv[])
     }
 
     std::cout << "Config: " << std::endl;
-    config.printConfig(config.getDirectives());
+    config.printConfig(config.getDirectives(), 0);
 
     Master master;
     Worker worker(master);
