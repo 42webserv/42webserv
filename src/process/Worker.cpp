@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/01 17:03:08 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/02 15:06:41 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include "common_error.hpp"
 #include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
-#include "HTTPResponse.cpp"
+#include "HTTPResponse.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), server(master.getEvents()), signal(master.getEvents()), event_list(master.getEvents()) {}
 
@@ -92,7 +92,7 @@ void Worker::run()
 			{
 				if (clients.find(fd) != clients.end())
 				{
-					std::cout << "clients[fd]: " << clients[fd] << std::endl;
+					// std::cout << "clients[fd]: " << clients[fd] << std::endl;
 
 					HTTPRequest *result = parser.parse(clients[fd]);
 					if (result)
