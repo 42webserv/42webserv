@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 20:41:00 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/02 21:30:55 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,9 +58,6 @@ int main(int argc, char const *argv[])
     std::cout << "Config: " << std::endl;
     config.printConfig(config.getDirectives(), 0);
     std::vector<Directive> tmp = config.getDirectives();
-    std::cout << "check : " << tmp[0].name << std::endl;
-    std::cout << "check : " << tmp.size() << std::endl;
-    std::cout << "check : " << tmp[0].block[0].name << std::endl;
 
     Master master;
     Worker worker(master);

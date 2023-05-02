@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/02 20:57:08 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/02 21:33:31 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,11 +75,7 @@ void ParsedConfig::setBlock(std::ifstream &infile, std::vector<Directive> &direc
 		}
 		directives.push_back(directive);
 		if (line.find("{") != std::string::npos)
-		{
-			blockCheck.push(1);
 			setBlock(infile, directives.back().block);
-			blockCheck.pop();
-		}
 	}
 }
 
