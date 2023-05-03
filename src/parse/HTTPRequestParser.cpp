@@ -80,6 +80,11 @@ bool HTTPRequestParser::parseMethod()
     return true;
 }
 
+/**
+ * HTTP 요청 메세지에서 Path 관련 파싱
+ *
+ * @return 경로가 존재한다면 true 반환, 경로가 존재하지 않다면 false 반환
+ */
 bool HTTPRequestParser::parsePath()
 {
     size_t pos = buffer_.find(' ');
@@ -91,6 +96,11 @@ bool HTTPRequestParser::parsePath()
     return true;
 }
 
+/**
+ * HTTP 요청 메세지에서 HTTP 버전 파싱
+ *
+ * @return HTTP 버전이 존재한다면 구조체에 저장 후 true 반환, 존재하지 않는다면 false 반환
+ */
 bool HTTPRequestParser::parseHttpVersion()
 {
     size_t pos = buffer_.find("\r\n");
@@ -102,6 +112,11 @@ bool HTTPRequestParser::parseHttpVersion()
     return true;
 }
 
+/**
+ * HTTP 요청 메세지에서 HEADER의 이름 부분 파싱
+ *
+ * @return 해더의 이름이 존재한다면 현재 이름 저장 후 true 반환, 존재하지 않는다면 false 반환
+ */
 bool HTTPRequestParser::parseHeaderName()
 {
     size_t pos = buffer_.find(':');
@@ -113,6 +128,12 @@ bool HTTPRequestParser::parseHeaderName()
     return true;
 }
 
+/**
+ * HTTP 요청 메세지에서 HEADER의 값 파싱.
+ * 만약 BODY를 받을 필요가 없는 요청이라면 COMPLETE로 상태를 변경, BODY를 받아야하는 요청이면 BODY로 상태를 변경
+ *
+ * @return 헤더의 값이 존재한다면 이미 저장되어있는 헤더 이름과 함께 map에 저장 후 true 반환, 존재하지 않는다면 false 반환
+ */
 bool HTTPRequestParser::parseHeaderValue()
 {
     size_t pos = buffer_.find("\r\n");
@@ -133,6 +154,11 @@ bool HTTPRequestParser::parseHeaderValue()
     return true;
 }
 
+/**
+ * HTTP 요청 메세지에서 HTTP 버전 파싱
+ *
+ * @return HTTP 버전이 존재한다면 구조체에 저장 후 true 반환, 존재하지 않는다면 false 반환
+ */
 bool HTTPRequestParser::parseBody()
 {
     if (method_ == "POST")
@@ -152,6 +178,9 @@ bool HTTPRequestParser::parseBody()
     return true;
 }
 
+/**
+ * HTTP 요청 메세지 파싱이 끝나면 사용한 버퍼를 모두 지워줌
+ */
 void HTTPRequestParser::reset()
 {
     state_ = METHOD;
