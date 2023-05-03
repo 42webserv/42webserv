@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 14:37:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/03 17:24:47 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,6 @@
 
 int main(int argc, char const *argv[])
 {
-    (void)argc;
-    (void)argv;
-
     // Nginx Config file parsing
     ParsedConfig config;
     config.parsedConfig(argc, argv);
