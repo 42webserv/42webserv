@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 17:22:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 15:00:09 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 13:33:15 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include "Directive.hpp"
+#include "HTTPRequestParser.hpp"
 
 enum ConfigType
 {
@@ -26,18 +27,16 @@ enum ConfigType
 class Config
 {
 private:
-	Directive parseDirective(const std::string &line);
-	void setBlock(std::ifstream &infile, std::vector<Directive> &directive);
+	Directive *parseDirective(const std::string &line);
 
 protected:
-	std::vector<Directive> _directives;
+	std::vector<Directive> directives;
 
 public:
 	Config();
 	~Config();
 	void loadFromFile(const std::string &filename);
-	void printConfig(std::vector<Directive> directives, size_t tab);
-	const std::vector<Directive> getDirectives() const;
+	bool valid_request(const HTTPRequest &req);
 };
 
 #endif
