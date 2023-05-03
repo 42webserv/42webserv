@@ -2,6 +2,12 @@
 
 HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 
+/**
+ * HTTP 요청 메세지를 파싱해서 구조체에 담아 반환
+ *
+ * @param data HTTP 요청 메세지가 담긴 문자열
+ * @return 파싱된 HTTP 요청 구조체
+ */
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     buffer_ += data;
@@ -54,30 +60,19 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     return NULL;
 }
 
+/**
+ * HTTP 요청 메세지에서 METHOD 관련 파싱
+ *
+ * @return 올바른 METHOD라면 구조체에 저장 후 true 반환, 올바르지 않은 METHOD일 경우 false 반환
+ */
 bool HTTPRequestParser::parseMethod()
 {
     size_t pos = buffer_.find(' ');
     if (pos == std::string::npos)
         return false;
     std::string method_str = buffer_.substr(0, pos);
-    if (method_str == "GET")
-        method_ = GET;
-    else if (method_str == "HEAD")
-        method_ = HEAD;
-    else if (method_str == "POST")
-        method_ = POST;
-    else if (method_str == "PUT")
-        method_ = PUT;
-    else if (method_str == "PATCH")
-        method_ = PATCH;
-    else if (method_str == "DELETE")
-        method_ = DELETE;
-    else if (method_str == "CONNECT")
-        method_ = CONNECT;
-    else if (method_str == "TRACE")
-        method_ = TRACE;
-    else if (method_str == "OPTIONS")
-        method_ = OPTIONS;
+    if (method_str == "GET" || method_str == "HEAD" || method_str == "POST" || method_str == "PUT" || method_str == "PATCH" || method_str == "DELETE" || method_str == "CONNECT" || method_str == "TRACE" || method_str == "OPTIONS")
+        method_ = method_str;
     else
         return false;
     state_ = PATH;
@@ -129,7 +124,7 @@ bool HTTPRequestParser::parseHeaderValue()
     if (buffer_.substr(0, 2) == "\r\n")
     {
         buffer_.erase(0, 2);
-        state_ = (method_ == GET || method_ == HEAD || method_ == DELETE || method_ == CONNECT || method_ == TRACE || method_ == OPTIONS) ? COMPLETE : BODY;
+        state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
     }
     else
     {
@@ -140,7 +135,7 @@ bool HTTPRequestParser::parseHeaderValue()
 
 bool HTTPRequestParser::parseBody()
 {
-    if (method_ == POST)
+    if (method_ == "POST")
     {
         std::map<std::string, std::string>::iterator it =
             headers_.find("Content-Length");
@@ -166,27 +161,33 @@ void HTTPRequestParser::reset()
     current_header_name_.clear();
 }
 
+/**
+ * HTTP 요청 메세지에서 Content-Type 헤더의 값을 반환
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return 문자열의 Content-Type 값 혹은 빈 문자열
+ */
+std::string HTTPRequestParser::getContentType(const HTTPRequest &request)
+{
+    std::map<std::string, std::string> headers = request.headers;
+
+    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
+    {
+        if (it->first == "Content-Type")
+            return it->second;
+    }
+    return "";
+}
+
+/**
+ * HTTP 요청 구조체 출력
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return void
+ */
 void HTTPRequestParser::printResult(const HTTPRequest &result)
 {
-    std::cout << "Request method: ";
-    if (result.method == GET)
-        std::cout << "GET" << std::endl;
-    else if (result.method == HEAD)
-        std::cout << "HEAD" << std::endl;
-    else if (result.method == POST)
-        std::cout << "POST" << std::endl;
-    else if (result.method == PUT)
-        std::cout << "PUT" << std::endl;
-    else if (result.method == PATCH)
-        std::cout << "PATCH" << std::endl;
-    else if (result.method == DELETE)
-        std::cout << "DELETE" << std::endl;
-    else if (result.method == CONNECT)
-        std::cout << "CONNECT" << std::endl;
-    else if (result.method == TRACE)
-        std::cout << "TRACE" << std::endl;
-    else if (result.method == OPTIONS)
-        std::cout << "OPTIONS" << std::endl;
+    std::cout << "Request method: " << result.method << std::endl;
     std::cout << "Request path: " << result.path << std::endl;
     std::cout << "Request HTTP version: " << result.http_version << std::endl;
 

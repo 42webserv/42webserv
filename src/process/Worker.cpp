@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:26:54 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/03 14:24:26 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "common_error.hpp"
 #include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
+#include "HTTPResponse.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), server(master.getEvents()), signal(master.getEvents()), event_list(master.getEvents()) {}
 
@@ -91,12 +92,15 @@ void Worker::run()
 			{
 				if (clients.find(fd) != clients.end())
 				{
-					std::cout << "clients[fd]: " << clients[fd] << std::endl;
+					// std::cout << "clients[fd]: " << clients[fd] << std::endl;
 
 					HTTPRequest *result = parser.parse(clients[fd]);
+					std::cout << "Content-Type: " << parser.getContentType(*result) << std::endl;
 					if (result)
 					{
-						parser.printResult(*result);
+						// parser.printResult(*result);
+						// TODO: HTTP Response 구현
+						requestHandler(*result, fd);
 						delete result;
 					}
 					else
