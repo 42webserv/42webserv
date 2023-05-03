@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 13:47:00 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 14:37:09 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include "CheckConfigValid.hpp"
 #include "ParsedConfig.hpp"
 
-int main(int, char const *[])
+int main(int argc, char const *argv[])
 {
     (void)argc;
     (void)argv;
