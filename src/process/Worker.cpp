@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 12:56:45 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/03 14:24:26 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ void Worker::run()
 					// std::cout << "clients[fd]: " << clients[fd] << std::endl;
 
 					HTTPRequest *result = parser.parse(clients[fd]);
-					std::cout << "Content-Type: " << parser.GetContentType(*result) << std::endl;
+					std::cout << "Content-Type: " << parser.getContentType(*result) << std::endl;
 					if (result)
 					{
 						// parser.printResult(*result);

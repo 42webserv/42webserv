@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 12:43:45 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/03 14:24:18 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ public:
     HTTPRequestParser();
 
     HTTPRequest *parse(const std::string &data);
-    std::string GetContentType(const HTTPRequest &request);
+    std::string getContentType(const HTTPRequest &request);
 
     void printResult(const HTTPRequest &request);
 };

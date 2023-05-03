@@ -156,7 +156,7 @@ void HTTPRequestParser::reset()
  * @param request 파싱된 HTTP 요청
  * @return 문자열의 Content-Type 값 혹은 빈 문자열
  */
-std::string HTTPRequestParser::GetContentType(const HTTPRequest &request)
+std::string HTTPRequestParser::getContentType(const HTTPRequest &request)
 {
     std::map<std::string, std::string> headers = request.headers;
 
