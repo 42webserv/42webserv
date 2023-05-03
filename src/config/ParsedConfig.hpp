@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 20:40:30 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 13:40:55 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ protected:
 public:
     ParsedConfig();
     ~ParsedConfig();
-    void loadFromFile(const std::string &filename);
+    void parsedConfig(int argc, char const **argv);
     void printConfig(std::vector<Directive> directives, size_t tab);
     const std::vector<Directive> getDirectives() const;
 };

@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 17:22:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 13:33:15 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 13:40:04 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ protected:
 public:
 	Config();
 	~Config();
-	void loadFromFile(const std::string &filename);
+	void parsedConfig(const std::string &filename);
 	bool valid_request(const HTTPRequest &req);
 };
 

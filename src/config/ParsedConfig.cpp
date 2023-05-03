@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/02 21:33:31 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 13:43:59 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <iostream>
 #include <stack>
 #include "ParsedConfig.hpp"
+#include "CheckConfigValid.hpp"
 
 ParsedConfig::ParsedConfig()
 {
@@ -79,11 +80,36 @@ void ParsedConfig::setBlock(std::ifstream &infile, std::vector<Directive> &direc
 	}
 }
 
-void ParsedConfig::loadFromFile(const std::string &filename)
+void ParsedConfig::parsedConfig(int argc, char const **argv)
 {
+	std::string filename;
 	std::ifstream infile; // 파일 스트림
 
-	infile.open(filename); // 파일 열기
+	if (argc != 1 && argc != 2)
+	{
+		std::cout << "Usage: ./webserv [config_file]" << std::endl;
+		exit(1);
+	}
+	if (argc == 2)
+	{
+		if (!CheckConfigValid::Parse(argv[1]))
+		{
+			std::cout << "Error: Invalid config file" << std::endl;
+			exit(1);
+		}
+		filename = argv[1];
+	}
+	else
+	{
+		if (!CheckConfigValid::Parse("src/config/default.conf"))
+		{
+			std::cout << "Error: Invalid config file" << std::endl;
+			exit(1);
+		}
+		filename = "src/config/default.conf";
+	}
+
+	infile.open(filename);
 	setBlock(infile, _directives);
 	infile.close();
 }

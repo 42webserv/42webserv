@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 21:30:55 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 13:47:00 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,34 +30,9 @@ int main(int argc, char const *argv[])
     (void)argv;
 
     // Nginx Config file parsing
-    if (argc != 1 && argc != 2)
-    {
-        std::cout << "Usage: ./webserv [config_file]" << std::endl;
-        exit(1);
-    }
     ParsedConfig config;
-    if (argc == 2)
-    {
-        if (!CheckConfigValid::Parse(argv[1]))
-        {
-            std::cout << "Error: Invalid config file" << std::endl;
-            exit(1);
-        }
-        config.loadFromFile(argv[1]);
-    }
-    else
-    {
-        if (!CheckConfigValid::Parse("src/config/default.conf"))
-        {
-            std::cout << "Error: Invalid config file" << std::endl;
-            exit(1);
-        }
-        config.loadFromFile("src/config/default.conf");
-    }
-
-    std::cout << "Config: " << std::endl;
-    config.printConfig(config.getDirectives(), 0);
-    std::vector<Directive> tmp = config.getDirectives();
+    config.parsedConfig(argc, argv);
+    // config.printConfig(config.getDirectives(), 0); // Directive 출력해보기
 
     Master master;
     Worker worker(master);
