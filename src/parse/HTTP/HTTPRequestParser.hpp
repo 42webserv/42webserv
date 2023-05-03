@@ -1,3 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/05/03 13:44:24 by seokchoi          #+#    #+#             */
+/*   Updated: 2023/05/03 13:44:42 by seokchoi         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef HTTP_REQUEST_PARSER_HPP
+#define HTTP_REQUEST_PARSER_HPP
+
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -63,3 +78,5 @@ public:
     HTTPRequest *parse(const std::string &data);
     void printResult(const HTTPRequest &request);
 };
+
+#endif
