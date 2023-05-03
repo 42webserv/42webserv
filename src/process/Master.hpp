@@ -1,20 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   Master.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:56:07 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 15:51:45 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/23 20:31:14 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/04/24 20:25:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef MASTER_HPP
+#define MASTER_HPP
 
-void error_exit(const char *msg)
+#include <sys/event.h>
+#include <vector>
+#include "Config.hpp"
+
+class Master
 {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
+private:
+	Config config;
+	std::vector<struct kevent> events;
+
+public:
+	const int kq;
+	Master();
+	~Master();
+	std::vector<struct kevent> &getEvents();
+};
+
+#endif
