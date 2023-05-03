@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 21:38:29 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/01 14:46:54 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/03 13:40:04 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Directive *Config::parseDirective(const std::string &line)
     return directive;
 }
 
-void Config::loadFromFile(const std::string &filename)
+void Config::parsedConfig(const std::string &filename)
 {
     std::ifstream infile;
     std::stack<Directive *> block_stack;
