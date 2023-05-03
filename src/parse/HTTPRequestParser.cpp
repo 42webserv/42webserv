@@ -150,6 +150,30 @@ void HTTPRequestParser::reset()
     current_header_name_.clear();
 }
 
+/**
+ * HTTP 요청 메세지에서 Content-Type 헤더의 값을 반환
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return 문자열의 Content-Type 값 혹은 빈 문자열
+ */
+std::string HTTPRequestParser::GetContentType(const HTTPRequest &request)
+{
+    std::map<std::string, std::string> headers = request.headers;
+
+    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
+    {
+        if (it->first == "Content-Type")
+            return it->second;
+    }
+    return "";
+}
+
+/**
+ * HTTP 요청 구조체 출력
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return void
+ */
 void HTTPRequestParser::printResult(const HTTPRequest &result)
 {
     std::cout << "Request method: " << result.method << std::endl;
