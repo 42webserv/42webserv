@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/02 16:46:11 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/03 13:55:40 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,3 +52,37 @@ void CGI::initEnvp(const HTTPRequest& request) // request config 이름 확인�
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
 };
 
+~AUTH_TYPE
+	공백
+-CONTENT_LENGTH
+	content_Length
+-CONTENT_TYPE
+	content type
+-GATEWAY_INTERFACE
+	CGI/1.1()
+~PATH_INFO
+	request.get Uri()
+~PATH_TRANSLATED
+	request.get Uri()
+-QUERY_STRING
+	getQueryFullPath
+-REMOTE_ADDR
+	getClientIP
+~REMOTE_IDENT
+	공백
+~REMOTE_USER
+	공백
+-REQUEST_METHOD
+	req.method
+~REQUEST_URI
+	getUri()
+-SCRIPT_NAME
+	webserv/1.1()
+-SERVER_NAME
+	server.\_serverName
+-SERVER_PORT
+	server.\_serverPort
+-SERVER_PROTOCOL
+	HTTP/1.1()
+-SERVER_SOFTWARE
+	webserv/1.1()
