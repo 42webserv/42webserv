@@ -2,6 +2,12 @@
 
 HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 
+/**
+ * HTTP 요청 메세지를 파싱해서 구조체에 담아 반환
+ *
+ * @param data HTTP 요청 메세지가 담긴 문자열
+ * @return 파싱된 HTTP 요청 구조체
+ */
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     buffer_ += data;
@@ -54,6 +60,11 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     return NULL;
 }
 
+/**
+ * HTTP 요청 메세지에서 METHOD 관련 파싱
+ *
+ * @return 올바른 METHOD라면 구조체에 저장 후 true 반환, 올바르지 않은 METHOD일 경우 false 반환
+ */
 bool HTTPRequestParser::parseMethod()
 {
     size_t pos = buffer_.find(' ');
