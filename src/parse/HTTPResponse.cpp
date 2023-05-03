@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/03 16:08:48 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/03 16:21:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,10 +61,10 @@ void errorResponse(int client_fd)
 }
 
 /**
- * response에 보내줄 리소스를 찾는과정
+ * GET request일 경우, response에 보내줄 리소스를 찾고 담긴 내용을 가져옴. 파일이 존재하지않으면 에러페이지 반환
  *
- * @param path uri에서 준 경로
- * @return 리소스를찾고 담긴 내용을 가져옴. 파일이 존재하지않으면 에러페이지 반환
+ * @param request 파싱된 HTTP 요청 메세지 구조체
+ * @param client_fd 웹 소켓
  */
 void getResponse(const HTTPRequest &request, int client_fd)
 {
@@ -75,7 +75,7 @@ void getResponse(const HTTPRequest &request, int client_fd)
         root_dir = "./assets/images";
     std::string resource_path = root_dir + (request.path == "/" ? "/index.html" : request.path);
     std::ifstream resource_file(resource_path);
-    // Resource not found, return a 404 error response
+    // 리소스를 찾지 못했다면 404페이지로 이동
     if (!resource_file.good())
         return errorResponse(client_fd);
     std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
