@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 15:45:09 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/02 16:26:54 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ Signal::~Signal()
 		signal(signals[i], SIG_DFL);
 }
 
-void Signal::handle_event(const struct kevent &event, const Socket &socket) const
+void Signal::handleEvent(const struct kevent &event, const Socket &socket) const
 {
 	int sig = event.ident;
 	for (size_t i = 0; i < MAX_SIGNAL; i++)

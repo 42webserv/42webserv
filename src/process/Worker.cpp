@@ -57,14 +57,14 @@ void Worker::run()
 				{
 					// 클라이언트 소켓 에러 아니면 다른 에러
 					if (clients.find(fd) != clients.end())
-						server.disconnect_client(fd, clients);
+						server.disconnectClient(fd, clients);
 				}
 			}
 			if (event.filter == EVFILT_READ)
 			{
 				if (fd == server.server_fd)
 				{
-					int client_fd = server.handle_event(event_list);
+					int client_fd = server.handleEvent(event_list);
 					clients[client_fd].clear();
 				}
 				else if (clients.find(fd) != clients.end())
@@ -105,7 +105,7 @@ void Worker::run()
 					}
 					else
 						std::cout << "Failed to parse request" << std::endl;
-					server.disconnect_client(fd, clients);
+					server.disconnectClient(fd, clients);
 					clients[fd].clear();
 				}
 				// 큰 파일 처리할 때
@@ -122,7 +122,7 @@ void Worker::run()
 				// bytes_written += len;
 			}
 			else if (event.filter == EVFILT_SIGNAL)
-				signal.handle_event(event, server);
+				signal.handleEvent(event, server);
 		}
 	}
 }

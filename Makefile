@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/02 13:38:29 by chanwjeo         ###   ########.fr        #
+#    Updated: 2023/05/03 13:44:57 by seokchoi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= Config
+SRC_CONFIG	= Config CheckConfigValid ParsedConfig
 SRC_ERROR	= common_error
 SRC_PARSE	= HTTPRequestParser HTTPResponse
 SRC_PROCESS	= Master Worker
@@ -48,6 +48,8 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 			$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS)))
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
+# CXXFLAGS	= -std=c++98 -g3
+
 
 SRCS = $(addsuffix .cpp, $(DIR_SRC)/main $(SRCS_LIST))
 OBJS = $(SRCS:%.cpp=$(OUT_DIR)%.o)
