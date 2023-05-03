@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/05/03 13:44:24 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/03 13:44:42 by seokchoi         ###   ########.fr       */
+/*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/05/01 14:48:13 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HTTP_REQUEST_PARSER_HPP
-#define HTTP_REQUEST_PARSER_HPP
+#ifndef HTTP_REQUEST_PARSER
+#define HTTP_REQUEST_PARSER
 
 #include <iostream>
 #include <map>
