@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/03 13:43:59 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/03 20:18:15 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,22 +31,23 @@ ParsedConfig::~ParsedConfig()
 Directive ParsedConfig::parseDirective(const std::string &line)
 {
 	Directive directive; // 디렉티브 객체
-
+	std::string trimdLine;
 	if (line.empty() || line[0] == '#') // 주석이거나 빈 줄인 경우
 	{
 		directive.name = "fail";
 		return directive;
 	}
-	size_t pos = line.find(' ');  // 첫 번째 공백의 위치를 찾는다.
-	if (pos == std::string::npos) // 공백이 없는 경우
+	trimdLine = ParsedConfig::Trim(line);
+	size_t pos = trimdLine.find(' '); // 첫 번째 공백의 위치를 찾는다.
+	if (pos == std::string::npos)	  // 공백이 없는 경우
 	{
 		directive.name = "fail"; // 디렉티브의 이름을 저장
 		return directive;
 	}
 
-	directive.name = line.substr(0, pos);							   // 디렉티브의 이름을 저장
-	size_t value_pos = line.find_first_not_of(" ", pos + 1);		   // 공백이 아닌 문자를 찾는다.
-	directive.value = line.substr(value_pos, line.size() - value_pos); // 디렉티브의 값을 저장
+	directive.name = trimdLine.substr(0, pos);								// 디렉티브의 이름을 저장
+	size_t value_pos = trimdLine.find_first_not_of(" ", pos + 1);			// 공백이 아닌 문자를 찾는다.
+	directive.value = trimdLine.substr(value_pos, line.size() - value_pos); // 디렉티브의 값을 저장
 
 	if (directive.value.find("{") != std::string::npos)
 		directive.value.erase(directive.value.find("{"), 1);
@@ -64,19 +65,16 @@ void ParsedConfig::setBlock(std::ifstream &infile, std::vector<Directive> &direc
 		pos = line.find('#', 1);
 		if (pos != std::string::npos)
 			line = line.substr(0, pos);
+		if (line.find("}") != std::string::npos)
+			return;
 		Directive directive = this->parseDirective(line);
 		if (directive.name == "fail")
 			continue;
-		if (line.find("}") != std::string::npos)
-		{
-			if (blockCheck.empty())
-				return;
-			else
-				blockCheck.pop();
-		}
 		directives.push_back(directive);
 		if (line.find("{") != std::string::npos)
+		{
 			setBlock(infile, directives.back().block);
+		}
 	}
 }
 
@@ -114,7 +112,7 @@ void ParsedConfig::parsedConfig(int argc, char const **argv)
 	infile.close();
 }
 
-void ParsedConfig::printConfig(std::vector<Directive> directive, size_t tab)
+void ParsedConfig::printDirectives(std::vector<Directive> directive, size_t tab)
 {
 	for (size_t i = 0; i < directive.size(); i++)
 	{
@@ -122,14 +120,46 @@ void ParsedConfig::printConfig(std::vector<Directive> directive, size_t tab)
 		{
 			std::cout << "\t";
 		}
-		std::cout << "  " << directive[i].name << ": " << directive[i].value << std::endl;
+		std::cout << "  " << directive[i].name << " : " << directive[i].value << std::endl;
 		if (directive[i].block.empty())
 			continue;
-		ParsedConfig::printConfig(directive[i].block, tab + 1);
+		ParsedConfig::printDirectives(directive[i].block, tab + 1);
 	}
 }
 
 const std::vector<Directive> ParsedConfig::getDirectives() const
 {
 	return this->_directives;
+}
+
+/*
+ *	원하는 directive name을 찾아주는 함수
+ *
+ *	param : 담아줄 Directive vector
+ *	param : 찾을 Directive vector
+ *	param :	찾을 Directive의 name
+ */
+void ParsedConfig::getAllDirectives(std::vector<Directive> &newDirectives, std::vector<Directive> directives, std::string dirName)
+{
+	for (size_t i = 0; i < directives.size(); i++)
+	{
+		if (directives[i].name == dirName)
+		{
+			newDirectives.push_back(directives[i]);
+		}
+		if (directives[i].block.empty())
+			continue;
+		ParsedConfig::getAllDirectives(newDirectives, directives[i].block, dirName);
+	}
+}
+
+std::string ParsedConfig::Trim(const std::string &str)
+{
+	std::size_t first = str.find_first_not_of(' ');
+	if (first == std::string::npos)
+	{
+		return "";
+	}
+	std::size_t last = str.find_last_not_of(' ');
+	return str.substr(first, (last - first + 1));
 }
