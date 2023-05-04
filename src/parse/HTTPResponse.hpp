@@ -1,43 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Config.hpp                                         :+:      :+:    :+:   */
+/*   HTTPResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/17 17:22:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 14:37:55 by chanwjeo         ###   ########.fr       */
+/*   Created: 2023/05/02 13:33:00 by chanwjeo          #+#    #+#             */
+/*   Updated: 2023/05/03 16:09:14 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+#ifndef HTTPRESPONSE
+#define HTTPRESPONSE
 
+#include <iostream>
 #include <string>
-#include <vector>
-#include "Directive.hpp"
+#include <unistd.h>
 #include "HTTPRequestParser.hpp"
 
-enum ConfigType
-{
-	SIMPLE,
-	BLOCK
-};
-
-class Config
-{
-private:
-	Directive *parseDirective(const std::string &line);
-
-protected:
-	std::vector<Directive> directives;
-
-public:
-	Config();
-	~Config();
-	void loadFromFile(const std::string &filename);
-	bool valid_request(const HTTPRequest &req);
-	void parsedConfig(const std::string &filename);
-};
+std::string generateErrorHeader(int status_code, const std::string &message);
+std::string generateHeader(const std::string &content);
+void getResponse(const HTTPRequest &request, int client_fd);
+void requestHandler(const HTTPRequest &request, int client_fd);
 
 #endif

@@ -28,7 +28,7 @@ INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
 SRC_CONFIG	= Config CheckConfigValid ParsedConfig
 SRC_ERROR	= common_error
-SRC_PARSE	= HTTP/HTTPRequestParser # parse_request
+SRC_PARSE	= HTTPRequestParser HTTPResponse
 SRC_PROCESS	= Master Worker
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
