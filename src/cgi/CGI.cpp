@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 16:33:11 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/04 23:05:41 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,11 +149,6 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
 		std::cout << "context: " << context << std::endl;
 
-		//
-		wait(nullptr);
-		execlp("python", "python", "sample.py", 5, 3, nullptr);
-		exit(0);
-		//
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
 		if (execve(context.c_str(), NULL, envp) == -1)

@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 16:22:56 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/04 23:05:41 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,6 +100,9 @@ int main()
     // testCGI << "echo \"Hello, CGI!\"\n";
 
     // 파일 이름과 경로
+    //std::string filename = "test.cgi";
+    //std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
+
     std::string filename = "test.cgi";
     std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
 
