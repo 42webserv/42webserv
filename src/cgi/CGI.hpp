@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 00:44:29 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/05 00:32:01 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <map>
 #include <unistd.h>
 #include <cctype>
+#include <sys/stat.h>
 class CGI
 {
 	// private:
@@ -38,6 +39,7 @@ public:
 	std::string getResponseBody() const;
 	void setEnv(const std::map<std::string, std::string> &env);
 	CGI(const std::string &cgi_path);
+	bool isCgiPath(void) const;
 	// int getFileDescriptor(int fdIndex) const;
 	// getenv(const char *env);
 

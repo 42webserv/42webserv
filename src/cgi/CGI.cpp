@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 23:05:41 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/05 00:30:14 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 		// redirect input and output to the file descriptors
 		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
 		std::cout << "context: " << context << std::endl;
-
+		isCgiPath();
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
 		if (execve(context.c_str(), NULL, envp) == -1)
@@ -175,6 +175,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 			body += buffer;
 		}
 	}
+	setBody(body);
 	dup2(oldFD[0], 0);
 	dup2(oldFD[1], 1);
 
@@ -193,4 +194,18 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 std::string CGI::getResponseBody() const
 {
 	return this->body_;
+}
+
+bool CGI::isCgiPath(void) const
+{
+	char *cgiPath = const_cast<char *>(cgiPath_.c_str());
+	const char *filepath = const_cast<char *>(cgiPath_.c_str());
+	int result = chmod(filepath, S_IRWXU | S_IRWXG | S_IRWXO);
+	if (access(cgiPath, X_OK) == -1)
+	{
+		// std::cout << "XX" << std::endl;
+		return false;
+	}
+	// std::cout << "!" << std::endl;
+	return true;
 }
