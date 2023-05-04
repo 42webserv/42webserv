@@ -6,11 +6,12 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/03 16:21:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/04 20:48:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPResponse.hpp"
+#include "MimeTypesParser.hpp"
 
 /**
  * response의 헤더에 적어줄 내용을 만듬
@@ -37,14 +38,14 @@ std::string generateErrorHeader(int status_code, const std::string &message)
  * @param content getResource함수에서 찾아온 내용을 가져옴
  * @return 최종완성된 헤더를 반환함
  */
-std::string generateHeader(const HTTPRequest &request, const std::string &content)
+std::string generateHeader(const std::string &content, const std::string &contentType)
 {
     HTTPRequestParser parser;
     std::ostringstream oss;
 
     oss << "HTTP/1.1 200 OK\r\n";
     oss << "Content-Length: " << content.length() << "\r\n";
-    oss << "Content-Type: " << ((parser.getContentType(request) == "") ? "text/html" : parser.getContentType(request)) << "\r\n"; // MIME type can be changed as needed
+    oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
     oss << "Connection: close\r\n\r\n";
     return oss.str();
 }
@@ -66,7 +67,7 @@ void errorResponse(int client_fd)
  * @param request 파싱된 HTTP 요청 메세지 구조체
  * @param client_fd 웹 소켓
  */
-void getResponse(const HTTPRequest &request, int client_fd)
+void getResponse(const HTTPRequest &request, int client_fd, ParsedConfig &config)
 {
     // root_dir에 관한내용은 conf에서 가져옴
     std::string root_dir = "./assets/html"; // Root directory for serving static files
@@ -78,9 +79,20 @@ void getResponse(const HTTPRequest &request, int client_fd)
     // 리소스를 찾지 못했다면 404페이지로 이동
     if (!resource_file.good())
         return errorResponse(client_fd);
+
+    // 경로에서 확장자 찾아준 뒤, Content-Type 찾기
+    std::vector<std::string> tokens;
+    std::istringstream iss(resource_path);
+    std::string token;
+    while (std::getline(iss, token, '.'))
+        tokens.push_back(token);
+    std::string extension = tokens.back();
+    MimeTypesParser mime(config);
+    std::string contentType = mime.getMimeType(extension);
+
     std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
                                  std::istreambuf_iterator<char>());
-    std::string response_header = generateHeader(request, resource_content);
+    std::string response_header = generateHeader(resource_content, contentType);
     write(client_fd, response_header.c_str(), response_header.length());
     write(client_fd, resource_content.c_str(), resource_content.length());
 }
@@ -91,11 +103,11 @@ void getResponse(const HTTPRequest &request, int client_fd)
  * @param request request 를 파싱완료한 구조체
  * @param client_fd 서버의 fd
  */
-void requestHandler(const HTTPRequest &request, int client_fd)
+void requestHandler(const HTTPRequest &request, int client_fd, ParsedConfig &config)
 {
     if (request.method == "GET")
     {
-        getResponse(request, client_fd);
+        getResponse(request, client_fd, config);
     }
     else
     {
