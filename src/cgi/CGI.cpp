@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 15:30:35 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/04 16:33:11 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	// lseek(fileFd[0], 0, 0);
 
 	pid = fork();
-	std::cout << "pid" << pid << std::endl;
+	std::cout << "pid " << pid << std::endl;
 	if (pid == -1)
 		throw std::runtime_error("Error create child process");
 	else if (pid == 0)
@@ -149,6 +149,11 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
 		std::cout << "context: " << context << std::endl;
 
+		//
+		wait(nullptr);
+		execlp("python", "python", "sample.py", 5, 3, nullptr);
+		exit(0);
+		//
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
 		if (execve(context.c_str(), NULL, envp) == -1)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 15:29:01 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/04 16:22:56 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,18 +101,19 @@ int main()
 
     // 파일 이름과 경로
     std::string filename = "test.cgi";
-    std::string filepath = "/Users/yein/git/webserv/src/Cgi/";
+    std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
 
     // 파일 경로와 이름을 합칩니다.
     std::string fullpath = filepath + filename;
 
     // 파일을 열고 문자열을 쓴 후 닫습니다.
-    // std::ofstream testCGI(fullpath);
-    // testCGI << "#!/bin/bash\n";
-    // testCGI << "echo \"Content-Type: text/plain\"\n";
-    // testCGI << "echo \"\"\n";
-    // testCGI << "echo \"Hello, CGI!\"\n";
-    // testCGI.close();
+    std::ofstream testCGI(fullpath);
+    // testCGI << "#!/bin/env python\n";
+    testCGI << "#!/bin/bash\n";
+    testCGI << "echo \"Content-Type: text/plain\"\n";
+    testCGI << "echo \"\"\n";
+    testCGI << "echo \"Hello, CGI!\"\n";
+    testCGI.close();
 
     // Execute test CGI program
     CGI cgi("test.cgi");
