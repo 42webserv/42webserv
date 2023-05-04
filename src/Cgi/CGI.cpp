@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 15:30:35 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/04 18:12:52 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,8 +108,8 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	int fileFD[2];
 	char **envp;
 	std::string body;
-	body = "id=1234&name=john";
-	setBody(body);
+	// body = "id=1234&name=john";
+	// this->body_ = body;
 
 	try
 	{
@@ -140,7 +140,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	// lseek(fileFd[0], 0, 0);
 
 	pid = fork();
-	std::cout << "pid" << pid << std::endl;
+	// std::cout << "pid" << pid << std::endl;
 	if (pid == -1)
 		throw std::runtime_error("Error create child process");
 	else if (pid == 0)
@@ -148,12 +148,12 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 		// redirect input and output to the file descriptors
 		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
 		std::cout << "context: " << context << std::endl;
-
+		isCgiPath();
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
 		if (execve(context.c_str(), NULL, envp) == -1)
 		{
-			std::cerr << "Error execute child process: " << strerror(errno) << std::endl;
+			// std::cerr << "Error execute child process: " << strerror(errno) << std::endl;
 			throw std::runtime_error("Error execute child process");
 		}
 		std::cerr << "Error status: 500" << std::endl;
@@ -175,6 +175,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 			body += buffer;
 		}
 	}
+	setBody(body);
 	dup2(oldFD[0], 0);
 	dup2(oldFD[1], 1);
 
@@ -193,4 +194,18 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 std::string CGI::getResponseBody() const
 {
 	return this->body_;
+}
+
+bool CGI::isCgiPath(void) const
+{
+	char *cgiPath = const_cast<char *>(cgiPath_.c_str());
+	const char *filepath = const_cast<char *>(cgiPath_.c_str());
+	int result = chmod(filepath, S_IRWXU | S_IRWXG | S_IRWXO);
+	if (access(cgiPath, X_OK) == -1)
+	{
+		// std::cout << "XX" << std::endl;
+		return false;
+	}
+	// std::cout << "!" << std::endl;
+	return true;
 }
