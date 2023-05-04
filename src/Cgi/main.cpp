@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 15:29:01 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/04 18:02:26 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,41 @@
 #include <fstream>
 #include "CGI.hpp"
 
+// int main()
+// {
+//     // Create test CGI program file
+//     // std::ofstream testCGI("test.cgi");
+//     // testCGI << "#!/bin/bash\n";
+//     // testCGI << "echo \"Content-Type: text/plain\"\n";
+//     // testCGI << "echo \"\"\n";
+//     // testCGI << "echo \"Hello, CGI!\"\n";
+
+//     // 파일 이름과 경로
+//     std::string filename = "test.cgi";
+//     std::string filepath = "/Users/yein/git/webserv/src/Cgi/";
+
+//     // 파일 경로와 이름을 합칩니다.
+//     std::string fullpath = filepath + filename;
+
+//     // 파일을 열고 문자열을 쓴 후 닫습니다.
+//     std::ofstream outfile(fullpath);
+//     outfile << "Hello, world!";
+//     outfile.close();
+
+//     // Execute test CGI program
+//     CGI cgi("test.cgi");
+//     cgi.excuteCGI("./test.cgi");
+
+//     // Print response body
+//     std::cout << "Response body:\n"
+//               << cgi.getResponseBody() << std::endl;
+
+//     // Remove test CGI program file
+//     // remove("test.cgi");
+
+//     return 0;
+// }
+
 int main()
 {
     // Create test CGI program file
@@ -100,7 +135,7 @@ int main()
     // testCGI << "echo \"Hello, CGI!\"\n";
 
     // 파일 이름과 경로
-    std::string filename = "test.cgi";
+    std::string filename = "hello.py";
     std::string filepath = "/Users/yein/git/webserv/src/Cgi/";
 
     // 파일 경로와 이름을 합칩니다.
@@ -115,8 +150,10 @@ int main()
     // testCGI.close();
 
     // Execute test CGI program
-    CGI cgi("test.cgi");
-    cgi.excuteCGI("./test.cgi");
+    CGI cgi("hello.py");
+    // cgi.excuteCGI("./hello.py");
+    // cgi.excuteCGI(fullpath);
+    cgi.excuteCGI("./hello.py");
 
     // Print response body
     std::cout << "Response body:\n"
