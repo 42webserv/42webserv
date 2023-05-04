@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 17:24:47 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/04 16:51:02 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,13 @@ int main(int argc, char const *argv[])
     config.printDirectives(servers, 0);
 
     Master master;
+    if (2 == argc)
+        master.setConfig(argv[1]);
+    else if (2 < argc)
+    {
+        std::cout << "Too many arguments" << std::endl;
+        exit(EXIT_FAILURE);
+    }
     Worker worker(master);
     worker.run();
     return 0;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 14:24:26 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/04 14:07:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ void Worker::run()
 				{
 					char buf[1024];
 					int n = 1;
-					while (0 < (n = read(fd, buf, sizeof(buf))))
+					while (0 < (n = recv(fd, buf, sizeof(buf), 0)))
 					{
 
 						buf[n] = '\0';

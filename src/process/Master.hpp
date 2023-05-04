@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:14 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/24 20:25:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/04 14:28:33 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 class Master
 {
 private:
-	Config config;
+	Config *config;
 	std::vector<struct kevent> events;
 
 public:
@@ -28,6 +28,7 @@ public:
 	Master();
 	~Master();
 	std::vector<struct kevent> &getEvents();
+	void setConfig(std::string path);
 };
 
 #endif
