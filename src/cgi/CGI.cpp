@@ -6,17 +6,27 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/03 15:06:27 by sanghan           #+#    #+#             */
-/*   Updated: 2023/05/03 15:35:46 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/04 15:08:39 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGI.hpp"
 
-
 CGI::CGI(void)
 {
 }
 
+CGI::~CGI(void)
+{
+}
+
+CGI::CGI(const CGI &obj)
+{
+}
+
+CGI CGI::&operator=(const CGI &obj)
+{
+}
 
 // ~AUTH_TYPE
 // 	공백
@@ -52,4 +62,3 @@ CGI::CGI(void)
 // 	HTTP/1.1()
 // -SERVER_SOFTWARE
 // 	webserv/1.1()
-
