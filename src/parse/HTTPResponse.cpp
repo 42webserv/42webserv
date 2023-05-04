@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/04 20:48:50 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/04 21:24:14 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ std::string generateErrorHeader(int status_code, const std::string &message)
 /**
  * response의 헤더에 적어줄 내용을 만듬
  *
- * @param request request 를 파싱완료한 구조체
  * @param content getResource함수에서 찾아온 내용을 가져옴
+ * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
 std::string generateHeader(const std::string &content, const std::string &contentType)
@@ -50,6 +50,11 @@ std::string generateHeader(const std::string &content, const std::string &conten
     return oss.str();
 }
 
+/**
+ * 404 에러일 경우 나와야할 페이지 띄워주는 함수
+ *
+ * @param client_fd 브라우저 포트번호
+ */
 void errorResponse(int client_fd)
 {
     std::string error_path = "./assets/html/404.html";
@@ -66,6 +71,7 @@ void errorResponse(int client_fd)
  *
  * @param request 파싱된 HTTP 요청 메세지 구조체
  * @param client_fd 웹 소켓
+ * @param config 파싱된 config 파일
  */
 void getResponse(const HTTPRequest &request, int client_fd, ParsedConfig &config)
 {
@@ -102,6 +108,7 @@ void getResponse(const HTTPRequest &request, int client_fd, ParsedConfig &config
  *
  * @param request request 를 파싱완료한 구조체
  * @param client_fd 서버의 fd
+ * @param config 파싱된 config 파일
  */
 void requestHandler(const HTTPRequest &request, int client_fd, ParsedConfig &config)
 {
