@@ -3,17 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-<<<<<<< HEAD
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 17:24:47 by chanwjeo         ###   ########.fr       */
-=======
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 15:25:47 by yje              ###   ########.fr       */
->>>>>>> feature/cgi/#8-yein
+/*   Updated: 2023/05/05 00:44:42 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

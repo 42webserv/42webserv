@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/05 00:27:07 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/05 00:51:29 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,18 +100,19 @@ int main()
     // testCGI << "echo \"Hello, CGI!\"\n";
 
     // 파일 이름과 경로
-    //std::string filename = "test.cgi";
-    //std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
+    // std::string filename = "test.cgi";
+    // std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
 
-    //std::string filename = "test.cgi";
+    // std::string filename = "test.cgi";
     std::string filename = "hello2.py";
-    std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
+    // std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
+    std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
 
     // 파일 경로와 이름을 합칩니다.
     std::string fullpath = filepath + filename;
 
     // 파일을 열고 문자열을 쓴 후 닫습니다.
-    //std::ofstream testCGI(fullpath);
+    // std::ofstream testCGI(fullpath);
     // testCGI << "#!/bin/env python\n";
     // testCGI << "#!/bin/bash\n";
     // testCGI << "echo \"Content-Type: text/plain\"\n";
