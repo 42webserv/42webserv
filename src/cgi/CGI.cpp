@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/03 15:06:27 by sanghan           #+#    #+#             */
-/*   Updated: 2023/05/04 15:08:39 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/04 15:33:37 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ CGI::CGI(const CGI &obj)
 {
 }
 
-CGI CGI::&operator=(const CGI &obj)
+CGI &CGI::operator=(const CGI &obj)
 {
 }
 
