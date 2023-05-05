@@ -6,7 +6,7 @@
 #    By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/03 13:44:57 by seokchoi         ###   ########.fr        #
+#    Updated: 2023/05/04 15:37:44 by seokchoi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= Config CheckConfigValid ParsedConfig
+SRC_CONFIG	= Config CheckConfigValid
 SRC_ERROR	= common_error
 SRC_PARSE	= HTTPRequestParser HTTPResponse
 SRC_PROCESS	= Master Worker
