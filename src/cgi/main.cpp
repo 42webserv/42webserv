@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/05 00:51:29 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/06 00:56:07 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,9 +104,9 @@ int main()
     // std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
 
     // std::string filename = "test.cgi";
-    std::string filename = "hello2.py";
+    std::string filename = "hello3.py";
     // std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
-    std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
+    std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
 
     // 파일 경로와 이름을 합칩니다.
     std::string fullpath = filepath + filename;
@@ -121,8 +121,8 @@ int main()
     // testCGI.close();
 
     // Execute test CGI program
-    CGI cgi("hello2.py");
-    cgi.excuteCGI("./hello2.py");
+    CGI cgi("hello3.py");
+    cgi.excuteCGI("../../cgi-bin/hello3.py");
 
     // Print response body
     std::cout << "Response body:\n"
