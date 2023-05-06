@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/06 21:40:02 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:34:09 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ void Config::_setBlock(std::ifstream &infile, std::vector<Directive> &directives
 void Config::_setRelation()
 {
 	// main
-	_main.insert(std::make_pair("mimeTypes", "fail"));
+	_main.insert(std::make_pair("types", "fail"));
 	_main.insert(std::make_pair("http", "fail"));
 
 	// http
@@ -108,6 +108,27 @@ void Config::_setRelation()
 	_location.insert(std::make_pair("limit_except", "fail"));
 	_location.insert(std::make_pair("return", "fail"));
 };
+
+void Config::_setIncludes()
+{
+	std::vector<Directive> includes;
+	this->getAllDirectives(includes, _directives, "include");
+	for (size_t i = 0; i < includes.size(); i++)
+	{
+		std::ifstream includeFile;
+		std::cout << includes[i].value << std::endl;
+		includeFile.open(includes[i].value);
+		if (!includeFile.is_open())
+		{
+			std::cerr << "Error: Invalid include config file" << std::endl;
+			exit(1);
+		}
+		std::vector<Directive> includeDirectives;
+		_setBlock(includeFile, includeDirectives, "main");
+		_directives[0].block.push_back(includeDirectives[0]);
+		includeFile.close();
+	}
+}
 
 void Config::parsedConfig(int argc, char const **argv)
 {
@@ -146,23 +167,7 @@ void Config::parsedConfig(int argc, char const **argv)
 		_directives[0].block = tmp;
 	}
 	_checkRealtion(_directives);
-	std::vector<Directive> includes;
-	this->getAllDirectives(includes, _directives, "include");
-	for (size_t i = 0; i < includes.size(); i++)
-	{
-		std::ifstream includeFile;
-		std::cout << includes[i].value << std::endl;
-		includeFile.open(includes[i].value);
-		if (!includeFile.is_open())
-		{
-			std::cerr << "Error: Invalid include config file" << std::endl;
-			exit(1);
-		}
-		std::vector<Directive> includeDirectives;
-		_setBlock(includeFile, includeDirectives, "main");
-		_directives[0].block.push_back(includeDirectives[0]);
-		includeFile.close();
-	}
+	_setIncludes();
 	infile.close();
 }
 

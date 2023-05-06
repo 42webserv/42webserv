@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/06 18:58:01 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:33:22 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,8 @@ typedef struct s_http_default
 } t_http_default;
 typedef struct s_main_default
 {
-    std::string mimeTypes; // 선택
-    t_http_default http;   // 필수
+    std::string types;   // 선택
+    t_http_default http; // 필수
 } t_main_default;
 
 class Config
@@ -65,6 +65,7 @@ private:
     std::map<std::string, std::string> _server;
     std::map<std::string, std::string> _location;
     void _setRelation();
+    void _setIncludes();
     void _checkRealtion(std::vector<Directive> directive);
 
 protected:
