@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/04 15:32:53 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/05 16:55:02 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ int main(int argc, char const *argv[])
     Config config;
     config.parsedConfig(argc, argv);
     config.printDirectives(config.getDirectives(), 0); // Directive 출력해보기
-
     Master master;
     Worker worker(master);
     worker.run();
