@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/04 20:49:11 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:51:16 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,13 @@
 #include "Worker.hpp"
 #include "Config.hpp"
 #include "CheckConfigValid.hpp"
-#include "ParsedConfig.hpp"
+#include "Config.hpp"
 #include "MimeTypesParser.hpp"
 
 int main(int argc, char const *argv[])
 {
     // Nginx Config file parsing
-    ParsedConfig config;
+    Config config;
     config.parsedConfig(argc, argv);
 
     Master master;
