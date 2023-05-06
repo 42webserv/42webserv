@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   MimeTypesParser.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/03 18:05:34 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/04 16:43:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:54:01 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "ParsedConfig.hpp"
+#include "Config.hpp"
 
 /**
  * mime.types를 파싱해 각 확장자를 Content-Type에 맞게 반환해줌
@@ -38,7 +38,7 @@ private:
     std::string getMimeTypesPath(std::vector<Directive> directive);
 
 public:
-    MimeTypesParser(ParsedConfig &config);
+    MimeTypesParser(Config &config);
 
     /*
      * A copy constructor

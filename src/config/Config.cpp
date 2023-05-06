@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/06 23:34:09 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/07 00:13:16 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,11 +116,10 @@ void Config::_setIncludes()
 	for (size_t i = 0; i < includes.size(); i++)
 	{
 		std::ifstream includeFile;
-		std::cout << includes[i].value << std::endl;
 		includeFile.open(includes[i].value);
 		if (!includeFile.is_open())
 		{
-			std::cerr << "Error: Invalid include config file" << std::endl;
+			std::cerr << "Error: Invalid include config file '" << includes[i].value << "'" << std::endl;
 			exit(1);
 		}
 		std::vector<Directive> includeDirectives;

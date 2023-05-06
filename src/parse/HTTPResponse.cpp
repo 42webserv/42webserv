@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/04 21:24:14 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:54:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ void errorResponse(int client_fd)
  * @param client_fd 웹 소켓
  * @param config 파싱된 config 파일
  */
-void getResponse(const HTTPRequest &request, int client_fd, ParsedConfig &config)
+void getResponse(const HTTPRequest &request, int client_fd, Config &config)
 {
     // root_dir에 관한내용은 conf에서 가져옴
     std::string root_dir = "./assets/html"; // Root directory for serving static files
@@ -110,7 +110,7 @@ void getResponse(const HTTPRequest &request, int client_fd, ParsedConfig &config
  * @param client_fd 서버의 fd
  * @param config 파싱된 config 파일
  */
-void requestHandler(const HTTPRequest &request, int client_fd, ParsedConfig &config)
+void requestHandler(const HTTPRequest &request, int client_fd, Config &config)
 {
     if (request.method == "GET")
     {
