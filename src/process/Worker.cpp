@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 14:24:26 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/04 20:46:48 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ void Worker::run()
 					{
 						// parser.printResult(*result);
 						// TODO: HTTP Response 구현
-						requestHandler(*result, fd);
+						requestHandler(*result, fd, config);
 						delete result;
 					}
 					else
