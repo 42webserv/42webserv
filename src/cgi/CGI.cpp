@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/05 00:30:14 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/08 16:48:09 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,99 @@ char **CGI::ENVPChangeStringArray()
  * @param filefd[2] 새로운 파일 디스크립터를 저장하는 변수입니다. pipe() 함수를 사용하여 파이프를 열면, 새로운 파일 디스크립터가 반환.
  */
 
-void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
+// void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
+// {
+// 	// this->_body = HTTPRequest.body_;
+// 	pid_t pid;
+// 	FILE *file[2];
+// 	int oldFD[2];
+// 	int fileFD[2];
+// 	char **envp;
+// 	std::string body;
+// 	body = "id=1234&name=john";
+// 	setBody(body);
+
+// 	try
+// 	{
+// 		envp = this->ENVPChangeStringArray();
+// 	}
+// 	catch (std::bad_alloc &e)
+// 	{
+// 		std::cerr << e.what() << std::endl;
+// 	}
+// 	// 입력과 출력 스트림의 사본을 생성하고 저장
+// 	oldFD[0] = dup(STDIN_FILENO);
+// 	oldFD[1] = dup(STDOUT_FILENO);
+// 	if (oldFD[0] == -1 || oldFD[1] == -1)
+// 		throw std::runtime_error("Error saving file descriptor");
+// 	// 파일 데이터 스트림을 생성
+// 	file[0] = tmpfile();
+// 	file[1] = tmpfile();
+// 	if (!file[0] || !file[1])
+// 		throw std::runtime_error("Error creating file for temporary work");
+
+// 	fileFD[0] = fileno(file[0]);
+// 	fileFD[1] = fileno(file[1]);
+// 	// write(fileFD[0], body.c_str(), body.size());
+// 	if (fileFD[0] == -1 || fileFD[1] == -1)
+// 		throw std::runtime_error("Error creating file descriptor");
+// 	write(fileFD[0], body.c_str(), body.size());
+// 	lseek(fileFD[0], 0, SEEK_SET);
+// 	// lseek(fileFd[0], 0, 0);
+
+// 	pid = fork();
+// 	std::cout << "pid " << pid << std::endl;
+// 	if (pid == -1)
+// 		throw std::runtime_error("Error create child process");
+// 	else if (pid == 0)
+// 	{
+// 		// redirect input and output to the file descriptors
+// 		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
+// 		std::cout << "context: " << context << std::endl;
+// 		isCgiPath();
+// 		dup2(fileFD[0], STDIN_FILENO);
+// 		dup2(fileFD[1], STDOUT_FILENO);
+// 		if (execve(context.c_str(), NULL, envp) == -1)
+// 		{
+// 			std::cerr << "Error execute child process: " << strerror(errno) << std::endl;
+// 			throw std::runtime_error("Error execute child process");
+// 		}
+// 		std::cerr << "Error status: 500" << std::endl;
+// 	}
+// 	else
+// 	{
+// 		// wait for child process to finish
+// 		char buffer[100001];
+// 		if (waitpid(pid, NULL, 0) == -1)
+// 			throw std::runtime_error("Error waiting for child process");
+// 		lseek(fileFD[1], 0, SEEK_SET);
+// 		// read output from the file descriptor and print it to console
+
+// 		int bytes = 1;
+// 		while (bytes > 0)
+// 		{
+// 			memset(buffer, 0, 100001);
+// 			bytes = read(fileFD[1], buffer, 100000);
+// 			body += buffer;
+// 		}
+// 	}
+// 	setBody(body);
+// 	dup2(oldFD[0], 0);
+// 	dup2(oldFD[1], 1);
+
+// 	fclose(file[0]);
+// 	fclose(file[1]);
+
+// 	close(fileFD[0]);
+// 	close(fileFD[1]);
+// 	close(oldFD[0]);
+// 	close(oldFD[1]);
+
+// 	if (pid == 0)
+// 		exit(0);
+// }
+
+std::string CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
 {
 	// this->_body = HTTPRequest.body_;
 	pid_t pid;
@@ -108,9 +200,6 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	int fileFD[2];
 	char **envp;
 	std::string body;
-	body = "id=1234&name=john";
-	setBody(body);
-
 	try
 	{
 		envp = this->ENVPChangeStringArray();
@@ -132,7 +221,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 
 	fileFD[0] = fileno(file[0]);
 	fileFD[1] = fileno(file[1]);
-	// write(fileFD[0], body.c_str(), body.size());
+	write(fileFD[0], body.c_str(), body.size());
 	if (fileFD[0] == -1 || fileFD[1] == -1)
 		throw std::runtime_error("Error creating file descriptor");
 	write(fileFD[0], body.c_str(), body.size());
@@ -140,14 +229,14 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	// lseek(fileFd[0], 0, 0);
 
 	pid = fork();
-	std::cout << "pid " << pid << std::endl;
+	// std::cout << "pid" << pid << std::endl;
 	if (pid == -1)
 		throw std::runtime_error("Error create child process");
 	else if (pid == 0)
 	{
 		// redirect input and output to the file descriptors
-		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
-		std::cout << "context: " << context << std::endl;
+		// std::cout << "cgiPath_: " << cgiPath_ << std::endl;
+		// std::cout << "context: " << context << std::endl;
 		isCgiPath();
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
@@ -189,6 +278,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 
 	if (pid == 0)
 		exit(0);
+	return (body);
 }
 
 std::string CGI::getResponseBody() const

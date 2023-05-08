@@ -18,22 +18,59 @@
 
 import sys
 import cgi
-print("\naaaaaaaaaaaaaaaaaaaaaaa\n")
-print("Content-type:text/html\r\n\r\n")
+# print("\naaaaaaaaaaaaaaaaaaaaaaa\n")
+# print("Content-type:text/html\r\n\r\n")
 
-print("<html>")
+# print("<html>")
+# print("<head>")
+# print("<title>Hello, World!</title>")
+# print("</head>")
+# print("<body>")
+# print("<h2>Hello, World!</h2>")
+
+# form = cgi.FieldStorage()
+# id = form.getvalue('id')
+# name = form.getvalue('name')
+
+# print("<p>ID: {}</p>".format(id))
+# print("<p>Name: {}</p>".format(name))
+
+# print("</body>")
+# print("</html>")
+
+
+
+print("<!DOCTYPE html>")
+print("<html lang=\"en\">")
 print("<head>")
-print("<title>Hello, World!</title>")
+print("	<meta charset=\"UTF-8\">")
+print("	<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">")
+print("	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
+print("	<title>TestCGI</title>")
 print("</head>")
 print("<body>")
-print("<h2>Hello, World!</h2>")
-
+print("	<h1>Hello, World!</h1>")
 form = cgi.FieldStorage()
 id = form.getvalue('id')
 name = form.getvalue('name')
 
 print("<p>ID: {}</p>".format(id))
 print("<p>Name: {}</p>".format(name))
-
 print("</body>")
 print("</html>")
+
+
+# #!/usr/bin/python3
+# import cgi
+# form = cgi.FieldStorage()
+
+# print("\naaaaaaaaaaaaaaaaaaaaaaa\n")
+
+# a = form.getvalue('a')
+# b = form.getvalue('b')
+
+# result = int(a) * int(b)
+
+# print('Content-type: text/plain')
+# print()
+# print(f'Result:{result}')
