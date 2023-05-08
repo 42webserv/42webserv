@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Directive.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:15:35 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/20 21:16:22 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/05 17:12:47 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ struct Directive
 {
     std::string name;
     std::string value;
+    std::string pre_name;
     std::vector<Directive> block;
 };
 
