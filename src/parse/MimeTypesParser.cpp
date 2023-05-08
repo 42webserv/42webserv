@@ -8,7 +8,7 @@
 MimeTypesParser::MimeTypesParser(Config &config)
 {
     config.getAllDirectives(this->includes, config.getDirectives(), "include");
-    std::string mimeTypesPath = "." + getMimeTypesPath(this->includes).substr(0, getMimeTypesPath(this->includes).length() - 1);
+    std::string mimeTypesPath = "." + getMimeTypesPath(this->includes);
     parseMimeTypes(mimeTypesPath);
 }
 
