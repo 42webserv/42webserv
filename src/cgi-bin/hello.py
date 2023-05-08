@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import cgi
 
 html_text = '<!DOCTYPE html>\n<html>\n<head>\n'
 html_text += '\t<title>'+'test'+'</title>\n'
@@ -13,6 +14,7 @@ if os.getenv('QUERY_STRING') != None:
     html_text += 'String from browser: ' + os.getenv('QUERY_STRING')
 
 html_text += '</body>\n</html>\n'
+
 
 print (html_text)
 
