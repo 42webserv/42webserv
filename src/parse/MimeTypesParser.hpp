@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   MimeTypesParser.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/03 18:05:34 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/06 23:54:01 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/08 18:39:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,7 @@ private:
      */
     MimeTypesParser();
 
-    void parseMimeTypes(const std::string &filename);
-    std::string getMimeTypesPath(std::vector<Directive> directive);
+    void parseMimeTypes();
 
 public:
     MimeTypesParser(Config &config);
