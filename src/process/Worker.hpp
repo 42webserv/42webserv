@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/04/26 10:31:37 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:53:38 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "Master.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
+#include "Config.hpp"
 
 class Worker
 {
@@ -26,6 +27,7 @@ private:
 	std::vector<struct kevent> &event_list;
 
 public:
+	Config config;
 	Worker(Master &master);
 	~Worker();
 	void run();

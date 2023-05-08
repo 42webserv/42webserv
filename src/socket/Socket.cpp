@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/01 13:18:38 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/02 16:26:43 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ Socket::~Socket()
     close(server_fd);
 }
 
-int Socket::handle_event(std::vector<struct kevent> &event_list) const
+int Socket::handleEvent(std::vector<struct kevent> &event_list) const
 {
     socklen_t addrlen = sizeof(server_addr);
     struct sockaddr_in client_addr;
@@ -87,7 +87,7 @@ int Socket::handle_event(std::vector<struct kevent> &event_list) const
 
 // TODO 이게 server랑 물려있는 client란 걸 어떻게 알까?
 // 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
-void Socket::disconnect_client(int client_fd, std::map<int, std::string> &clients) const
+void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients) const
 {
     close(client_fd);
     clients.erase(client_fd);

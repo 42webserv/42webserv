@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 13:33:00 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/02 14:44:13 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/06 23:54:14 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,11 @@
 #include <string>
 #include <unistd.h>
 #include "HTTPRequestParser.hpp"
+#include "Config.hpp"
 
 std::string generateErrorHeader(int status_code, const std::string &message);
-std::string generateHeader(const std::string &content);
-std::string getResource(const std::string &path);
-void requestHandler(const HTTPRequest &request, int client_fd);
+std::string generateHeader(const std::string &content, const std::string &contentType);
+void getResponse(const HTTPRequest &request, int client_fd, Config &config);
+void requestHandler(const HTTPRequest &request, int client_fd, Config &config);
 
 #endif

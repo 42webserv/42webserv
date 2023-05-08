@@ -6,7 +6,7 @@
 #    By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/04 18:40:07 by yje              ###   ########.fr        #
+#    Updated: 2023/05/08 19:25:13 by yje              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,9 +28,9 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= Config
+SRC_CONFIG	= Config CheckConfigValid
 SRC_ERROR	= common_error
-SRC_PARSE	= HTTPRequestParser HTTPResponse
+SRC_PARSE	= HTTPRequestParser HTTPResponse MimeTypesParser
 SRC_PROCESS	= Master Worker
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
@@ -53,6 +53,8 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
+# CXXFLAGS	= -std=c++98 -g3
+
 
 SRCS = $(addsuffix .cpp, $(DIR_SRC)/main $(SRCS_LIST))
 OBJS = $(SRCS:%.cpp=$(OUT_DIR)%.o)
