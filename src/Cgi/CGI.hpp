@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 18:15:52 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/04 21:49:28 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ public:
 	// void initEnvp(const HTTPRequest &request);
 	void initEnvp();
 
-	void excuteCGI(const std::string &context);
+	std::string excuteCGI(const std::string &context);
 	char **ENVPChangeStringArray();
 	void setFilePath();
 	void setBody(const std::string &body);

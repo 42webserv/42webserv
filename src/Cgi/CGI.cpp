@@ -6,25 +6,26 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/04 18:12:52 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/08 16:53:42 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// #include "../parse/HTTPRequestParser.hpp"
+#include "../parse/HTTPRequestParser.hpp"
 #include "CGI.hpp"
 // CGI 환경변수 세팅
 
 // CGI::CGI()
 // {
 // }
-CGI::CGI(const std::string &cgi_path)
-	: cgiPath_(cgi_path)
+CGI::CGI(const std::string &cgiPath)
+	: cgiPath_(cgiPath)
 {
 }
 
 void CGI::initEnvp() // request config 이름 확인해서 받아오기
 {
-	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
+	HTTPRequest httpRequest; // HTTPRequestParser확인하기
+	std::map<std::string, std::string> headers = httpRequest.headers;
 
 	// const std::string &method =
 	// std::size_t content_length = request.getContentLength(); // contentlength
@@ -70,6 +71,7 @@ void CGI::setBody(const std::string &body)
 // 	else
 // 		throw std::out_of_range("Invalid file descriptor index");
 // }
+
 void CGI::setEnv(const std::map<std::string, std::string> &envp)
 {
 	this->envp_ = envp;
@@ -99,7 +101,7 @@ char **CGI::ENVPChangeStringArray()
  * @param filefd[2] 새로운 파일 디스크립터를 저장하는 변수입니다. pipe() 함수를 사용하여 파이프를 열면, 새로운 파일 디스크립터가 반환.
  */
 
-void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
+std::string CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
 {
 	// this->_body = HTTPRequest.body_;
 	pid_t pid;
@@ -108,9 +110,6 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	int fileFD[2];
 	char **envp;
 	std::string body;
-	// body = "id=1234&name=john";
-	// this->body_ = body;
-
 	try
 	{
 		envp = this->ENVPChangeStringArray();
@@ -132,7 +131,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 
 	fileFD[0] = fileno(file[0]);
 	fileFD[1] = fileno(file[1]);
-	// write(fileFD[0], body.c_str(), body.size());
+	write(fileFD[0], body.c_str(), body.size());
 	if (fileFD[0] == -1 || fileFD[1] == -1)
 		throw std::runtime_error("Error creating file descriptor");
 	write(fileFD[0], body.c_str(), body.size());
@@ -146,14 +145,14 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 	else if (pid == 0)
 	{
 		// redirect input and output to the file descriptors
-		std::cout << "cgiPath_: " << cgiPath_ << std::endl;
-		std::cout << "context: " << context << std::endl;
+		// std::cout << "cgiPath_: " << cgiPath_ << std::endl;
+		// std::cout << "context: " << context << std::endl;
 		isCgiPath();
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
 		if (execve(context.c_str(), NULL, envp) == -1)
 		{
-			// std::cerr << "Error execute child process: " << strerror(errno) << std::endl;
+			std::cerr << "Error execute child process: " << strerror(errno) << std::endl;
 			throw std::runtime_error("Error execute child process");
 		}
 		std::cerr << "Error status: 500" << std::endl;
@@ -189,6 +188,7 @@ void CGI::excuteCGI(const std::string &context) // context 받기 아마두 경�
 
 	if (pid == 0)
 		exit(0);
+	return (body);
 }
 
 std::string CGI::getResponseBody() const
@@ -200,7 +200,8 @@ bool CGI::isCgiPath(void) const
 {
 	char *cgiPath = const_cast<char *>(cgiPath_.c_str());
 	const char *filepath = const_cast<char *>(cgiPath_.c_str());
-	int result = chmod(filepath, S_IRWXU | S_IRWXG | S_IRWXO);
+	chmod(filepath, S_IRWXU | S_IRWXG | S_IRWXO);
+	// (void)result;
 	if (access(cgiPath, X_OK) == -1)
 	{
 		// std::cout << "XX" << std::endl;
