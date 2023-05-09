@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 19:08:50 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 19:12:40 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,6 @@ void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &server)
     {
         if (server[i].name == "error_page")
         {
-            std::cout << server[i].value << std::endl;
             std::vector<std::string> tokens;
             std::istringstream iss(server[i].value);
             std::string token;
