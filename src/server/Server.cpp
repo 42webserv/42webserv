@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 19:19:34 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 20:17:46 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,13 @@
 /*
  * A default constructor
  */
-Server::Server(Config &config)
+Server::Server() {}
+
+void Server::setServer(Config &config)
 {
     std::vector<Directive> server;
     config.getAllDirectives(server, config.getDirectives(), "server");
     setUpServer(server);
-    printServer();
 }
 
 /*

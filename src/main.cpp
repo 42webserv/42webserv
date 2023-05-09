@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/09 17:25:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 20:18:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,14 @@ int main(int argc, char const *argv[])
     Config config;
     config.parsedConfig(argc, argv);
     config.printDirectives(config.getDirectives(), 0);
-    Server server(config);
+    Server server;
+    server.setServer(config);
+    server.printServer();
 
-    // Master master;
-    // Worker worker(master);
-    // worker.config = config;
-    // worker.run();
+    Master master;
+    Worker worker(master);
+    worker.config = config;
+    worker.serverInfo = server;
+    worker.run();
     return 0;
 }
