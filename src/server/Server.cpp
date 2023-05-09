@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 20:40:01 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 20:42:52 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,6 +149,21 @@ void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverB
 }
 
 /**
+ * server 블록 내부에서 location 지시자를 찾아 location vector 세팅
+ *
+ * @param tmpServ 현재 서버 정보를 저장할 구조체
+ * @param serverBlock 파싱된 서버 블록
+ */
+void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+{
+    for (size_t i = 0; i < serverBlock.size(); i++)
+    {
+        if (serverBlock[i].name == "location")
+            tmpServ.location.push_back(serverBlock[i]);
+    }
+}
+
+/**
  * Server 클래스 멤버 변수들을 세팅해주기 위한 메서드
  *
  * @param serverBlock 파싱된 서버 블록
@@ -163,11 +178,7 @@ void Server::setUpServer(std::vector<Directive> &serverBlock)
         tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlock[i].block);
         tmpServ.root = findRoot(serverBlock[i].block);
         setUpErrorPage(tmpServ, serverBlock[i].block);
-        for (size_t j = 0; j < serverBlock[i].block.size(); j++)
-        {
-            if (serverBlock[i].block[j].name == "location")
-                tmpServ.location.push_back(serverBlock[i].block[j]);
-        }
+        setUpLocation(tmpServ, serverBlock[i].block);
         this->server.push_back(tmpServ);
     }
 }
