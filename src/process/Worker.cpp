@@ -354,21 +354,21 @@ bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &i
 			return (true);
 		}
 	}
-	size_t pos = request.path.rfind('/');
-	while (pos != std::string::npos)
-	{
-		std::string tmp = request.path.substr(0, pos); //
-		for (size_t i = 0; i < thisServer.location.size(); ++i)
-		{
-			if (thisServer.location[i].value == tmp)
-			{
-				idx = i;
-				return (true);
-			}
-		}
-		tmp = tmp.erase(pos);
-		pos = tmp.rfind('/');
-	}
+	// size_t pos = request.path.rfind('/');
+	// while (pos != std::string::npos)
+	// {
+	// 	std::string tmp = request.path.substr(0, pos); //
+	// 	for (size_t i = 0; i < thisServer.location.size(); ++i)
+	// 	{
+	// 		if (thisServer.location[i].value == tmp)
+	// 		{
+	// 			idx = i;
+	// 			return (true);
+	// 		}
+	// 	}
+	// 	tmp = tmp.erase(pos);
+	// 	pos = tmp.rfind('/');
+	// }
 	return (false);
 }
 
