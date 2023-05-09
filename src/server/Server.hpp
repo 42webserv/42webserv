@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 16:43:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 16:52:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ public:
      * Add it if you feel necessary additional member functions.
      */
     int findListen(std::vector<Directive> &server);
-    void setPortAndLocation(std::vector<Directive> &server);
+    void setupServer(std::vector<Directive> &server);
     void printServer();
 };
 

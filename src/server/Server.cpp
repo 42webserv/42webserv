@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 16:44:10 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 16:52:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ Server::Server(Config &config)
 {
     std::vector<Directive> server;
     config.getAllDirectives(server, config.getDirectives(), "server");
-    setPortAndLocation(server);
+    setupServer(server);
     printServer();
 }
 
@@ -60,12 +60,13 @@ int Server::findListen(std::vector<Directive> &server)
     return 80;
 }
 
-void Server::setPortAndLocation(std::vector<Directive> &server)
+void Server::setupServer(std::vector<Directive> &server)
 {
     for (size_t i = 0; i < server.size(); i++)
     {
         ServerInfo tmpServ;
         tmpServ.port = findListen(server[i].block);
+
         for (size_t j = 0; j < server[i].block.size(); j++)
         {
             if (server[i].block[j].name == "location")
