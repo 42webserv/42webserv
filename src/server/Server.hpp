@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 16:52:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 17:45:40 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,9 @@
 struct ServerInfo
 {
     int port;
+    std::string serverName;
     std::vector<Directive> location;
+    std::vector<Directive> errorPage;
 };
 
 class Server
@@ -55,8 +57,11 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
+    void setUpServer(std::vector<Directive> &server);
+    void setUpErrorPage(std::vector<Directive> &error, ServerInfo &tmpServ);
     int findListen(std::vector<Directive> &server);
-    void setupServer(std::vector<Directive> &server);
+    std::string findServerName(std::vector<Directive> &server);
+
     void printServer();
 };
 
