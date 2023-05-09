@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 20:17:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 20:40:01 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,19 +17,12 @@
  */
 Server::Server() {}
 
-void Server::setServer(Config &config)
-{
-    std::vector<Directive> server;
-    config.getAllDirectives(server, config.getDirectives(), "server");
-    setUpServer(server);
-}
-
 /*
  * A copy constructor
  */
 Server::Server(const Server &ref)
 {
-    *this = ref;
+    this->server = ref.server;
 }
 
 /*
@@ -39,7 +32,7 @@ Server &Server::operator=(const Server &ref)
 {
     if (this != &ref)
     {
-        /* insert */
+        this->server = ref.server;
     }
     return *this;
 }
@@ -51,6 +44,24 @@ Server::~Server()
 {
 }
 
+/**
+ * 입력인자를 Server 클래스에 세팅
+ *
+ * @param config conf 파일을 파싱한 클래스
+ */
+void Server::setServer(Config &config)
+{
+    std::vector<Directive> server;
+    config.getAllDirectives(server, config.getDirectives(), "server");
+    setUpServer(server);
+}
+
+/**
+ * server 블록 내부에서 listen 지시자를 찾아 포트번호를 반환
+ *
+ * @param serverBlock 파싱된 서버 블록
+ * @return 포트번호
+ */
 int Server::findListen(std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
@@ -61,6 +72,12 @@ int Server::findListen(std::vector<Directive> &serverBlock)
     return 80;
 }
 
+/**
+ * server 블록 내부에서 server_name을 찾아 값을 반환
+ *
+ * @param serverBlock 파싱된 서버 블록
+ * @return 서버 이름
+ */
 std::string Server::findServerName(std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
@@ -71,6 +88,12 @@ std::string Server::findServerName(std::vector<Directive> &serverBlock)
     return "nobody";
 }
 
+/**
+ * server 블록 내부에서 client_max_body_size 지시자를 찾아 값을 반환
+ *
+ * @param serverBlock 파싱된 서버 블록
+ * @return 정수 값
+ */
 size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
@@ -81,6 +104,12 @@ size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlock)
     return -1;
 }
 
+/**
+ * server 블록 내부에서 root 지시자를 찾아 값을 반환
+ *
+ * @param serverBlock 파싱된 서버 블록
+ * @return root 경로
+ */
 std::string Server::findRoot(std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
@@ -91,6 +120,12 @@ std::string Server::findRoot(std::vector<Directive> &serverBlock)
     return "";
 }
 
+/**
+ * server 블록 내부에서 error_page 지시자를 찾아 에러페이지 세팅
+ *
+ * @param tmpServ 현재 서버 정보를 저장할 구조체
+ * @param serverBlock 파싱된 서버 블록
+ */
 void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
@@ -113,6 +148,11 @@ void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverB
     }
 }
 
+/**
+ * Server 클래스 멤버 변수들을 세팅해주기 위한 메서드
+ *
+ * @param serverBlock 파싱된 서버 블록
+ */
 void Server::setUpServer(std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
@@ -132,6 +172,9 @@ void Server::setUpServer(std::vector<Directive> &serverBlock)
     }
 }
 
+/**
+ * Server 클래스의 정보 출력
+ */
 void Server::printServer()
 {
     std::cout << "============Server===========" << std::endl;
