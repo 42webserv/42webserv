@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 17:46:47 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 19:00:39 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,11 +70,26 @@ std::string Server::findServerName(std::vector<Directive> &server)
     return "nobody";
 }
 
-void Server::setUpErrorPage(std::vector<Directive> &error, ServerInfo &tmpServ)
+void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &server)
 {
-    for (size_t i = 0; i < error.size(); i++)
+    for (size_t i = 0; i < server.size(); i++)
     {
-        tmpServ.errorPage.push_back(error[i]);
+        if (server[i].name == "error_page")
+        {
+            std::cout << server[i].value << std::endl;
+            std::vector<std::string> tokens;
+            std::istringstream iss(server[i].value);
+            std::string token;
+
+            while (iss >> token)
+                tokens.push_back(token);
+            std::string errorPage = tokens[tokens.size() - 1];
+            for (size_t j = 0; j < tokens.size() - 1; j++)
+            {
+                int key = static_cast<int>(strtod(tokens[j].c_str(), NULL));
+                tmpServ.errorPage[key] = errorPage;
+            }
+        }
     }
 }
 
@@ -85,12 +100,11 @@ void Server::setUpServer(std::vector<Directive> &server)
         ServerInfo tmpServ;
         tmpServ.port = findListen(server[i].block);
         tmpServ.serverName = findServerName(server[i].block);
+        setUpErrorPage(tmpServ, server[i].block);
         for (size_t j = 0; j < server[i].block.size(); j++)
         {
             if (server[i].block[j].name == "location")
                 tmpServ.location.push_back(server[i].block[j]);
-            else if (server[i].block[j].name == "error_page")
-                setUpErrorPage(server[i].block[j].block, tmpServ);
         }
         this->server.push_back(tmpServ);
     }
@@ -109,8 +123,8 @@ void Server::printServer()
             std::cout << "location : " << this->server[i].location[j].value << std::endl;
         }
         std::cout << "-------------------------------\n";
-        for (size_t j = 0; j < this->server[i].errorPage.size(); j++)
-            std::cout << "errorPage : " << this->server[i].errorPage[j].name << ", " << this->server[i].errorPage[j].value << std::endl;
+        for (std::map<int, std::string>::iterator iter = this->server[i].errorPage.begin(); iter != this->server[i].errorPage.end(); iter++)
+            std::cout << "errorPage : " << iter->first << ", " << iter->second << std::endl;
         std::cout << "===============================\n\n";
     }
 }

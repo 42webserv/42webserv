@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 17:45:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 18:56:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include "Config.hpp"
 
 struct ServerInfo
@@ -22,7 +23,7 @@ struct ServerInfo
     int port;
     std::string serverName;
     std::vector<Directive> location;
-    std::vector<Directive> errorPage;
+    std::map<int, std::string> errorPage;
 };
 
 class Server
@@ -58,7 +59,7 @@ public:
      * Add it if you feel necessary additional member functions.
      */
     void setUpServer(std::vector<Directive> &server);
-    void setUpErrorPage(std::vector<Directive> &error, ServerInfo &tmpServ);
+    void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &server);
     int findListen(std::vector<Directive> &server);
     std::string findServerName(std::vector<Directive> &server);
 
