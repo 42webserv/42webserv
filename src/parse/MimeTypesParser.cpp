@@ -7,9 +7,8 @@
  */
 MimeTypesParser::MimeTypesParser(Config &config)
 {
-    config.getAllDirectives(this->includes, config.getDirectives(), "include");
-    std::string mimeTypesPath = "." + getMimeTypesPath(this->includes).substr(0, getMimeTypesPath(this->includes).length() - 1);
-    parseMimeTypes(mimeTypesPath);
+    config.getAllDirectives(this->includes, config.getDirectives(), "types");
+    parseMimeTypes();
 }
 
 /*
@@ -44,36 +43,21 @@ MimeTypesParser::~MimeTypesParser()
 /**
  * mime.types 파일을 열어 한 줄씩 map 자료구조로 저장
  *
- * @param filename mime.types가 존재하는 위치
  */
-void MimeTypesParser::parseMimeTypes(const std::string &filename)
+void MimeTypesParser::parseMimeTypes()
 {
-    std::ifstream file(filename);
-
-    if (file.is_open())
+    for (size_t i = 0; i < this->includes[0].block.size(); i++)
     {
-        std::string line;
-        while (std::getline(file, line))
-        {
-            line = line.substr(0, line.length() - 1); // mime.types 각 줄 끝의 ; 제거
-            if (line[0] != '#' && !line.empty())
-            {
-                std::vector<std::string> tokens;
-                std::istringstream iss(line);
-                std::string token;
+        std::vector<std::string> tokens;
+        std::istringstream iss(this->includes[0].block[i].value);
+        std::string token;
 
-                while (iss >> token)
-                    tokens.push_back(token);
+        while (iss >> token)
+            tokens.push_back(token);
 
-                if (tokens.size() > 1)
-                {
-                    std::string mime = tokens[0];
-                    for (size_t i = 1; i < tokens.size(); i++)
-                        this->mimeMap[tokens[i]] = mime;
-                }
-            }
-        }
-        file.close();
+        std::string mime = this->includes[0].block[i].name;
+        for (size_t j = 0; j < tokens.size(); j++)
+            this->mimeMap[tokens[j]] = mime;
     }
 }
 
@@ -90,19 +74,4 @@ std::string MimeTypesParser::getMimeType(const std::string &extension)
         if (iter->first == ext)
             return iter->second;
     return "application/octet-stream";
-}
-
-/**
- * include에 존재하는 mime.types에 대한 경로를 찾아준다.
- *
- * @param directive 파싱된 configure file
- * @return mime.types 파일 경로
- */
-std::string MimeTypesParser::getMimeTypesPath(std::vector<Directive> directive)
-{
-    for (size_t i = 0; i < directive.size(); i++)
-        if (directive[i].name == "include")
-            if (directive[i].value.substr(directive[i].value.length() - 11) == "mime.types;")
-                return directive[i].value;
-    return "/assets/conf/mime.types";
 }
