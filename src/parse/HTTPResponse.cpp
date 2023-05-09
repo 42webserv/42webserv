@@ -141,7 +141,7 @@ void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *di
 void broad(const HTTPRequest &request, int client_fd, Config &config)
 {
     std::stringstream broadHtml;
-    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body>";
+    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
     DIR *dirPtr = NULL;
     std::string path = "/example"; // location + path로 교체예정
     if ((dirPtr = opendir(path.c_str())) != NULL)
@@ -150,6 +150,7 @@ void broad(const HTTPRequest &request, int client_fd, Config &config)
         return;
     }
     recursionDir(path, broadHtml, dirPtr);
+    broadHtml << "</body></html>"
     std::string tmp = broadHtml.str();
     /* 헤더를 작성해주는과정 */
     MimeTypesParser mime(config);
