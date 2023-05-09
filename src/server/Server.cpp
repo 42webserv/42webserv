@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 19:12:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 19:19:34 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,44 +50,54 @@ Server::~Server()
 {
 }
 
-int Server::findListen(std::vector<Directive> &server)
+int Server::findListen(std::vector<Directive> &serverBlock)
 {
-    for (size_t i = 0; i < server.size(); i++)
+    for (size_t i = 0; i < serverBlock.size(); i++)
     {
-        if (server[i].name == "listen")
-            return strtod(server[i].value.c_str(), NULL);
+        if (serverBlock[i].name == "listen")
+            return strtod(serverBlock[i].value.c_str(), NULL);
     }
     return 80;
 }
 
-std::string Server::findServerName(std::vector<Directive> &server)
+std::string Server::findServerName(std::vector<Directive> &serverBlock)
 {
-    for (size_t i = 0; i < server.size(); i++)
+    for (size_t i = 0; i < serverBlock.size(); i++)
     {
-        if (server[i].name == "server_name")
-            return server[i].value;
+        if (serverBlock[i].name == "server_name")
+            return serverBlock[i].value;
     }
     return "nobody";
 }
 
-size_t Server::findClientMaxBodySize(std::vector<Directive> &server)
+size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlock)
 {
-    for (size_t i = 0; i < server.size(); i++)
+    for (size_t i = 0; i < serverBlock.size(); i++)
     {
-        if (server[i].name == "client_max_body_size")
-            return static_cast<size_t>(strtod(server[i].value.c_str(), NULL));
+        if (serverBlock[i].name == "client_max_body_size")
+            return static_cast<size_t>(strtod(serverBlock[i].value.c_str(), NULL));
     }
     return -1;
 }
 
-void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &server)
+std::string Server::findRoot(std::vector<Directive> &serverBlock)
 {
-    for (size_t i = 0; i < server.size(); i++)
+    for (size_t i = 0; i < serverBlock.size(); i++)
     {
-        if (server[i].name == "error_page")
+        if (serverBlock[i].name == "root")
+            return serverBlock[i].value;
+    }
+    return "";
+}
+
+void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+{
+    for (size_t i = 0; i < serverBlock.size(); i++)
+    {
+        if (serverBlock[i].name == "error_page")
         {
             std::vector<std::string> tokens;
-            std::istringstream iss(server[i].value);
+            std::istringstream iss(serverBlock[i].value);
             std::string token;
 
             while (iss >> token)
@@ -102,19 +112,20 @@ void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &server)
     }
 }
 
-void Server::setUpServer(std::vector<Directive> &server)
+void Server::setUpServer(std::vector<Directive> &serverBlock)
 {
-    for (size_t i = 0; i < server.size(); i++)
+    for (size_t i = 0; i < serverBlock.size(); i++)
     {
         ServerInfo tmpServ;
-        tmpServ.port = findListen(server[i].block);
-        tmpServ.serverName = findServerName(server[i].block);
-        tmpServ.clientMaxBodySize = findClientMaxBodySize(server[i].block);
-        setUpErrorPage(tmpServ, server[i].block);
-        for (size_t j = 0; j < server[i].block.size(); j++)
+        tmpServ.port = findListen(serverBlock[i].block);
+        tmpServ.serverName = findServerName(serverBlock[i].block);
+        tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlock[i].block);
+        tmpServ.root = findRoot(serverBlock[i].block);
+        setUpErrorPage(tmpServ, serverBlock[i].block);
+        for (size_t j = 0; j < serverBlock[i].block.size(); j++)
         {
-            if (server[i].block[j].name == "location")
-                tmpServ.location.push_back(server[i].block[j]);
+            if (serverBlock[i].block[j].name == "location")
+                tmpServ.location.push_back(serverBlock[i].block[j]);
         }
         this->server.push_back(tmpServ);
     }
@@ -129,6 +140,7 @@ void Server::printServer()
         std::cout << "PORT: " << this->server[i].port << std::endl;
         std::cout << "Server_name: " << this->server[i].serverName << std::endl;
         std::cout << "Client_max_body_size: " << this->server[i].clientMaxBodySize << std::endl;
+        std::cout << "Root: " << this->server[i].root << std::endl;
         for (size_t j = 0; j < this->server[i].location.size(); j++)
         {
             std::cout << "location : " << this->server[i].location[j].value << std::endl;
