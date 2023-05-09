@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 16:52:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/09 19:18:42 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,17 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include "Config.hpp"
 
 struct ServerInfo
 {
     int port;
+    size_t clientMaxBodySize;
+    std::string serverName;
+    std::string root;
     std::vector<Directive> location;
+    std::map<int, std::string> errorPage;
 };
 
 class Server
@@ -30,6 +35,15 @@ private:
     std::vector<ServerInfo> server;
 
     Server();
+    /*
+     * Add it if you feel necessary additional member functions.
+     */
+    void setUpServer(std::vector<Directive> &serverBlock);
+    void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
+    int findListen(std::vector<Directive> &serverBlock);
+    std::string findServerName(std::vector<Directive> &serverBlock);
+    size_t findClientMaxBodySize(std::vector<Directive> &serverBlock);
+    std::string findRoot(std::vector<Directive> &serverBlock);
 
 public:
     /*
@@ -52,11 +66,6 @@ public:
      */
     ~Server();
 
-    /*
-     * Add it if you feel necessary additional member functions.
-     */
-    int findListen(std::vector<Directive> &server);
-    void setupServer(std::vector<Directive> &server);
     void printServer();
 };
 
