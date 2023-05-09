@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/08 16:47:52 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/09 21:12:08 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,7 @@ int main()
 
     // Execute test CGI program
     CGI cgi("hello3.py");
-    testCGI << cgi.excuteCGI("../../cgi-bin/hello3.py");
+    testCGI << cgi.excuteCGI("../cgi-bin/hello3.py");
 
     // Print response body
     std::cout
