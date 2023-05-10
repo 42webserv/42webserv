@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/09 20:18:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 14:22:39 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,22 +16,11 @@
 #include "Config.hpp"
 #include "CheckConfigValid.hpp"
 #include "MimeTypesParser.hpp"
-#include "Server.hpp"
 
 int main(int argc, char const *argv[])
 {
-    // Nginx Config file parsing
-    Config config;
-    config.parsedConfig(argc, argv);
-    config.printDirectives(config.getDirectives(), 0);
-    Server server;
-    server.setServer(config);
-    server.printServer();
-
-    Master master;
+    Master master(argc, argv);
     Worker worker(master);
-    worker.config = config;
-    worker.serverInfo = server;
     worker.run();
     return 0;
 }
