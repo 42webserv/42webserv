@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:26:54 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/10 17:05:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ Signal::~Signal()
 		signal(signals[i], SIG_DFL);
 }
 
-void Signal::handleEvent(const struct kevent &event, const Socket &socket) const
+void Signal::handleEvent(const struct kevent &event, std::vector<Socket *> &sockets) const
 {
 	int sig = event.ident;
 	for (size_t i = 0; i < MAX_SIGNAL; i++)
@@ -45,13 +45,18 @@ void Signal::handleEvent(const struct kevent &event, const Socket &socket) const
 		// TERM, INT: 빠른 종료
 		if (sig == SIGTERM || sig == SIGINT)
 		{
-			close(socket.server_fd);
+			for (size_t i = 0; i < sockets.size(); i++)
+				delete (sockets[i]);
+			// close(socket.server_fd);
 			exit(EXIT_SUCCESS);
 		}
 		// QUIT: 정상적인 종료
 		else if (sig == SIGQUIT)
 		{
-			close(socket.server_fd);
+			// for // 모든 애들 소멸하도록 고쳐야함
+			for (size_t i = 0; i < sockets.size(); i++)
+				delete (sockets[i]);
+			// close(socket.server_fd);
 			exit(EXIT_SUCCESS);
 		}
 		// 미구현 목록
