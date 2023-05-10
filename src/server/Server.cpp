@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/10 16:41:43 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 20:32:28 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,21 +57,30 @@ void Server::setServer(Config &config)
 }
 
 /**
- * server 블록 내부에서 listen 지시자를 찾아 포트번호를 반환
+ * server 블록 내부에서 listen 지시자를 찾아 포트번호 벡터에 저장. 중복된 포트번호가 존재한다면 에러 반환
  *
+ * @param tmpServ 현재 서버 정보를 저장할 구조체
  * @param serverBlock 파싱된 서버 블록
- * @return 포트번호
  */
 void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
     {
         if (serverBlock[i].name == "listen")
-            tmpServ.port.push_back(strtod(serverBlock[i].value.c_str(), NULL));
+        {
+            int port = strtod(serverBlock[i].value.c_str(), NULL);
+            if (find(this->validPort.begin(), this->validPort.end(), port) != this->validPort.end())
+                error_exit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
+            tmpServ.port.push_back(port);
+            this->validPort.push_back(port);
+        }
     }
     if (tmpServ.port.size() != 0)
         return;
+    if (find(this->validPort.begin(), this->validPort.end(), 80) != this->validPort.end())
+        error_exit("Error : duplicate port number 80\n");
     tmpServ.port.push_back(80);
+    this->validPort.push_back(80);
 }
 
 /**
