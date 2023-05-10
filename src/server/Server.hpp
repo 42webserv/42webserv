@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/10 16:03:44 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 20:30:26 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,10 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include "Config.hpp"
 #include "Socket.hpp"
+#include "common_error.hpp"
 
 struct ServerInfo
 {
@@ -34,6 +36,8 @@ struct ServerInfo
 class Server
 {
 private:
+    std::vector<int> validPort;
+
     /*
      * Add it if you feel necessary additional member functions.
      */
