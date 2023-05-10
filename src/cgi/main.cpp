@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/08 19:20:59 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/10 17:31:25 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,21 +92,33 @@
 
 int main()
 {
+    // Create test CGI program file
+    // std::ofstream testCGI("test.cgi");
+    // testCGI << "#!/bin/bash\n";
+    // testCGI << "echo \"Content-Type: text/plain\"\n";
+    // testCGI << "echo \"\"\n";
+    // testCGI << "echo \"Hello, CGI!\"\n";
 
-    std::string filename = "cgi-bin.html";
+    // 파일 이름과 경로
+    // std::string filename = "test.cgi";
+    // std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
+
+    // std::string filename = "test.cgi";
+    std::string filename = "helloworld.html";
     std::string filepath = "../../assets/html/";
+    // std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
     // 파일 경로와 이름을 합칩니다.
     std::string fullpath = filepath + filename;
     // 파일을 열고 문자열을 쓴 후 닫습니다.
     std::ofstream testCGI(fullpath);
     CGI cgi("hello.py");
     testCGI << cgi.excuteCGI("../cgi-bin/hello.py");
-    std::ofstream outfile(fullpath);
+    // std::ofstream outfile(fullpath);
     // Print response body
     // std::cout
-        // << "Response body :\n\n\n\n"
-        // << cgi.getResponseBody()
-        // << std::endl;
+    // << "Response body :\n\n\n\n"
+    // << cgi.getResponseBody()
+    // << std::endl;
     testCGI.close();
     // http://52.78.8.100:8088/cgi-bin/multiple.py?a=3&b=5
     //  Remove test CGI program file

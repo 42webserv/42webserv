@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 16:08:30 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/06 23:54:28 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/10 15:23:46 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,12 @@ std::string generateHeader(const std::string &content, const std::string &conten
     HTTPRequestParser parser;
     std::ostringstream oss;
 
+    (void)contentType;
     oss << "HTTP/1.1 200 OK\r\n";
     oss << "Content-Length: " << content.length() << "\r\n";
-    oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
+    oss << "Content-Type: "
+        << "html"
+        << "\r\n"; // MIME type can be changed as needed
     oss << "Connection: close\r\n\r\n";
     return oss.str();
 }

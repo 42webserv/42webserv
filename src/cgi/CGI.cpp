@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/08 16:53:42 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/10 17:31:17 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,34 +22,34 @@ CGI::CGI(const std::string &cgiPath)
 {
 }
 
-void CGI::initEnvp() // request config 이름 확인해서 받아오기
+void CGI::initEnvp(HTTPRequest &request, Config &config) // request config 이름 확인해서 받아오기
 {
-	HTTPRequest httpRequest; // HTTPRequestParser확인하기
-	std::map<std::string, std::string> headers = httpRequest.headers;
-
-	// const std::string &method =
+	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
+	HTTPRequestParser request_parser;
+	const std::string &method = request.method;
 	// std::size_t content_length = request.getContentLength(); // contentlength
 	// if (method == "POST" && content_length > 0)
 	// {
 	// 	headers["CONTENT_LENGTH"] = toString(content_length);
 	// }
 	this->envp_["AUTH_TYPE"] = "";
-	// this->envp_["CONTENT_LENGTH"] = to_string(this->_body.length());
-	// this->envp_["CONTENT_TYPE"] = request.getHeader("CONTENT-TYPE"); // 헤더가져오기
+	// this->envp_["CONTENT_LENGTH"] = to_string(this->body_.length());
+	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
+	this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request); // 헤더가져오기
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
-	// this->envp_["PATH_INFO"] = request.path;
-	// this->envp_["PATH_TRANSLATED"] = request.path;
+	this->envp_["PATH_INFO"] = request.path;
+	this->envp_["PATH_TRANSLATED"] = request.path;
 	// PATH_INFO의 변환. 스크립트의 가상경로를, 실제 호출 할 때 사용되는 경로로 맵핑.
 	//  요청 URI의 PATH_INFO 구성요소를 가져와, 적합한 가상 : 실제 변환을 수행하여 맵핑.
 	// this->envp_["QUERY_STRING"] = request.getQueryString(); // 쿼리스트링
 	// this->envp_["REMOTE_ADDR"] = ""ip주소 받아와야 함
 	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
 	this->envp_["REMOTE_USER"] = "";
-	// this->envp_["REQUEST_METHOD"] = method;
-	this->envp_["REQUEST_URI"] = ""; // request.getUri();
+	this->envp_["REQUEST_METHOD"] = method;
+	// this->envp_["REQUEST_URI"] = ""; // request.getUri();
 	// this->envp_["SCRIPT_NAME"] = request.getUri();
-	this->envp_["SERVER_NAME"] = ""; // 요청을 수신한 서버의 호스트 이름.
-	this->envp_["SERVER_PORT"] = ""; // 요청을 수신한 서버의 포트 번호.
+	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
+	// this->envp_["SERVER_PORT"] = ""; // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
 };
