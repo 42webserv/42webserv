@@ -120,42 +120,19 @@ void requestHandler(const HTTPRequest &request, int client_fd, Config &config)
     else
     {
         // 잘못된 메서드일경우
-        std::string response_body = "Method not allowed";
+        std::string response_body = "======Method not allowed=======";
+        std::cout << "===================================" << std::endl;
+        std::cout << "Request method: " << request.method << std::endl;
+        std::cout << "Request path: " << request.path << std::endl;
+      std::cout << "Request HTTP version: " << request.http_version << std::endl;
+
+    for (std::map<std::string, std::string>::const_iterator it = request.headers.begin(); it != request.headers.end(); ++it)
+        std::cout << "Header: " << it->first << " = " << it->second << std::endl;
+
+    std::cout << "Body: " << request.body << std::endl;
         std::string response_header = generateErrorHeader(405, response_body);
         write(client_fd, response_header.c_str(), response_header.length());
         write(client_fd, response_body.c_str(), response_body.length());
     }
 }
 
-void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *dirPtr)
-{
-    dirent *file;
-    broadHtml << "<p>";
-    if ((file = readdir(dirPtr)) == NULL)
-        return;
-    broadHtml << "<a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a><p>";
-    recursionDir(path, broadHtml, dirPtr);
-    return;
-}
-
-void broad(const HTTPRequest &request, int client_fd, Config &config)
-{
-    std::stringstream broadHtml;
-    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
-    DIR *dirPtr = NULL;
-    std::string path = "/example"; // location + path로 교체예정
-    if ((dirPtr = opendir(path.c_str())) != NULL)
-    {
-        std::cout << "broad: location path err" << std::endl;
-        return;
-    }
-    recursionDir(path, broadHtml, dirPtr);
-    broadHtml << "</body></html>"
-    std::string tmp = broadHtml.str();
-    /* 헤더를 작성해주는과정 */
-    MimeTypesParser mime(config);
-    std::string contentType = mime.getMimeType("html");
-    std::string response_header = generateHeader(tmp, contentType);
-    write(client_fd, response_header.c_str(), response_header.length());
-    write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
-}
