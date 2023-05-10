@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 17:02:56 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 17:12:42 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include "common_error.hpp"
 #include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
-#include "HTTPResponse.hpp"
 #include "MimeTypesParser.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
