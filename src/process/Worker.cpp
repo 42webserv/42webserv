@@ -150,6 +150,9 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	{
 		getResponse(request, client_fd);
 	}
+	if (request.method == "POST")
+	{
+	}
 	else
 	{
 		// 잘못된 메서드일경우
