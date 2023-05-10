@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 14:28:11 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 14:34:18 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ private:
 	const Socket socket;
 	const Signal signal;
 	std::vector<struct kevent> &event_list;
+	Config config;
+	Server server;
 
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(const HTTPRequest &request, int client_fd);
@@ -35,8 +37,6 @@ private:
 	std::string generateErrorHeader(int status_code, const std::string &message);
 
 public:
-	Config config;
-	Server server;
 	Worker(Master &master);
 	~Worker();
 	void run();
