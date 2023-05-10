@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 14:20:51 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 14:28:11 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include "HTTPResponse.hpp"
 #include "MimeTypesParser.hpp"
 
-Worker::Worker(Master &master) : kq(master.kq), server(master.getEvents()), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), serverInfo(master.getServer()) {}
+Worker::Worker(Master &master) : kq(master.kq), socket(master.getEvents()), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer()) {}
 
 Worker::~Worker() {}
 
@@ -51,21 +51,21 @@ void Worker::run()
 			if (event.flags & EV_ERROR)
 			{
 				// handle error
-				if (fd == server.server_fd)
+				if (fd == socket.server_fd)
 					// 서버 소켓 에러
 					error_exit("Server socket error");
 				else
 				{
 					// 클라이언트 소켓 에러 아니면 다른 에러
 					if (clients.find(fd) != clients.end())
-						server.disconnectClient(fd, clients);
+						socket.disconnectClient(fd, clients);
 				}
 			}
 			if (event.filter == EVFILT_READ)
 			{
-				if (fd == server.server_fd)
+				if (fd == socket.server_fd)
 				{
-					int client_fd = server.handleEvent(event_list);
+					int client_fd = socket.handleEvent(event_list);
 					clients[client_fd].clear();
 				}
 				else if (clients.find(fd) != clients.end())
@@ -102,7 +102,7 @@ void Worker::run()
 					}
 					else
 						std::cout << "Failed to parse request" << std::endl;
-					server.disconnectClient(fd, clients);
+					socket.disconnectClient(fd, clients);
 					clients[fd].clear();
 				}
 				// 큰 파일 처리할 때
@@ -119,7 +119,7 @@ void Worker::run()
 				// bytes_written += len;
 			}
 			else if (event.filter == EVFILT_SIGNAL)
-				signal.handleEvent(event, server);
+				signal.handleEvent(event, socket);
 		}
 	}
 }
