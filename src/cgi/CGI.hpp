@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/05/08 16:44:54 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/10 16:45:51 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include <cctype>
 #include <sys/stat.h>
+#include "../parse/HTTPRequestParser.hpp"
+#include "../config/Config.hpp"
+
 class CGI
 {
 	// private:
@@ -29,7 +32,7 @@ public:
 	// ~CGI(void); //
 	// cgiRequest();
 	// void initEnvp(const HTTPRequest &request);
-	void initEnvp();
+	void initEnvp(HTTPRequest &request, Config &config);
 
 	std::string excuteCGI(const std::string &context);
 	char **ENVPChangeStringArray();
