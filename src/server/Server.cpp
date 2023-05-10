@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 20:42:52 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 15:45:13 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,14 +62,16 @@ void Server::setServer(Config &config)
  * @param serverBlock 파싱된 서버 블록
  * @return 포트번호
  */
-int Server::findListen(std::vector<Directive> &serverBlock)
+void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
 {
     for (size_t i = 0; i < serverBlock.size(); i++)
     {
         if (serverBlock[i].name == "listen")
-            return strtod(serverBlock[i].value.c_str(), NULL);
+            tmpServ.port.push_back(strtod(serverBlock[i].value.c_str(), NULL));
     }
-    return 80;
+    if (tmpServ.port.size() != 0)
+        return;
+    tmpServ.port.push_back(80);
 }
 
 /**
@@ -173,7 +175,7 @@ void Server::setUpServer(std::vector<Directive> &serverBlock)
     for (size_t i = 0; i < serverBlock.size(); i++)
     {
         ServerInfo tmpServ;
-        tmpServ.port = findListen(serverBlock[i].block);
+        setUpListen(tmpServ, serverBlock[i].block);
         tmpServ.serverName = findServerName(serverBlock[i].block);
         tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlock[i].block);
         tmpServ.root = findRoot(serverBlock[i].block);
@@ -192,7 +194,10 @@ void Server::printServer()
     for (size_t i = 0; i < this->server.size(); i++)
     {
         std::cout << "Server[" << i + 1 << "]" << std::endl;
-        std::cout << "PORT: " << this->server[i].port << std::endl;
+        std::cout << "PORT: ";
+        for (size_t j = 0; j < this->server[i].port.size(); j++)
+            std::cout << this->server[i].port[j] << " ";
+        std::cout << std::endl;
         std::cout << "Server_name: " << this->server[i].serverName << std::endl;
         std::cout << "Client_max_body_size: " << this->server[i].clientMaxBodySize << std::endl;
         std::cout << "Root: " << this->server[i].root << std::endl;

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/09 20:40:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 15:49:26 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,10 @@
 #include <string>
 #include <sstream>
 #include "Config.hpp"
-
+#include "Socket.hpp"
 struct ServerInfo
 {
-    int port;
+    std::vector<int> port;
     size_t clientMaxBodySize;
     std::string serverName;
     std::string root;
@@ -33,14 +33,14 @@ class Server
 private:
     /* data */
     std::vector<ServerInfo> server;
-
+    std::vector<*Socket> sockets;
     /*
      * Add it if you feel necessary additional member functions.
      */
-    void setUpServer(std::vector<Directive> &serverBlock);
+    void setUpServer(std::vector<Directive> &servrBlock);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     void setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
-    int findListen(std::vector<Directive> &serverBlock);
+    void setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     std::string findServerName(std::vector<Directive> &serverBlock);
     size_t findClientMaxBodySize(std::vector<Directive> &serverBlock);
     std::string findRoot(std::vector<Directive> &serverBlock);
