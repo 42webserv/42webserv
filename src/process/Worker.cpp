@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/09 20:29:48 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 17:02:56 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,18 @@
 #include "HTTPResponse.hpp"
 #include "MimeTypesParser.hpp"
 
-Worker::Worker(Master &master) : kq(master.kq), server(master.getEvents()), signal(master.getEvents()), event_list(master.getEvents()) {}
+Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
+{
+	// Create sockets
+	for (size_t i = 0; i < server.server.size(); i++)
+	{
+		for (size_t j = 0; j < server.server[i].port.size(); j++)
+		{
+			std::cout << server.server[i].port[j] << std::endl;
+			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
+		}
+	}
+}
 
 Worker::~Worker() {}
 
@@ -44,82 +55,86 @@ void Worker::run()
 		}
 		event_list.clear();
 
-		for (int i = 0; i < nevents; i++)
+		for (size_t k = 0; k < sockets.size(); k++)
 		{
-			event = events[i];
-			fd = event.ident;
-			if (event.flags & EV_ERROR)
+			for (int i = 0; i < nevents; i++)
 			{
-				// handle error
-				if (fd == server.server_fd)
-					// 서버 소켓 에러
-					error_exit("Server socket error");
-				else
-				{
-					// 클라이언트 소켓 에러 아니면 다른 에러
-					if (clients.find(fd) != clients.end())
-						server.disconnectClient(fd, clients);
-				}
-			}
-			if (event.filter == EVFILT_READ)
-			{
-				if (fd == server.server_fd)
-				{
-					int client_fd = server.handleEvent(event_list);
-					clients[client_fd].clear();
-				}
-				else if (clients.find(fd) != clients.end())
-				{
-					char buf[1024];
-					int n = 1;
-					while (0 < (n = read(fd, buf, sizeof(buf))))
-					{
+				event = events[i];
+				fd = event.ident;
 
-						buf[n] = '\0';
-						clients[fd] += buf;
-						std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
-					}
-					if (n < 1)
-					{
-						if (n < 0)
-							std::cerr << "Client read error!" << '\n';
-						struct kevent new_event;
-						EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-						event_list.push_back(new_event);
-					}
-				}
-			}
-			else if (event.filter == EVFILT_WRITE)
-			{
-				if (clients.find(fd) != clients.end())
+				if (event.flags & EV_ERROR)
 				{
-					HTTPRequest *result = parser.parse(clients[fd]);
-					if (result)
-					{
-						// TODO: HTTP Response 구현
-						this->requestHandler(*result, fd);
-						delete result;
-					}
+					// handle error
+					if (fd == sockets[k]->server_fd)
+						// 서버 소켓 에러
+						error_exit("Server socket error");
 					else
-						std::cout << "Failed to parse request" << std::endl;
-					server.disconnectClient(fd, clients);
-					clients[fd].clear();
+					{
+						// 클라이언트 소켓 에러 아니면 다른 에러
+						if (clients.find(fd) != clients.end())
+							sockets[k]->disconnectClient(fd, clients);
+					}
 				}
-				// 큰 파일 처리할 때
-				// off_t offset = (off_t)event.udata;
-				// off_t len = 0;
-				// if (sendfile(junk, fd, offset, &len, NULL, 0) != 0)
-				// {
-				// 	if (errno == EAGAIN)
-				// 	{
-				// 		EV_SET(&event, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, (void *)(offset + len));
-				// 		event_list.push_back(event);
-				// 	}
-				// }
-				// bytes_written += len;
+				if (event.filter == EVFILT_READ)
+				{
+					if (fd == sockets[k]->server_fd)
+					{
+						int client_fd = sockets[k]->handleEvent(event_list);
+						clients[client_fd].clear();
+					}
+					else if (clients.find(fd) != clients.end())
+					{
+						char buf[1024];
+						int n = 1;
+						while (0 < (n = read(fd, buf, sizeof(buf))))
+						{
+
+							buf[n] = '\0';
+							clients[fd] += buf;
+							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+						}
+						if (n < 1)
+						{
+							if (n < 0)
+								std::cerr << "Client read error!" << '\n';
+							struct kevent new_event;
+							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+							event_list.push_back(new_event);
+						}
+					}
+				}
+				else if (event.filter == EVFILT_WRITE)
+				{
+					if (clients.find(fd) != clients.end())
+					{
+						HTTPRequest *result = parser.parse(clients[fd]);
+						if (result)
+						{
+							// TODO: HTTP Response 구현
+							this->requestHandler(*result, fd);
+							delete result;
+						}
+						else
+							std::cout << "Failed to parse request" << std::endl;
+						sockets[k]->disconnectClient(fd, clients);
+						clients[fd].clear();
+					}
+					// 큰 파일 처리할 때
+					// off_t offset = (off_t)event.udata;
+					// off_t len = 0;
+					// if (sendfile(junk, fd, offset, &len, NULL, 0) != 0)
+					// {
+					// 	if (errno == EAGAIN)
+					// 	{
+					// 		EV_SET(&event, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, (void *)(offset + len));
+					// 		event_list.push_back(event);
+					// 	}
+					// }
+					// bytes_written += len;
+				}
+				else if (event.filter == EVFILT_SIGNAL)
+					signal.handleEvent(event, sockets);
 			}
-			else if (event.filter == EVFILT_SIGNAL)
-				signal.handleEvent(event, server);
 		}
 	}
 }
