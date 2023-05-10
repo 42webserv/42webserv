@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:26:43 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/10 16:51:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,10 @@
 #include "Socket.hpp"
 #include "common_error.hpp"
 
-#define PORT 8080
-
-Socket::Socket(std::vector<struct kevent> &event_list) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
+    this->_port = port;
 
     // Create an AF_INET stream socket to receive incoming connections on
     if (server_fd < 0)
@@ -41,7 +40,8 @@ Socket::Socket(std::vector<struct kevent> &event_list) : server_fd(socket(AF_INE
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     // TODO port는 server.port에서 받아야 함.
-    server_addr.sin_port = htons(PORT);
+    server_addr.sin_port = htons(this->_port);
+    std::cout << this->_port << std::endl;
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         close(server_fd);
@@ -58,7 +58,7 @@ Socket::Socket(std::vector<struct kevent> &event_list) : server_fd(socket(AF_INE
     EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     event_list.push_back(event);
 
-    std::cout << "Server listening on port " << PORT << std::endl;
+    std::cout << "Server listening on port " << this->_port << std::endl;
 }
 
 Socket::~Socket()

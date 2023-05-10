@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:36:22 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:26:56 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/10 17:05:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ private:
 public:
 	Signal(std::vector<struct kevent> &event_list);
 	~Signal();
-	void handleEvent(const struct kevent &event, const Socket &socket) const;
+	void handleEvent(const struct kevent &event, std::vector<Socket *> &sockets) const;
 };
 
 #endif
