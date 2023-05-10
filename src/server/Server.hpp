@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/10 15:49:26 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 16:03:44 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,12 @@
 #include <sstream>
 #include "Config.hpp"
 #include "Socket.hpp"
+
 struct ServerInfo
 {
     std::vector<int> port;
+    // Socket *socket;
+    std::vector<Socket *> sockets;
     size_t clientMaxBodySize;
     std::string serverName;
     std::string root;
@@ -31,9 +34,6 @@ struct ServerInfo
 class Server
 {
 private:
-    /* data */
-    std::vector<ServerInfo> server;
-    std::vector<*Socket> sockets;
     /*
      * Add it if you feel necessary additional member functions.
      */
@@ -46,6 +46,9 @@ private:
     std::string findRoot(std::vector<Directive> &serverBlock);
 
 public:
+    /* data */
+    std::vector<ServerInfo> server;
+
     /*
      * A default constructor
      */

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 14:34:18 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 16:18:33 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@ class Worker
 {
 private:
 	const int kq;
-	const Socket socket;
 	const Signal signal;
+	std::vector<Socket *> sockets;
 	std::vector<struct kevent> &event_list;
 	Config config;
 	Server server;
