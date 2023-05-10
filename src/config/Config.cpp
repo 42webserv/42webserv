@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/07 00:13:16 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/10 15:36:09 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,7 @@ void Config::_setRelation()
 	_http.insert(std::make_pair("include", "fail"));
 	_http.insert(std::make_pair("index", "index.html"));
 	_http.insert(std::make_pair("server", "fail"));
+	_http.insert(std::make_pair("cgi-bin", "helloworld.html"));
 
 	// server
 	_server.insert(std::make_pair("listen", "fail"));

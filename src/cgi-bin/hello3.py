@@ -50,6 +50,8 @@ print("	<title>TestCGI</title>")
 print("</head>")
 print("<body>")
 print("	<h1>Hello, World!</h1>")
+print("	<h2>aaaaaaaaaaaaa</h2>")
+
 form = cgi.FieldStorage()
 id = form.getvalue('id')
 name = form.getvalue('name')

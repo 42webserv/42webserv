@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/02 20:43:49 by yje               #+#    #+#             */
-/*   Updated: 2023/05/09 21:12:08 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/10 15:36:24 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@ int main()
     // std::string filepath = "/Users/han/42Seoul/webserv/src/cgi/";
 
     // std::string filename = "test.cgi";
-    std::string filename = "cgi-bin.html";
+    std::string filename = "helloworld.html";
     std::string filepath = "../../assets/html/";
     // std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
 
