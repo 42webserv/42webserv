@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 13:37:23 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/11 14:29:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,12 @@ void Worker::run()
 	int fd;
 	std::map<int, std::string> clients;
 	HTTPRequestParser parser;
+	HTTPRequest *result = NULL;
 
 	while (true)
 	{
 		// event_list	-> events we want to monitor
 		// event		-> events that were triggered
-		// HTTPRequest *result = NULL;
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
 		if (nevents == -1)
 		{
@@ -74,9 +74,6 @@ void Worker::run()
 							sockets[k]->disconnectClient(fd, clients);
 					}
 				}
-				HTTPRequest *result = parser.parse(clients[fd]);
-				if (sockets[k]->_port != 8080)
-					continue;
 				if (event.filter == EVFILT_READ)
 				{
 					if (fd == sockets[k]->server_fd)
@@ -94,6 +91,9 @@ void Worker::run()
 							clients[fd] += buf;
 							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 						}
+						result = parser.parse(clients[fd]);
+						if (sockets[k]->_port != parser.getPort(*result))
+							continue;
 						if (n < 1)
 						{
 							if (n < 0)
@@ -106,6 +106,10 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
+					if (!result)
+						result = parser.parse(clients[fd]);
+					if (sockets[k]->_port != parser.getPort(*result))
+						continue;
 					if (clients.find(fd) != clients.end())
 					{
 						if (result)
