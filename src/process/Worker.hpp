@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 15:19:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 16:20:20 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ private:
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	int getSuitableServer(int port);
+	std::string getRootDirectory(const HTTPRequest &request, ServerInfo &thisServer);
 
 public:
 	Worker(Master &master);
