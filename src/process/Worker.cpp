@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 18:14:59 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 19:14:38 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,13 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	}
 }
 
-Worker::~Worker() {}
+Worker::~Worker()
+{
+	for (size_t i = 0; i < sockets.size(); i++)
+	{
+		delete sockets[i];
+	}
+}
 
 void Worker::run()
 {
@@ -94,6 +100,7 @@ void Worker::run()
 						result = parser.parse(clients[fd]);
 						if (sockets[k]->_port != parser.getPort(*result))
 							continue;
+						std::cout << "hehehehehehehere" << std::endl;
 						if (n < 1)
 						{
 							if (n < 0)
@@ -117,6 +124,7 @@ void Worker::run()
 							// TODO: HTTP Response 구현
 							this->requestHandler(*result, fd);
 							delete result;
+							// result = NULL;
 						}
 						else
 							std::cout << "Failed to parse request" << std::endl;
@@ -138,6 +146,12 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_SIGNAL)
 					signal.handleEvent(event, sockets);
+				// if (result != NULL)
+				// {
+				// 	delete result;
+				// 	result = NULL;
+				// }
+				system("leaks webserv");
 			}
 		}
 	}
