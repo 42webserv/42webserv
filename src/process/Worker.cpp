@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 16:24:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 18:14:59 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,9 +152,18 @@ void Worker::run()
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
+	if (getSuitableServer(request.port) == -1)
+		return;
+	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
+	ServerInfo thisServer = this->server.server[nServer];
+	ResponseData *response = new ResponseData;
+	response->index = thisServer.index;
+	response->clientFd = client_fd;
+	response->root = getRootDirectory(request, thisServer);
+	response->resourcePath = response->root + (request.path == "/" ? "/" + thisServer.index : request.path);
 	if (request.method == "GET")
 	{
-		getResponse(request, client_fd);
+		getResponse(response);
 	}
 	else
 	{
@@ -164,6 +173,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		write(client_fd, response_header.c_str(), response_header.length());
 		write(client_fd, response_body.c_str(), response_body.length());
 	}
+	delete response;
 }
 
 /**
@@ -207,22 +217,16 @@ std::string Worker::getRootDirectory(const HTTPRequest &request, ServerInfo &thi
  * @param request 파싱된 HTTP 요청 메세지 구조체
  * @param client_fd 웹 소켓
  */
-void Worker::getResponse(const HTTPRequest &request, int client_fd)
+void Worker::getResponse(ResponseData *response)
 {
-	if (getSuitableServer(request.port) == -1)
-		return;
-	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
-	ServerInfo thisServer = this->server.server[nServer];
-	std::string root_dir = getRootDirectory(request, thisServer);
-	std::string resource_path = root_dir + (request.path == "/" ? "/" + thisServer.index : request.path);
-	std::ifstream resource_file(resource_path);
+	std::ifstream resource_file(response->resourcePath);
 	// 리소스를 찾지 못했다면 404페이지로 이동
 	if (!resource_file.good())
-		return errorResponse(client_fd);
+		return errorResponse(response->clientFd);
 
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;
-	std::istringstream iss(resource_path);
+	std::istringstream iss(response->resourcePath);
 	std::string token;
 	while (std::getline(iss, token, '.'))
 		tokens.push_back(token);
@@ -233,8 +237,8 @@ void Worker::getResponse(const HTTPRequest &request, int client_fd)
 	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
 								 std::istreambuf_iterator<char>());
 	std::string response_header = generateHeader(resource_content, contentType);
-	write(client_fd, response_header.c_str(), response_header.length());
-	write(client_fd, resource_content.c_str(), resource_content.length());
+	write(response->clientFd, response_header.c_str(), response_header.length());
+	write(response->clientFd, resource_content.c_str(), resource_content.length());
 }
 
 /**
