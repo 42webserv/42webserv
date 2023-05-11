@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/03 14:24:18 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 14:23:18 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 struct HTTPRequest
 {
     std::string method;
+    int port;
     std::string path;
     std::string http_version;
     std::map<std::string, std::string> headers;
@@ -65,7 +66,7 @@ public:
 
     HTTPRequest *parse(const std::string &data);
     std::string getContentType(const HTTPRequest &request);
-
+    int getPort(const HTTPRequest &result);
     void printResult(const HTTPRequest &request);
 };
 

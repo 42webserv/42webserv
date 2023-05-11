@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 17:12:42 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 14:29:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.server[i].port.size(); j++)
 		{
-			std::cout << server.server[i].port[j] << std::endl;
 			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
 		}
 	}
@@ -41,6 +40,7 @@ void Worker::run()
 	int fd;
 	std::map<int, std::string> clients;
 	HTTPRequestParser parser;
+	HTTPRequest *result = NULL;
 
 	while (true)
 	{
@@ -87,11 +87,13 @@ void Worker::run()
 						int n = 1;
 						while (0 < (n = read(fd, buf, sizeof(buf))))
 						{
-
 							buf[n] = '\0';
 							clients[fd] += buf;
 							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 						}
+						result = parser.parse(clients[fd]);
+						if (sockets[k]->_port != parser.getPort(*result))
+							continue;
 						if (n < 1)
 						{
 							if (n < 0)
@@ -104,9 +106,12 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
+					if (!result)
+						result = parser.parse(clients[fd]);
+					if (sockets[k]->_port != parser.getPort(*result))
+						continue;
 					if (clients.find(fd) != clients.end())
 					{
-						HTTPRequest *result = parser.parse(clients[fd]);
 						if (result)
 						{
 							// TODO: HTTP Response 구현
