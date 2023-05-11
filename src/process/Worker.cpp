@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 15:32:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 15:50:14 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,8 +194,12 @@ int Worker::getSuitableServer(int port)
  */
 void Worker::getResponse(const HTTPRequest &request, int client_fd)
 {
+	if (getSuitableServer(request.port) == -1)
+		return;
+	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
+	std::cout << "getResponse Server: " << nServer << std::endl;
 	// root_dir에 관한내용은 conf에서 가져옴
-	std::string root_dir = "./assets/html"; // Root directory for serving static files
+	std::string root_dir = this->server.server[nServer].root; // Root directory for serving static files
 	//.ico파일일 경우 임의로 이미지폴더로 이동
 	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
 		root_dir = "./assets/images";
