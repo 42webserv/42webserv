@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/10 20:30:26 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 16:02:37 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ struct ServerInfo
     size_t clientMaxBodySize;
     std::string serverName;
     std::string root;
+    std::string index;
     std::vector<Directive> location;
     std::map<int, std::string> errorPage;
 };
@@ -42,6 +43,7 @@ private:
      * Add it if you feel necessary additional member functions.
      */
     void setUpServer(std::vector<Directive> &servrBlock);
+    void setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &servrBlock);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     void setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     void setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
