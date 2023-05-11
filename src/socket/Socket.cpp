@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 16:51:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/10 20:51:11 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,6 @@ Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_
     server_addr.sin_addr.s_addr = INADDR_ANY;
     // TODO port는 server.port에서 받아야 함.
     server_addr.sin_port = htons(this->_port);
-    std::cout << this->_port << std::endl;
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         close(server_fd);

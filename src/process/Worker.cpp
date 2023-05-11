@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 17:12:42 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 13:37:23 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.server[i].port.size(); j++)
 		{
-			std::cout << server.server[i].port[j] << std::endl;
 			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
 		}
 	}
@@ -46,6 +45,7 @@ void Worker::run()
 	{
 		// event_list	-> events we want to monitor
 		// event		-> events that were triggered
+		// HTTPRequest *result = NULL;
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
 		if (nevents == -1)
 		{
@@ -74,6 +74,9 @@ void Worker::run()
 							sockets[k]->disconnectClient(fd, clients);
 					}
 				}
+				HTTPRequest *result = parser.parse(clients[fd]);
+				if (sockets[k]->_port != 8080)
+					continue;
 				if (event.filter == EVFILT_READ)
 				{
 					if (fd == sockets[k]->server_fd)
@@ -87,7 +90,6 @@ void Worker::run()
 						int n = 1;
 						while (0 < (n = read(fd, buf, sizeof(buf))))
 						{
-
 							buf[n] = '\0';
 							clients[fd] += buf;
 							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
@@ -106,7 +108,6 @@ void Worker::run()
 				{
 					if (clients.find(fd) != clients.end())
 					{
-						HTTPRequest *result = parser.parse(clients[fd]);
 						if (result)
 						{
 							// TODO: HTTP Response 구현
