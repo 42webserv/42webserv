@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 15:32:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 16:24:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,6 +187,21 @@ int Worker::getSuitableServer(int port)
 }
 
 /**
+ * 해당 서버의 root 경로를 반환. 요청이 favicon.ico 일 경우, 미리 지정한 이미지 경로 반환
+ *
+ * @param request 파싱된 HTTP 요청 메세지 구조체
+ * @param thisServer 현재 해당하는 서버
+ * @return 경로 문자열
+ */
+std::string Worker::getRootDirectory(const HTTPRequest &request, ServerInfo &thisServer)
+{
+	//.ico파일일 경우 임의로 이미지폴더로 이동
+	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
+		return "./assets/images";
+	return thisServer.root;
+}
+
+/**
  * GET request일 경우, response에 보내줄 리소스를 찾고 담긴 내용을 가져옴. 파일이 존재하지않으면 에러페이지 반환
  *
  * @param request 파싱된 HTTP 요청 메세지 구조체
@@ -194,12 +209,12 @@ int Worker::getSuitableServer(int port)
  */
 void Worker::getResponse(const HTTPRequest &request, int client_fd)
 {
-	// root_dir에 관한내용은 conf에서 가져옴
-	std::string root_dir = "./assets/html"; // Root directory for serving static files
-	//.ico파일일 경우 임의로 이미지폴더로 이동
-	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
-		root_dir = "./assets/images";
-	std::string resource_path = root_dir + (request.path == "/" ? "/index.html" : request.path);
+	if (getSuitableServer(request.port) == -1)
+		return;
+	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
+	ServerInfo thisServer = this->server.server[nServer];
+	std::string root_dir = getRootDirectory(request, thisServer);
+	std::string resource_path = root_dir + (request.path == "/" ? "/" + thisServer.index : request.path);
 	std::ifstream resource_file(resource_path);
 	// 리소스를 찾지 못했다면 404페이지로 이동
 	if (!resource_file.good())
