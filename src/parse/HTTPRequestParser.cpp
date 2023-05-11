@@ -54,8 +54,14 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->headers = headers_;
         request->body = body_;
         std::map<std::string, std::string>::iterator it = request->headers.find("Host");
-        size_t pos = it->second.find(":");
-        request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+        if (it != headers_.end())
+        {
+            size_t pos = it->second.find(":");
+            request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+        }
+        else
+            request->port = -1;
+        // printResult(*request);
         reset();
         return request;
     }
@@ -221,11 +227,16 @@ void HTTPRequestParser::printResult(const HTTPRequest &result)
 {
     std::cout << "Request method: " << result.method << std::endl;
     std::cout << "Request path: " << result.path << std::endl;
-    std::cout << "Request port: " << result.port << std::endl;
+    std::cout << "Request port: [" << result.port << "]" << std::endl;
     std::cout << "Request HTTP version: " << result.http_version << std::endl;
 
     for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
         std::cout << "Header: " << it->first << " = " << it->second << std::endl;
 
     std::cout << "Body: " << result.body << std::endl;
+}
+
+int HTTPRequestParser::getPort(const HTTPRequest &result)
+{
+    return result.port;
 }
