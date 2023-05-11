@@ -53,6 +53,9 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->http_version = http_version_;
         request->headers = headers_;
         request->body = body_;
+        std::map<std::string, std::string>::iterator it = request->headers.find("Host");
+        size_t pos = it->second.find(":");
+        request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
         reset();
         return request;
     }
@@ -218,6 +221,7 @@ void HTTPRequestParser::printResult(const HTTPRequest &result)
 {
     std::cout << "Request method: " << result.method << std::endl;
     std::cout << "Request path: " << result.path << std::endl;
+    std::cout << "Request port: " << result.port << std::endl;
     std::cout << "Request HTTP version: " << result.http_version << std::endl;
 
     for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
