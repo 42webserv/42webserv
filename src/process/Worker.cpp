@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 14:29:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 15:24:08 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,6 +151,8 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
+	std::cout << "requestHandler port: " << request.port << std::endl;
+	std::cout << getSuitableServer(request.port) << std::endl;
 	if (request.method == "GET")
 	{
 		getResponse(request, client_fd);
@@ -163,6 +165,26 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		write(client_fd, response_header.c_str(), response_header.length());
 		write(client_fd, response_body.c_str(), response_body.length());
 	}
+}
+
+/**
+ * 특정 포트번호가 몇 번째 서버에 위치하는지 찾아서 위치값 반환. 서버 내에서 포트번호를 찾지 못할경우 -1 반환
+ *
+ * @param port 위치 찾고싶은 포트번호
+ * @return 서버 위치
+ */
+int Worker::getSuitableServer(int port)
+{
+	std::vector<ServerInfo> serv = this->server.server;
+	for (size_t i = 0; i < serv.size(); i++)
+	{
+		for (size_t j = 0; j < serv[i].port.size(); j++)
+		{
+			if (serv[i].port[j] == port)
+				return static_cast<int>(i);
+		}
+	}
+	return -1;
 }
 
 /**
