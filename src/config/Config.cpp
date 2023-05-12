@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/12 14:24:34 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/12 18:30:46 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,6 @@ void Config::_setRelation()
 	_location.insert(std::make_pair("autoindex", "off"));
 	_location.insert(std::make_pair("limit_except", "fail"));
 	_location.insert(std::make_pair("return", "fail"));
-	_location.insert(std::make_pair("cgi_info", "fail"));
 };
 
 void Config::_setIncludes()
@@ -258,6 +257,29 @@ void Config::_checkChildes(std::vector<Directive> &block, std::map<std::string, 
 	}
 }
 
+void Config::_checkRepeatition(std::vector<Directive> directives, std::string parentName)
+{
+	for (size_t i = 0; i < directives.size() - 1; i++)
+	{
+		for (size_t k = i + 1; k < directives.size(); k++)
+		{
+			if (directives[i].name == "listen")
+				continue;
+			if (directives[i].name == "server")
+				continue;
+			if (directives[i].name == "location")
+				continue;
+			if (directives[i].name == "error_page")
+				continue;
+			if (directives[i].name == directives[k].name)
+			{
+				std::cerr << "Error: The same " << directives[i].name << " directive exists within " << parentName << " directive." << std::endl;
+				exit(1);
+			}
+		}
+	}
+}
+
 /*
  *	Block의 모든 에러 체크 함수
  *
@@ -288,6 +310,8 @@ void Config::_checkRealtion(std::vector<Directive> directive)
 		}
 		if (directive[i].block.empty())
 			continue;
+		else
+			_checkRepeatition(directive[i].block, directive[i].name);
 		Config::_checkRealtion(directive[i].block);
 	}
 }

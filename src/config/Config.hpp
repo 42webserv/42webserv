@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 23:15:29 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/12 18:29:57 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ private:
     void _checkRealtion(std::vector<Directive> directive);
     void _checkParent(std::string parentName, std::string rightPre, std::string blockName);
     void _checkChildes(std::vector<Directive> &block, std::map<std::string, std::string> &blockFormat, std::string prarentBlockName);
+    void _checkRepeatition(std::vector<Directive> directives, std::string parentName);
 
 protected:
     std::vector<Directive> _directives;
