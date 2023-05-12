@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/06 23:33:22 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/11 23:15:29 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,8 @@ private:
     void _setRelation();
     void _setIncludes();
     void _checkRealtion(std::vector<Directive> directive);
+    void _checkParent(std::string parentName, std::string rightPre, std::string blockName);
+    void _checkChildes(std::vector<Directive> &block, std::map<std::string, std::string> &blockFormat, std::string prarentBlockName);
 
 protected:
     std::vector<Directive> _directives;

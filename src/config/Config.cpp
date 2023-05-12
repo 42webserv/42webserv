@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/07 00:13:16 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/12 14:24:34 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,7 @@ void Config::_setRelation()
 	_http.insert(std::make_pair("include", "fail"));
 	_http.insert(std::make_pair("index", "index.html"));
 	_http.insert(std::make_pair("server", "fail"));
+	_http.insert(std::make_pair("client_max_body_size", "fail"));
 
 	// server
 	_server.insert(std::make_pair("listen", "fail"));
@@ -104,9 +105,11 @@ void Config::_setRelation()
 	// location
 	_location.insert(std::make_pair("root", "fail"));
 	_location.insert(std::make_pair("index", "fail"));
+	_location.insert(std::make_pair("client_max_body_size", "fail"));
 	_location.insert(std::make_pair("autoindex", "off"));
 	_location.insert(std::make_pair("limit_except", "fail"));
 	_location.insert(std::make_pair("return", "fail"));
+	_location.insert(std::make_pair("cgi_info", "fail"));
 };
 
 void Config::_setIncludes()
@@ -223,7 +226,40 @@ std::string Config::trim(const std::string &str)
 }
 
 /*
- *	지시자들의 상관 관계를 확인하는 함수
+ * 지시자들의 상관 관계를 확인하는 함수
+ *
+ */
+void Config::_checkParent(std::string parentName, std::string rightPre, std::string blockName)
+{
+	if (parentName != rightPre)
+	{
+		std::cerr << "Error: " << blockName << " directive must be in " << rightPre << " block" << std::endl;
+		exit(1);
+	}
+}
+
+/*
+ * 자식이 될 수 있는 지사자들을 체크한다.
+ */
+void Config::_checkChildes(std::vector<Directive> &block, std::map<std::string, std::string> &blockFormat, std::string prarentBlockName)
+{
+	std::map<std::string, std::string>::iterator it;
+
+	for (size_t j = 0; j < block.size(); j++)
+	{
+		it = blockFormat.find(block[j].name);
+		if (it == blockFormat.end())
+		{
+			std::cerr << "Error: " << block[j].name << " directive can not be in "
+					  << prarentBlockName
+					  << " block" << std::endl;
+			exit(1);
+		}
+	}
+}
+
+/*
+ *	Block의 모든 에러 체크 함수
  *
  *	directive : 확인할 지시자들
  */
@@ -231,21 +267,24 @@ void Config::_checkRealtion(std::vector<Directive> directive)
 {
 	for (size_t i = 0; i < directive.size(); i++)
 	{
+		if (directive[i].name == "main")
+		{
+			_checkChildes(directive[i].block, _main, "main");
+		}
+		if (directive[i].name == "http")
+		{
+			_checkParent(directive[i].pre_name, "main", "http");
+			_checkChildes(directive[i].block, _http, "http");
+		}
 		if (directive[i].name == "server")
 		{
-			if (directive[i].pre_name != "http")
-			{
-				std::cerr << "Error: server directive must be in http block" << std::endl;
-				exit(1);
-			}
+			_checkParent(directive[i].pre_name, "http", "server");
+			_checkChildes(directive[i].block, _server, "server");
 		}
 		if (directive[i].name == "location")
 		{
-			if (directive[i].pre_name != "server")
-			{
-				std::cerr << "Error: location directive must be in server block" << std::endl;
-				exit(1);
-			}
+			_checkParent(directive[i].pre_name, "server", "location");
+			_checkChildes(directive[i].block, _location, "location");
 		}
 		if (directive[i].block.empty())
 			continue;
