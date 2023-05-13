@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 18:55:58 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/13 16:43:20 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,11 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	}
 }
 
-Worker::~Worker() {}
+Worker::~Worker()
+{
+	for (size_t i = 0; i < sockets.size(); i++)
+		delete (sockets[i]);
+}
 
 void Worker::run()
 {
