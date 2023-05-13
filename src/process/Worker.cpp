@@ -189,6 +189,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else
 	{
+		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
 		std::string response_body = "Method not allowed";
 		std::string response_header = generateErrorHeader(405, response_body);
@@ -250,10 +251,12 @@ void Worker::getResponse(ResponseData *response)
 	{
 		if (!response->index.empty())
 		{
-			response->resourcePath = response->resourcePath + '/' +response->index;
+			response->resourcePath = response->root + '/' +response->index;
 			std::ifstream resource_file(response->resourcePath);
 			if (!resource_file.is_open())
+			{
 				return errorResponse(response->clientFd);
+			}
 		}
 		else
 			return errorResponse(response->clientFd);
@@ -329,14 +332,22 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	return oss.str();
 }
 
-bool tmp1(const HTTPRequest &request, ServerInfo &thisServer, size_t *idx)
+/**
+ * path중 location에 매칭되는게있는지 판단하고, 매칭되는게 몇번째 location인지 찾는다.
+ *
+ * @param request request 를 파싱완료한 구조체
+ * @param thisServer 현재 해당하는 서버
+ * @param idx 몇번째 location블록과 매칭되는지 값을 받아온다.
+ * @return 매칭된다면 true 그렇지않다면 false
+ */
+bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &idx)
 {
 	for (size_t i = 0; i < thisServer.location.size(); ++i)
 	{
 		thisServer.location[i].value.erase(thisServer.location[i].value.find_last_not_of(' ') + 1);
 		if (thisServer.location[i].value == request.path)
 		{
-			*idx = i;
+			idx = i;
 			return (true);
 		}
 	}
@@ -348,7 +359,7 @@ bool tmp1(const HTTPRequest &request, ServerInfo &thisServer, size_t *idx)
 		{
 			if (thisServer.location[i].value == tmp)
 			{
-				*idx = i;
+				idx = i;
 				return (true);
 			}
 		}
@@ -358,6 +369,14 @@ bool tmp1(const HTTPRequest &request, ServerInfo &thisServer, size_t *idx)
 	return (false);
 }
 
+/**
+ * ResponseDate구조체를 얻어옴. 만약 location과 일치한다면 location을 우선으로 가져옴
+ *
+ * @param request request 를 파싱완료한 구조체
+ * @param client_fd 웹 소켓
+ * @param thisServer 현재 해당하는 서버
+ * @return 전부 채워진 ResponseDate구조체
+ */
 ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer)
 {
 	ResponseData *response = new ResponseData;
@@ -365,7 +384,7 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 	response->clientFd = client_fd;
 	response->root = getRootDirectory(request, thisServer);
 	size_t i = 0;
-	if (tmp1(request, thisServer, &i))
+	if (matchLocation(request, thisServer, i))
 	{
 		for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
 		{
@@ -405,7 +424,42 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 			}
 		}
 	}
-	// response->resourcePath = response->root + (request.path == "/" ? "/" + thisServer.index : request.path);
-	response->resourcePath = response->root + (request.path == "/" ? "" : request.path);
+	response->resourcePath = response->root + request.path;
 	return (response);
+}
+
+
+
+//broad 페이지 작업중입니다...
+void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *dirPtr)
+{
+    dirent *file;
+    broadHtml << "<p>";
+    if ((file = readdir(dirPtr)) == NULL)
+        return;
+    broadHtml << "<a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a><p>";
+    recursionDir(path, broadHtml, dirPtr);
+    return;
+}
+
+void broad(const HTTPRequest &request, int client_fd, Config &config)
+{
+    std::stringstream broadHtml;
+    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
+    DIR *dirPtr = NULL;
+    std::string path = "/example"; // location + path로 교체예정
+    if ((dirPtr = opendir(path.c_str())) != NULL)
+    {
+        std::cout << "broad: location path err" << std::endl;
+        return;
+    }
+    recursionDir(path, broadHtml, dirPtr);
+    broadHtml << "</body></html>"
+    std::string tmp = broadHtml.str();
+    /* 헤더를 작성해주는과정 */
+    MimeTypesParser mime(config);
+    std::string contentType = mime.getMimeType("html");
+    std::string response_header = generateHeader(tmp, contentType);
+    write(client_fd, response_header.c_str(), response_header.length());
+    write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
 }
