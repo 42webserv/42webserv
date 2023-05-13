@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 19:14:38 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 13:24:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,6 @@ void Worker::run()
 							// TODO: HTTP Response 구현
 							this->requestHandler(*result, fd);
 							delete result;
-							// result = NULL;
 						}
 						else
 							std::cout << "Failed to parse request" << std::endl;
@@ -146,12 +145,7 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_SIGNAL)
 					signal.handleEvent(event, sockets);
-				// if (result != NULL)
-				// {
-				// 	delete result;
-				// 	result = NULL;
-				// }
-				system("leaks webserv");
+				// system("leaks webserv");
 			}
 		}
 	}
@@ -184,8 +178,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// 잘못된 메서드일경우
 		std::string response_body = "Method not allowed";
 		std::string response_header = generateErrorHeader(405, response_body);
-		write(client_fd, response_header.c_str(), response_header.length());
-		write(client_fd, response_body.c_str(), response_body.length());
+		write(response->clientFd, response_header.c_str(), response_header.length());
+		write(response->clientFd, response_body.c_str(), response_body.length());
 	}
 	delete response;
 }
