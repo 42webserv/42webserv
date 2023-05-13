@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 13:24:32 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 16:36:13 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,7 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 Worker::~Worker()
 {
 	for (size_t i = 0; i < sockets.size(); i++)
-	{
 		delete sockets[i];
-	}
 }
 
 void Worker::run()
