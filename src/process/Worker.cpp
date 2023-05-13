@@ -17,6 +17,7 @@
 #include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
 #include "MimeTypesParser.hpp"
+#include <sys/stat.h>
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
@@ -181,12 +182,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		return;
 	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
 	ServerInfo thisServer = this->server.server[nServer];
-	ResponseData *response = new ResponseData;
-	response->index = thisServer.index;
-	response->clientFd = client_fd;
-	response->root = getRootDirectory(request, thisServer);
-	response->resourcePath = response->root + (request.path == "/" ? "/" + thisServer.index : request.path);
-	if (request.method == "GET")
+	ResponseData *response = getResponseData(request, client_fd, thisServer);
+	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
 	{
 		getResponse(response);
 	}
@@ -228,7 +225,7 @@ int Worker::getSuitableServer(int port)
  * @param thisServer 현재 해당하는 서버
  * @return 경로 문자열
  */
-std::string Worker::getRootDirectory(const HTTPRequest &request, ServerInfo &thisServer)
+std::string Worker::getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer)
 {
 	//.ico파일일 경우 임의로 이미지폴더로 이동
 	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
@@ -244,11 +241,24 @@ std::string Worker::getRootDirectory(const HTTPRequest &request, ServerInfo &thi
  */
 void Worker::getResponse(ResponseData *response)
 {
-	std::ifstream resource_file(response->resourcePath);
+	struct stat st;
+    const char* path = response->resourcePath.c_str();
+    if (!stat(path, &st)) 
+        std::cerr << "Failed to get information about " << path << std::endl;
 	// 리소스를 찾지 못했다면 404페이지로 이동
-	if (!resource_file.good())
-		return errorResponse(response->clientFd);
-
+	if (!S_ISREG(st.st_mode))
+	{
+		if (!response->index.empty())
+		{
+			response->resourcePath = response->resourcePath + '/' +response->index;
+			std::ifstream resource_file(response->resourcePath);
+			if (!resource_file.is_open())
+				return errorResponse(response->clientFd);
+		}
+		else
+			return errorResponse(response->clientFd);
+	}
+	std::ifstream resource_file(response->resourcePath);
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;
 	std::istringstream iss(response->resourcePath);
@@ -258,12 +268,12 @@ void Worker::getResponse(ResponseData *response)
 	std::string extension = tokens.back();
 	MimeTypesParser mime(this->config);
 	std::string contentType = mime.getMimeType(extension);
-
 	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
 								 std::istreambuf_iterator<char>());
 	std::string response_header = generateHeader(resource_content, contentType);
 	write(response->clientFd, response_header.c_str(), response_header.length());
 	write(response->clientFd, resource_content.c_str(), resource_content.length());
+	resource_file.close();
 }
 
 /**
@@ -317,4 +327,85 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	oss << "Content-Type: text/html\r\n";
 	oss << "Connection: close\r\n\r\n";
 	return oss.str();
+}
+
+bool tmp1(const HTTPRequest &request, ServerInfo &thisServer, size_t *idx)
+{
+	for (size_t i = 0; i < thisServer.location.size(); ++i)
+	{
+		thisServer.location[i].value.erase(thisServer.location[i].value.find_last_not_of(' ') + 1);
+		if (thisServer.location[i].value == request.path)
+		{
+			*idx = i;
+			return (true);
+		}
+	}
+	size_t pos = request.path.rfind('/');
+	while (pos != std::string::npos)
+	{
+		std::string tmp = request.path.substr(0, pos); //
+		for (size_t i = 0; i < thisServer.location.size(); ++i)
+		{
+			if (thisServer.location[i].value == tmp)
+			{
+				*idx = i;
+				return (true);
+			}
+		}
+		tmp = tmp.erase(pos);
+		pos = tmp.rfind('/');
+	}
+	return (false);
+}
+
+ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer)
+{
+	ResponseData *response = new ResponseData;
+	response->index = thisServer.index;
+	response->clientFd = client_fd;
+	response->root = getRootDirectory(request, thisServer);
+	size_t i = 0;
+	if (tmp1(request, thisServer, &i))
+	{
+		for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
+		{
+			if (thisServer.location[i].block[j].name == "root")
+				response->root = thisServer.location[i].block[j].value;
+			else if (thisServer.location[i].block[j].name == "index")
+				response->index = thisServer.location[i].block[j].value;
+			// else if (thisServer.location[i].block[j].name == "autoindex") //켜져있다면 동적으로 index를 만들어야함
+			// 	thisServer.location[i].block[j].value == "on" ? :
+			else if (thisServer.location[i].block[j].name == "limit_except")
+			{
+				size_t pos = thisServer.location[i].block[j].value.find(' ');
+				size_t start = 0;
+				while (pos != std::string::npos)
+				{
+					std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
+					response->limit_except.push_back(tmp);
+					start = pos;
+					while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
+						start++;
+					pos = thisServer.location[i].block[j].value.find(' ', start);
+				}
+				std::string tmp = thisServer.location[i].block[j].value.substr(start);
+				response->limit_except.push_back(tmp);
+			}
+			else if (thisServer.location[i].block[j].name == "return")
+			{
+				size_t pos = thisServer.location[i].block[j].value.find(' ');
+				size_t start = 0;
+				std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
+				response->return_state = tmp;
+				start = pos;
+				while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
+					start++;
+				tmp = thisServer.location[i].block[j].value.substr(start);
+				response->redirect = tmp;
+			}
+		}
+	}
+	// response->resourcePath = response->root + (request.path == "/" ? "/" + thisServer.index : request.path);
+	response->resourcePath = response->root + (request.path == "/" ? "" : request.path);
+	return (response);
 }
