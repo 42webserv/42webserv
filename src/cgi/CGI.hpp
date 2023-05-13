@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   CGI.hpp                                            :+:      :+:    :+:   */
+/*   Cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/05/10 17:28:36 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/13 18:48:32 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ public:
 	void setEnv(const std::map<std::string, std::string> &env);
 	CGI(const std::string &cgi_path);
 	bool isCgiPath(void) const;
+	// void deleteEnvp(char** envp) const;
+	// void	tofile(std::string path);
 	// int getFileDescriptor(int fdIndex) const;
 	// getenv(const char *env);
 

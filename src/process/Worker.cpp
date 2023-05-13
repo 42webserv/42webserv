@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 17:12:42 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 18:18:1737:03 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,9 +146,20 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-	if (request.method == "GET")
-	{
-		getResponse(request, client_fd);
+
+    if (request.method == "GET")
+    {
+        if (isCGIRequest(request))
+        {
+			CGI cgi("hello.py");
+			std::string cgiPath = extractCGIPath(request);
+			std::cout << "aaaaaaaaaaa   " << cgiPath << std::endl;
+            cgi.excuteCGI(cgiPath);
+        }
+        else
+        {
+            getResponse(request, client_fd);
+        }
 	}
 	if (request.method == "POST")
 	{
@@ -161,6 +172,16 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		write(client_fd, response_header.c_str(), response_header.length());
 		write(client_fd, response_body.c_str(), response_body.length());
 	}
+}
+
+bool Worker::isCGIRequest(const HTTPRequest &request)
+{
+    // 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
+    // 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
+    // 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
+    // return request.find(".py") != std::string::npos;
+	(void) request;
+	return true;
 }
 
 /**
@@ -250,4 +271,17 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	oss << "Content-Type: text/html\r\n";
 	oss << "Connection: close\r\n\r\n";
 	return oss.str();
+}
+
+// CGI 처리
+
+std::string Worker::extractCGIPath(const HTTPRequest &request)
+{
+    // CGI 경로 추출 로직을 구현합니다.
+    // 예를 들어, 요청 URL에서 경로 부분을 추출하는 방식으로 구현할 수 있습니다.
+    // 추출된 경로를 반환합니다.
+    // 예: http://example.com/cgi-bin/cgi_program.cgi
+    // 추출된 경로: /cgi-bin/cgi_program.cgi
+    std::string cgiPath = request.path.substr(request.path.find("/cgi-bin/"));
+    return cgiPath;
 }
