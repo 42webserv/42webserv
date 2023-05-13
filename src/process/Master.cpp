@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Master.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 15:40:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 21:16:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <unistd.h>
 #include "Master.hpp"
+#include "DefaultConfig.hpp"
+#include "ParsedConfig.hpp"
 
 Master::Master(int argc, char const *argv[]) : kq(kqueue())
 {
@@ -29,6 +31,7 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 
 Master::~Master()
 {
+	delete config;
 	close(kq);
 }
 
