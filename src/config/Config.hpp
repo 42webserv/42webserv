@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/06 23:33:22 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/13 16:39:52 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
  * 지시자들의 상관 관계를 정리하기 위해서 만든 구조체
  *
  */
-
 typedef struct s_location_default
 {
     std::string root;         // 필수
@@ -60,13 +59,21 @@ private:
     Directive _parseDirective(const std::string &line);
     void _setBlock(std::ifstream &infile, std::vector<Directive> &directive, std::string pre_name);
     std::string trim(const std::string &str);
+    std::vector<std::string> split(std::string input, char delimiter);
     std::map<std::string, std::string> _main;
     std::map<std::string, std::string> _http;
     std::map<std::string, std::string> _server;
     std::map<std::string, std::string> _location;
     void _setRelation();
     void _setIncludes();
-    void _checkRealtion(std::vector<Directive> directive);
+    void _checkRealtion(std::vector<Directive> &directive);
+    void _checkParent(std::string &parentName, std::string rightPre, std::string blockName) const;
+    void _checkChildes(std::vector<Directive> &block, std::map<std::string, std::string> &blockFormat, std::string prarentBlockName);
+    void _checkRepeatition(std::vector<Directive> &directives, std::string &parentName);
+    void _checkValidValue(std::vector<Directive> &directives);
+    void _checkEmpty(std::string &value, std::string directiveName, bool exist);
+    bool _isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName);
+    bool _isDirectoryExists(const std::string &directoryPath, std::string directiveName);
 
 protected:
     std::vector<Directive> _directives;
