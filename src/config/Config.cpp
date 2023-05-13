@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/12 18:30:46 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/13 16:40:30 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include "Config.hpp"
 #include "CheckConfigValid.hpp"
 #include <exception>
+#include <sys/stat.h>
+#include <sstream>
 
 Config::Config()
 {
@@ -101,6 +103,7 @@ void Config::_setRelation()
 	_server.insert(std::make_pair("client_max_body_size", "fail"));
 	_server.insert(std::make_pair("root", "fail"));
 	_server.insert(std::make_pair("location", "fail"));
+	_server.insert(std::make_pair("index", "fail"));
 
 	// location
 	_location.insert(std::make_pair("root", "fail"));
@@ -228,7 +231,7 @@ std::string Config::trim(const std::string &str)
  * 지시자들의 상관 관계를 확인하는 함수
  *
  */
-void Config::_checkParent(std::string parentName, std::string rightPre, std::string blockName)
+void Config::_checkParent(std::string &parentName, std::string rightPre, std::string blockName) const
 {
 	if (parentName != rightPre)
 	{
@@ -257,7 +260,10 @@ void Config::_checkChildes(std::vector<Directive> &block, std::map<std::string, 
 	}
 }
 
-void Config::_checkRepeatition(std::vector<Directive> directives, std::string parentName)
+/*
+ * 중복되면 안되는 지시자들 확인
+ */
+void Config::_checkRepeatition(std::vector<Directive> &directives, std::string &parentName)
 {
 	for (size_t i = 0; i < directives.size() - 1; i++)
 	{
@@ -280,12 +286,198 @@ void Config::_checkRepeatition(std::vector<Directive> directives, std::string pa
 	}
 }
 
+std::vector<std::string> Config::split(std::string input, char delimiter)
+{
+	std::vector<std::string> answer;
+	std::stringstream ss(input);
+	std::string temp;
+
+	while (std::getline(ss, temp, delimiter))
+	{
+		answer.push_back(temp);
+	}
+
+	return answer;
+}
+
+bool Config::_isDirectoryExists(const std::string &directoryPath, std::string directiveName)
+{
+	struct stat dirStat;
+	if (stat(directoryPath.c_str(), &dirStat) == 0 && S_ISDIR(dirStat.st_mode))
+	{
+		return true;
+	}
+	std::cerr << "Error: " << directiveName << " value must be directory " << std::endl;
+	exit(1);
+	return false;
+}
+
+bool Config::_isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName)
+{
+	std::string root = "";
+	for (size_t k = 0; k < directives.size(); k++)
+	{
+		if (directives[k].name == "root")
+		{
+			root = directives[k].value;
+			break;
+		}
+	}
+	if (filePath[0] != '/' && root != "")
+		root += "/";
+	root += filePath;
+	struct stat fileStat;
+	if (stat(root.c_str(), &fileStat) == 0 && S_ISREG(fileStat.st_mode))
+	{
+		return true;
+	}
+	std::cerr << "Error: " << directiveName << " value must be file " << std::endl;
+	exit(1);
+	return false;
+}
+
+void Config::_checkEmpty(std::string &value, std::string directiveName, bool exist)
+{
+	if (value == "" && exist)
+	{
+		std::cerr << "Error: " << directiveName << " value must be not empty" << std::endl;
+		exit(1);
+	}
+	if (value != "" && !exist)
+	{
+		std::cerr << "Error: " << directiveName << " value must be empty" << std::endl;
+		exit(1);
+	}
+}
+
+void Config::_checkValidValue(std::vector<Directive> &directives)
+{
+	for (size_t i = 0; i < directives.size(); i++)
+	{
+		if (directives[i].name == "http")
+			_checkEmpty(directives[i].value, "http", false);
+		if (directives[i].name == "types")
+			_checkEmpty(directives[i].value, "types", false);
+		if (directives[i].name == "server")
+			_checkEmpty(directives[i].value, "server", false);
+		if (directives[i].name == "include")
+		{
+			_checkEmpty(directives[i].value, "include", true);
+			_isFileExists(directives, directives[i].value, "include");
+		}
+		if (directives[i].name == "server_name")
+			_checkEmpty(directives[i].value, "server_name", true);
+		if (directives[i].name == "listen")
+		{
+			_checkEmpty(directives[i].value, "listen", true);
+			for (size_t j = 0; j < directives[i].value.size(); j++)
+			{
+				if (directives[i].value[j] < '0' || directives[i].value[j] > '9')
+				{
+					std::cerr << "Error: listen value must be number" << std::endl;
+					exit(1);
+				}
+			}
+		}
+		if (directives[i].name == "location")
+			_checkEmpty(directives[i].value, "location", true);
+		if (directives[i].name == "root")
+		{
+			_checkEmpty(directives[i].value, "root", true);
+			_isDirectoryExists(directives[i].value, "root");
+		}
+		if (directives[i].name == "error_page")
+		{
+			_checkEmpty(directives[i].value, "error_page", true);
+			std::vector<std::string> errorPage = split(directives[i].value, ' ');
+			if (errorPage.size() < 2) // 여러개 들어와도 처리하도록 해놔야한다.
+			{
+				std::cerr << "Error: error_page value must be number or file" << std::endl;
+				exit(1);
+			}
+			for (size_t j = 0; j < errorPage.size() - 1; j++)
+			{
+				for (size_t k = 0; k < errorPage[j].length(); k++)
+				{
+					if (errorPage[j][k] < '0' || errorPage[j][k] > '9')
+					{
+						std::cerr << "Error: error_page errorCode must be number" << std::endl;
+						exit(1);
+					}
+				}
+			}
+
+			_isFileExists(directives, errorPage[errorPage.size() - 1], "error_page");
+		}
+		if (directives[i].name == "client_max_body_size")
+		{
+			_checkEmpty(directives[i].value, "client_max_body_size", true);
+			for (size_t j = 0; j < directives[i].value.size(); j++)
+			{
+				if (directives[i].value[j] < '0' || directives[i].value[j] > '9')
+				{
+					std::cerr << "Error: client_max_body_size value must be number" << std::endl;
+					exit(1);
+				}
+			}
+		}
+		if (directives[i].name == "autoindex")
+		{
+			_checkEmpty(directives[i].value, "autoindex", true);
+			if (directives[i].value != "on" && directives[i].value != "off")
+			{
+				std::cerr << "Error: autoindex value must be on or off" << std::endl;
+				exit(1);
+			}
+		}
+		if (directives[i].name == "index")
+		{
+			_checkEmpty(directives[i].value, "index", true);
+			_isFileExists(directives, directives[i].value, "index");
+		}
+		if (directives[i].name == "limit_except")
+		{
+			_checkEmpty(directives[i].value, "limit_except", true);
+			std::vector<std::string> excepts = split(directives[i].value, ' ');
+			for (size_t i = 0; i < excepts.size(); i++)
+			{
+				if (excepts[i] != "GET" && excepts[i] != "POST" && excepts[i] != "DELETE")
+				{
+					std::cerr << "Error: limit_except value must be GET or POST or DELETE" << std::endl;
+					exit(1);
+				}
+			}
+		}
+		if (directives[i].name == "return")
+		{
+			_checkEmpty(directives[i].value, "return", true);
+			std::vector<std::string> returns = split(directives[i].value, ' ');
+			if (returns.size() != 2)
+			{
+				std::cerr << "Error: return value must be number or file" << std::endl;
+				exit(1);
+			}
+			for (size_t j = 0; j < returns[0].size(); j++)
+			{
+				if (returns[0][j] < '0' || returns[0][j] > '9')
+				{
+					std::cerr << "Error: return errorCode must be number" << std::endl;
+					exit(1);
+				}
+			}
+			// _isFileExists(returns[1], "return"); // return 같은 경우는 파일이 아니여도 되는거 같은데?
+		}
+		if (directives[i].block.empty())
+			continue;
+	}
+}
+
 /*
  *	Block의 모든 에러 체크 함수
  *
  *	directive : 확인할 지시자들
  */
-void Config::_checkRealtion(std::vector<Directive> directive)
+void Config::_checkRealtion(std::vector<Directive> &directive)
 {
 	for (size_t i = 0; i < directive.size(); i++)
 	{
@@ -314,4 +506,5 @@ void Config::_checkRealtion(std::vector<Directive> directive)
 			_checkRepeatition(directive[i].block, directive[i].name);
 		Config::_checkRealtion(directive[i].block);
 	}
+	_checkValidValue(directive);
 }
