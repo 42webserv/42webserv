@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 20:51:11 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/11 17:19:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <vector>
 #include "Socket.hpp"
 #include "common_error.hpp"
 
@@ -56,7 +55,7 @@ Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_
 
     EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     event_list.push_back(event);
-
+    clientFds.push_back(server_fd);
     std::cout << "Server listening on port " << this->_port << std::endl;
 }
 
@@ -65,7 +64,7 @@ Socket::~Socket()
     close(server_fd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list) const
+int Socket::handleEvent(std::vector<struct kevent> &event_list)
 {
     socklen_t addrlen = sizeof(server_addr);
     struct sockaddr_in client_addr;
@@ -81,13 +80,15 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list) const
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     event_list.push_back(new_event);
+    clientFds.push_back(client_fd);
     return client_fd;
 }
 
 // TODO 이게 server랑 물려있는 client란 걸 어떻게 알까?
 // 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
-void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients) const
+void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients)
 {
     close(client_fd);
     clients.erase(client_fd);
+    clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
 }
