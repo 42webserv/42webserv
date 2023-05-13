@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 16:51:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 17:19:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <vector>
 #include "Socket.hpp"
 #include "common_error.hpp"
 
@@ -41,7 +40,6 @@ Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_
     server_addr.sin_addr.s_addr = INADDR_ANY;
     // TODO port는 server.port에서 받아야 함.
     server_addr.sin_port = htons(this->_port);
-    std::cout << this->_port << std::endl;
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         close(server_fd);
@@ -57,7 +55,7 @@ Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_
 
     EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     event_list.push_back(event);
-
+    clientFds.push_back(server_fd);
     std::cout << "Server listening on port " << this->_port << std::endl;
 }
 
@@ -66,7 +64,7 @@ Socket::~Socket()
     close(server_fd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list) const
+int Socket::handleEvent(std::vector<struct kevent> &event_list)
 {
     socklen_t addrlen = sizeof(server_addr);
     struct sockaddr_in client_addr;
@@ -82,13 +80,15 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list) const
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     event_list.push_back(new_event);
+    clientFds.push_back(client_fd);
     return client_fd;
 }
 
 // TODO 이게 server랑 물려있는 client란 걸 어떻게 알까?
 // 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
-void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients) const
+void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients)
 {
     close(client_fd);
     clients.erase(client_fd);
+    clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
 }
