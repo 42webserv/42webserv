@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 18:18:1737:03 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/13 16:43:20 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,13 +25,16 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.server[i].port.size(); j++)
 		{
-			std::cout << server.server[i].port[j] << std::endl;
 			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
 		}
 	}
 }
 
-Worker::~Worker() {}
+Worker::~Worker()
+{
+	for (size_t i = 0; i < sockets.size(); i++)
+		delete (sockets[i]);
+}
 
 void Worker::run()
 {
@@ -41,6 +44,7 @@ void Worker::run()
 	int fd;
 	std::map<int, std::string> clients;
 	HTTPRequestParser parser;
+	HTTPRequest *result = NULL;
 
 	while (true)
 	{
@@ -60,6 +64,7 @@ void Worker::run()
 			{
 				event = events[i];
 				fd = event.ident;
+				std::vector<int>::iterator found;
 
 				if (event.flags & EV_ERROR)
 				{
@@ -76,6 +81,18 @@ void Worker::run()
 				}
 				if (event.filter == EVFILT_READ)
 				{
+					found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+					if (found == sockets[k]->clientFds.end())
+						continue;
+
+					// 돌아가는 방식 보고 싶을때
+
+					// std::cout << fd << " 의 Read event  소켓 포트 번호는 " << sockets[k]->_port << std::endl;
+					// std::cout << "그리고 socket에 저장되어있는 fd들은 [";
+					// for (size_t i = 0; i < sockets[k]->clientFds.size(); i++)
+					// 	std::cout << sockets[k]->clientFds[i] << ", ";
+					// std::cout << "]" << std::endl;
+
 					if (fd == sockets[k]->server_fd)
 					{
 						int client_fd = sockets[k]->handleEvent(event_list);
@@ -87,15 +104,15 @@ void Worker::run()
 						int n = 1;
 						while (0 < (n = read(fd, buf, sizeof(buf))))
 						{
-
 							buf[n] = '\0';
 							clients[fd] += buf;
-							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 						}
 						if (n < 1)
 						{
-							if (n < 0)
-								std::cerr << "Client read error!" << '\n';
+							// if (n < 0) // 여기 들어온다는 것은 읽지 못하는 것을 읽었다는 뜻인데 그럼...
+							// 	std::cerr << "Client read error!" << '\n';
+							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+
 							struct kevent new_event;
 							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 							event_list.push_back(new_event);
@@ -104,9 +121,21 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
+					found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+					if (found == sockets[k]->clientFds.end())
+						continue;
+
+					// 돌아가는 방식 보고 싶을때
+
+					// std::cout << fd << " 의 Write event  소켓 포트 번호는 " << sockets[k]->_port << std::endl;
+					// std::cout << "그리고 socket에 저장되어있는 fd들은 [";
+					// for (size_t i = 0; i < sockets[k]->clientFds.size(); i++)
+					// 	std::cout << sockets[k]->clientFds[i] << ", ";
+					// std::cout << "]" << std::endl;
+
+					result = parser.parse(clients[fd]);
 					if (clients.find(fd) != clients.end())
 					{
-						HTTPRequest *result = parser.parse(clients[fd]);
 						if (result)
 						{
 							// TODO: HTTP Response 구현
@@ -147,19 +176,19 @@ void Worker::run()
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 
-    if (request.method == "GET")
-    {
-        if (isCGIRequest(request))
-        {
+	if (request.method == "GET")
+	{
+		if (isCGIRequest(request))
+		{
 			CGI cgi("hello.py");
 			std::string cgiPath = extractCGIPath(request);
 			std::cout << "aaaaaaaaaaa   " << cgiPath << std::endl;
-            cgi.excuteCGI(cgiPath);
-        }
-        else
-        {
-            getResponse(request, client_fd);
-        }
+			cgi.excuteCGI(cgiPath);
+		}
+		else
+		{
+			getResponse(request, client_fd);
+		}
 	}
 	if (request.method == "POST")
 	{
@@ -176,11 +205,11 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 
 bool Worker::isCGIRequest(const HTTPRequest &request)
 {
-    // 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
-    // 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
-    // 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
-    // return request.find(".py") != std::string::npos;
-	(void) request;
+	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
+	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
+	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
+	// return request.find(".py") != std::string::npos;
+	(void)request;
 	return true;
 }
 
@@ -277,11 +306,11 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 
 std::string Worker::extractCGIPath(const HTTPRequest &request)
 {
-    // CGI 경로 추출 로직을 구현합니다.
-    // 예를 들어, 요청 URL에서 경로 부분을 추출하는 방식으로 구현할 수 있습니다.
-    // 추출된 경로를 반환합니다.
-    // 예: http://example.com/cgi-bin/cgi_program.cgi
-    // 추출된 경로: /cgi-bin/cgi_program.cgi
-    std::string cgiPath = request.path.substr(request.path.find("/cgi-bin/"));
-    return cgiPath;
+	// CGI 경로 추출 로직을 구현합니다.
+	// 예를 들어, 요청 URL에서 경로 부분을 추출하는 방식으로 구현할 수 있습니다.
+	// 추출된 경로를 반환합니다.
+	// 예: http://example.com/cgi-bin/cgi_program.cgi
+	// 추출된 경로: /cgi-bin/cgi_program.cgi
+	std::string cgiPath = request.path.substr(request.path.find("/cgi-bin/"));
+	return cgiPath;
 }

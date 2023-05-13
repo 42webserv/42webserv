@@ -49,8 +49,8 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 			$(addprefix $(DIR_PROCESS)/,	$(SRC_PROCESS))	\
 			$(addprefix $(DIR_SOCKET)/,		$(SRC_SOCKET))	\
 			$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS)) \
-			$(addprefix $(DIR_CGI)/,		$(SRC_CGI))) \
-			$(addprefix $(DIR_SERVER)/,		$(SRC_SERVER))
+			$(addprefix $(DIR_CGI)/,		$(SRC_CGI)) \
+			$(addprefix $(DIR_SERVER)/,		$(SRC_SERVER)))
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
 # CXXFLAGS	= -std=c++98 -g3

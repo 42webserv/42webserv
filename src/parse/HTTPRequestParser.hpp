@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 16:36:55 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/13 17:18:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 struct HTTPRequest
 {
     std::string method;
+    int port;
     std::string path;
     std::string http_version;
     std::map<std::string, std::string> headers;
@@ -30,8 +31,7 @@ struct HTTPRequest
     std::string query;
     std::string addr;
     std::string name;
-    std::string port;
-//  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
+    //  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
 };
 
 class HTTPRequestParser
@@ -74,7 +74,7 @@ public:
 
     HTTPRequest *parse(const std::string &data);
     std::string getContentType(const HTTPRequest &request);
-
+    int getPort(const HTTPRequest &result);
     void printResult(const HTTPRequest &request);
 };
 

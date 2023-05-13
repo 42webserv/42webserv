@@ -91,33 +91,33 @@ char **CGI::ENVPChangeStringArray()
 	return envp;
 }
 
-	// void Cgi::tofile(std::string path)
-	// {
-	//     std::stringstream ss;
-	//     std::ifstream ifs(path, std::ifstream::in);
-	//     std::string response;
-	//     std::string str;
+// void Cgi::tofile(std::string path)
+// {
+//     std::stringstream ss;
+//     std::ifstream ifs(path, std::ifstream::in);
+//     std::string response;
+//     std::string str;
 
-	//     ss << ifs.rdbuf();
-	//     str = ss.str();
-	//     ss.clear();
-	//     ss.str("");
-	//     std::string res = str;
-	//     size_t pos = str.find("\r\n\r\n");
-	//     if (pos != std::string::npos)
-	//     {
-	//         res = str.substr(pos + 4, str.length() - (pos + 4));
-	//     }
-	//     ss << res.length();
-	// 	response += "HTTP/1.1 " + (std::string)"200" + " " + "ok" + "\r\n";
-	// 	response += "Content-Length: " + ss.str() + "\r\n";
-	// 	response += "Server: webserv\r\n";
-	//     // if ("py")//경로가 맞으면
-	//   	response += "Content-Type: text/html\r\n\r\n";
-	// 	response += str;
-	//     ifs.close();
-	//     this->cont->setResponse(response);
-	// }
+//     ss << ifs.rdbuf();
+//     str = ss.str();
+//     ss.clear();
+//     ss.str("");
+//     std::string res = str;
+//     size_t pos = str.find("\r\n\r\n");
+//     if (pos != std::string::npos)
+//     {
+//         res = str.substr(pos + 4, str.length() - (pos + 4));
+//     }
+//     ss << res.length();
+// 	response += "HTTP/1.1 " + (std::string)"200" + " " + "ok" + "\r\n";
+// 	response += "Content-Length: " + ss.str() + "\r\n";
+// 	response += "Server: webserv\r\n";
+//     // if ("py")//경로가 맞으면
+//   	response += "Content-Type: text/html\r\n\r\n";
+// 	response += str;
+//     ifs.close();
+//     this->cont->setResponse(response);
+// }
 
 /**
  * cgi 실행
@@ -128,10 +128,10 @@ char **CGI::ENVPChangeStringArray()
  * @param filefd[2] 새로운 파일 디스크립터를 저장하는 변수입니다. pipe() 함수를 사용하여 파이프를 열면, 새로운 파일 디스크립터가 반환.
  */
 
-void leaks()
-{
-	system("leaks a.out");
-}
+// void leaks()
+// {
+// 	system("leaks a.out");
+// }
 
 std::string CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
 {
@@ -220,13 +220,14 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 	close(oldFD[1]);
 	// delete envp
 	// tofile(body);
-	for (int i = 0; envp[i]; ++i) {
+	for (int i = 0; envp[i]; ++i)
+	{
 		delete[] envp[i];
 	}
 	delete[] envp;
 	if (pid == 0)
 		exit(0);
-	atexit(leaks);
+	// atexit(leaks);
 	return (body);
 }
 
