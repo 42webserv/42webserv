@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/13 16:23:27 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/13 18:48:32 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,7 @@ Server::Server() {}
  */
 Server::Server(const Server &ref)
 {
-<<<<<<< HEAD
-    *this = ref;
-=======
     this->server = ref.server;
->>>>>>> develop
 }
 
 /*
@@ -36,11 +32,7 @@ Server &Server::operator=(const Server &ref)
 {
     if (this != &ref)
     {
-<<<<<<< HEAD
-        /* insert */
-=======
         this->server = ref.server;
->>>>>>> develop
     }
     return *this;
 }

@@ -3,22 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 16:18:33 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 18:50:03 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WORKER_HPP
 #define WORKER_HPP
 
+#include <iostream>
 #include "Master.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
 #include "Config.hpp"
-#include "Server.hpp"
+#include "server/Server.hpp"
 #include "HTTPRequestParser.hpp"
+#include "CGI.hpp"
 
 class Worker
 {
@@ -35,6 +37,10 @@ private:
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
+	bool isCGIRequest(const HTTPRequest &request);
+	std::string	extractCGIPath (const HTTPRequest &request);
+
+
 
 public:
 	Worker(Master &master);
