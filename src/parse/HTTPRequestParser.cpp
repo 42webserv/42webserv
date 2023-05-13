@@ -61,7 +61,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         }
         else
             request->port = -1;
-        // printResult(*request);
+        printResult(*request);
         reset();
         return request;
     }
@@ -148,7 +148,7 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos = buffer_.find("\r\n");
     if (pos == std::string::npos)
         return false;
-    std::string header_value = buffer_.substr(0, pos);
+    std::string header_value = buffer_.substr(1, pos);
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos + 2);
     if (buffer_.substr(0, 2) == "\r\n")
