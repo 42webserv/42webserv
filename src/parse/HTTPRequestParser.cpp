@@ -93,6 +93,9 @@ bool HTTPRequestParser::parsePath()
     path_ = buffer_.substr(0, pos);
     state_ = HTTP_VERSION;
     buffer_.erase(0, pos + 1);
+    pos = path_.find("?");
+    if (pos != std::string::npos)
+        query_ = path_.substr(pos);
     return true;
 }
 
@@ -142,6 +145,15 @@ bool HTTPRequestParser::parseHeaderValue()
     std::string header_value = buffer_.substr(0, pos);
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos + 2);
+    if (current_header_name_ == "Host")
+    {
+        pos = header_value.find(":");
+        if (pos != std::string::npos)
+        {
+            addr_ = header_value.substr(0, pos);
+            port_ = header_value.substr(pos);
+        }
+    }
     if (buffer_.substr(0, 2) == "\r\n")
     {
         buffer_.erase(0, 2);

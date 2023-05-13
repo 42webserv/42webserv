@@ -27,6 +27,11 @@ struct HTTPRequest
     std::string http_version;
     std::map<std::string, std::string> headers;
     std::string body;
+    std::string query;
+    std::string addr;
+    std::string name;
+    std::string port;
+//  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
 };
 
 class HTTPRequestParser
@@ -51,6 +56,10 @@ private:
     std::string body_;
     std::string buffer_;
     std::string current_header_name_;
+    std::string query_;
+    std::string addr_;
+    std::string name_;
+    std::string port_;
 
     bool parseMethod();
     bool parsePath();

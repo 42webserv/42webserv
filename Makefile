@@ -3,10 +3,17 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
+<<<<<<< HEAD
 #    By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
 #    Updated: 2023/05/10 17:30:48 by yje              ###   ########.fr        #
+=======
+#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
+#    Updated: 2023/05/09 20:11:05 by chanwjeo         ###   ########.fr        #
+>>>>>>> develop
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,20 +28,27 @@ DIR_PARSE	= parse
 DIR_PROCESS	= process
 DIR_SOCKET	= socket
 DIR_UTILS	= utils
+<<<<<<< HEAD
 DIR_CGI	= cgi
 
 
 SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARSE) $(DIR_PARSE)/HTTP $(DIR_PROCESS) $(DIR_SOCKET) $(DIR_UTILS) $(DIR_CGI)))
+=======
+DIR_SERVER	= server
+
+SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARSE) $(DIR_PARSE)/HTTP $(DIR_PROCESS) $(DIR_SOCKET) $(DIR_UTILS) $(DIR_SERVER)))
+>>>>>>> develop
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
 SRC_CONFIG	= Config CheckConfigValid
 SRC_ERROR	= common_error
-SRC_PARSE	= HTTPRequestParser HTTPResponse MimeTypesParser
+SRC_PARSE	= HTTPRequestParser MimeTypesParser
 SRC_PROCESS	= Master Worker
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
 SRC_CGI	= CGI
+SRC_SERVER	= Server
 
 ifeq (,$(findstring bonus,$(MAKECMDGOALS)))
 # SRC_WINDOW	+= draw_rt
@@ -50,7 +64,7 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 			$(addprefix $(DIR_SOCKET)/,		$(SRC_SOCKET))	\
 			$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS)) \
 			$(addprefix $(DIR_CGI)/,		$(SRC_CGI)))
-
+			$(addprefix $(DIR_SERVER)/,		$(SRC_SERVER))
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
 # CXXFLAGS	= -std=c++98 -g3
