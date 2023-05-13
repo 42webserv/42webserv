@@ -158,10 +158,7 @@ bool HTTPRequestParser::parseHeaderValue()
     {
         pos = header_value.find(":");
         if (pos != std::string::npos)
-        {
             addr_ = header_value.substr(0, pos);
-            port_ = header_value.substr(pos);
-        }
     }
     if (buffer_.substr(0, 2) == "\r\n")
     {
