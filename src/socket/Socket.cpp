@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 17:19:28 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/13 21:15:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,8 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
 // 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
 void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients)
 {
+    // TODO keep-alive면 안지운다. timeout도 해보기.
+    // disconnect하기 전에 이벤트 삭제도 등록하기.
     close(client_fd);
     clients.erase(client_fd);
     clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());

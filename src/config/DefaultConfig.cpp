@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 20:14:50 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/13 20:05:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,20 +136,11 @@ void addMainDirectives(Directive &main)
 	addHttpDirectives(main);
 }
 
-DefaultConfig::DefaultConfig()
+DefaultConfig::DefaultConfig(Config &config)
 {
-	this->directives.clear();
 	Directive main = newDir("main", "");
 
 	addMainDirectives(main);
-	this->directives.push_back(main);
 }
 
-DefaultConfig::~DefaultConfig()
-{
-	this->directives.clear();
-}
-
-void DefaultConfig::setDefaults()
-{
-}
+DefaultConfig::~DefaultConfig() {}
