@@ -61,7 +61,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         }
         else
             request->port = -1;
-        printResult(*request);
+        // printResult(*request);
         reset();
         return request;
     }

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 16:58:16 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/14 18:02:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,7 @@ void Worker::run()
 						{
 							// if (n < 0) // 여기 들어온다는 것은 읽지 못하는 것을 읽었다는 뜻인데 그럼...
 							// 	std::cerr << "Client read error!" << '\n';
-							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+							// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 
 							struct kevent new_event;
 							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -243,15 +243,15 @@ std::string Worker::getRootDirectory(const HTTPRequest &request, const ServerInf
 void Worker::getResponse(ResponseData *response)
 {
 	struct stat st;
-    const char* path = response->resourcePath.c_str();
-    if (!stat(path, &st)) 
-        std::cerr << "Failed to get information about " << path << std::endl;
+	const char *path = response->resourcePath.c_str();
+	if (!stat(path, &st))
+		std::cerr << "Failed to get information about " << path << std::endl;
 	// 리소스를 찾지 못했다면 404페이지로 이동
 	if (!S_ISREG(st.st_mode))
 	{
 		if (!response->index.empty())
 		{
-			response->resourcePath = response->root + '/' +response->index;
+			response->resourcePath = response->root + '/' + response->index;
 			std::ifstream resource_file(response->resourcePath);
 			if (!resource_file.is_open())
 			{
@@ -424,42 +424,42 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 			}
 		}
 	}
+	if (response->limit_except.size() == 0)
+		response->limit_except = thisServer.limitExcept;
 	response->resourcePath = response->root + request.path;
 	return (response);
 }
 
+// //broad 페이지 작업중입니다...
+// void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *dirPtr)
+// {
+//     dirent *file;
+//     broadHtml << "<p>";
+//     if ((file = readdir(dirPtr)) == NULL)
+//         return;
+//     broadHtml << "<a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a><p>";
+//     recursionDir(path, broadHtml, dirPtr);
+//     return;
+// }
 
-
-//broad 페이지 작업중입니다...
-void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *dirPtr)
-{
-    dirent *file;
-    broadHtml << "<p>";
-    if ((file = readdir(dirPtr)) == NULL)
-        return;
-    broadHtml << "<a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a><p>";
-    recursionDir(path, broadHtml, dirPtr);
-    return;
-}
-
-void broad(const HTTPRequest &request, int client_fd, Config &config)
-{
-    std::stringstream broadHtml;
-    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
-    DIR *dirPtr = NULL;
-    std::string path = "/example"; // location + path로 교체예정
-    if ((dirPtr = opendir(path.c_str())) != NULL)
-    {
-        std::cout << "broad: location path err" << std::endl;
-        return;
-    }
-    recursionDir(path, broadHtml, dirPtr);
-    broadHtml << "</body></html>"
-    std::string tmp = broadHtml.str();
-    /* 헤더를 작성해주는과정 */
-    MimeTypesParser mime(config);
-    std::string contentType = mime.getMimeType("html");
-    std::string response_header = generateHeader(tmp, contentType);
-    write(client_fd, response_header.c_str(), response_header.length());
-    write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
-}
+// void broad(const HTTPRequest &request, int client_fd, Config &config)
+// {
+//     std::stringstream broadHtml;
+//     broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
+//     DIR *dirPtr = NULL;
+//     std::string path = "/example"; // location + path로 교체예정
+//     if ((dirPtr = opendir(path.c_str())) != NULL)
+//     {
+//         std::cout << "broad: location path err" << std::endl;
+//         return;
+//     }
+//     recursionDir(path, broadHtml, dirPtr);
+//     broadHtml << "</body></html>"
+//     std::string tmp = broadHtml.str();
+//     /* 헤더를 작성해주는과정 */
+//     MimeTypesParser mime(config);
+//     std::string contentType = mime.getMimeType("html");
+//     std::string response_header = generateHeader(tmp, contentType);
+//     write(client_fd, response_header.c_str(), response_header.length());
+//     write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
+// }
