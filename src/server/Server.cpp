@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/11 16:05:28 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/14 17:59:51 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,28 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
         error_exit("Error : duplicate port number 80\n");
     tmpServ.port.push_back(80);
     this->validPort.push_back(80);
+}
+
+/**
+ * server 블록 내부에서 listen 지시자를 찾아 포트번호 벡터에 저장. 중복된 포트번호가 존재한다면 에러 반환
+ *
+ * @param tmpServ 현재 서버 정보를 저장할 구조체
+ * @param serverBlock 파싱된 서버 블록
+ */
+void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+{
+    for (size_t i = 0; i < serverBlock.size(); i++)
+    {
+        if (serverBlock[i].name == "limit_except")
+        {
+            std::vector<std::string> tokens;
+            std::istringstream iss(serverBlock[i].value);
+            std::string token;
+
+            while (iss >> token)
+                tmpServ.limitExcept.push_back(token);
+        }
+    }
 }
 
 /**
@@ -209,6 +231,7 @@ void Server::setUpServer(std::vector<Directive> &serverBlock)
         tmpServ.root = findRoot(serverBlock[i].block);
         setUpIndex(tmpServ, serverBlock[i].block);
         setUpErrorPage(tmpServ, serverBlock[i].block);
+        setUpLimitExcept(tmpServ, serverBlock[i].block);
         setUpLocation(tmpServ, serverBlock[i].block);
         this->server.push_back(tmpServ);
     }

@@ -28,6 +28,9 @@ struct ResponseData
 	std::string index;
 	std::string resourcePath;
 	std::string contentType;
+	std::vector<std::string> limit_except;
+	std::string return_state;
+	std::string redirect;
 };
 
 class Worker
@@ -46,7 +49,8 @@ private:
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	int getSuitableServer(int port);
-	std::string getRootDirectory(const HTTPRequest &request, ServerInfo &thisServer);
+	std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
+	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 
 public:
 	Worker(Master &master);
