@@ -180,36 +180,40 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 
 	if (request.method == "GET")
 	{
-		std::string filename = "helloworld.html";
-		std::string filepath = "./assets/html/";
+
 		// std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
 		// 파일 경로와 이름을 합칩니다.
-		std::string fullpath = filepath + filename;
-		// 파일을 열고 문자열을 쓴 후 닫습니다.
-		std::ofstream testCGI(fullpath);
-		CGI cgi("hello3.py");
-		testCGI << cgi.excuteCGI("./src/cgi-bin/hello3.py");
+
 		// std::ofstream outfile(fullpath);
 		// Print response body
 		// std::cout
 		// << "Response body :\n\n\n\n"
 		// << cgi.getResponseBody()
 		// << std::endl;
-		testCGI.close();
 		// CGI cgi("");
 		// cgi.excuteCGI("./src/cgi-bin/hello3.py");
 		//  getResponse(request, client_fd);
-		// if (isCGIRequest(request))
-		// {
-		// 	CGI cgi("hello.py");
-		// 	std::string cgiPath = extractCGIPath(request);
-		// 	std::cout << "aaaaaaaaaaa   " << cgiPath << std::endl;
-		// 	cgi.excuteCGI(cgiPath);
-		// }
-		// else
-		// {
-		// 	getResponse(request, client_fd);
-		// }
+		if (isCGIRequest(request))
+		{
+			// 	std::string cgiPath = extractCGIPath(request);
+
+			std::string filename = "helloworld.html";
+			std::string filepath = "./assets/html/";
+			std::string fullpath = filepath + filename;
+			// // 	// 파일을 열고 문자열을 쓴 후 닫습니다.
+			std::ofstream testCGI(fullpath);
+			CGI cgi("hello3.py");
+			testCGI << cgi.excuteCGI("./src/cgi-bin/hello3.py");
+
+			// testCGI.close();
+
+			std::cout << "aaaaaaaaaaa   " << std::endl;
+			// 	// 	cgi.excuteCGI(cgiPath);
+			// 	// }
+			// 	// else
+			// 	// {
+			// 	// 	getResponse(request, client_fd);
+		}
 		std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
 		if (getSuitableServer(request.port) == -1)
 			return;
@@ -277,8 +281,10 @@ bool Worker::isCGIRequest(const HTTPRequest &request)
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
-	(void)request;
-	return true;
+	size_t pos = request.path.find("cgi-bin");
+	return (pos != std::string::npos);
+	// (void)request;
+	// return true;
 }
 
 /**
