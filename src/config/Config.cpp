@@ -114,7 +114,8 @@ void Config::_setRelation()
 	_location.insert(std::make_pair("return", "fail"));
 	_location.insert(std::make_pair("cgi_extension", "fail"));
 	_location.insert(std::make_pair("cgi_path", "fail"));
-	_location.insert(std::make_pair("cgi_info", "fail"));
+	_location.insert(std::make_pair("cgi_info", "helloworld.html"));
+	_location.insert(std::make_pair("cgi-bin", "helloworld.html"));
 };
 
 void Config::_setIncludes()

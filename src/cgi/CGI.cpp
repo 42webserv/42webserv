@@ -207,6 +207,8 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 			body += buffer;
 		}
 	}
+	std::cout << "\n\nabcdefghijklmnopqrstuvwxyz\n\n"
+			  << std::endl;
 	setBody(body);
 	dup2(oldFD[0], 0);
 	dup2(oldFD[1], 1);

@@ -178,17 +178,36 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 
 	if (request.method == "GET")
 	{
-		if (isCGIRequest(request))
-		{
-			CGI cgi("hello.py");
-			std::string cgiPath = extractCGIPath(request);
-			std::cout << "aaaaaaaaaaa   " << cgiPath << std::endl;
-			cgi.excuteCGI(cgiPath);
-		}
-		else
-		{
-			getResponse(request, client_fd);
-		}
+		std::string filename = "helloworld.html";
+		std::string filepath = "./assets/html/";
+		// std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
+		// 파일 경로와 이름을 합칩니다.
+		std::string fullpath = filepath + filename;
+		// 파일을 열고 문자열을 쓴 후 닫습니다.
+		std::ofstream testCGI(fullpath);
+		CGI cgi("hello3.py");
+		testCGI << cgi.excuteCGI("./src/cgi-bin/hello3.py");
+		// std::ofstream outfile(fullpath);
+		// Print response body
+		// std::cout
+		// << "Response body :\n\n\n\n"
+		// << cgi.getResponseBody()
+		// << std::endl;
+		testCGI.close();
+		// CGI cgi("");
+		// cgi.excuteCGI("./src/cgi-bin/hello3.py");
+		getResponse(request, client_fd);
+		// if (isCGIRequest(request))
+		// {
+		// 	CGI cgi("hello.py");
+		// 	std::string cgiPath = extractCGIPath(request);
+		// 	std::cout << "aaaaaaaaaaa   " << cgiPath << std::endl;
+		// 	cgi.excuteCGI(cgiPath);
+		// }
+		// else
+		// {
+		// 	getResponse(request, client_fd);
+		// }
 	}
 	if (request.method == "POST")
 	{
@@ -230,7 +249,10 @@ void Worker::getResponse(const HTTPRequest &request, int client_fd)
 	std::ifstream resource_file(resource_path);
 	// 리소스를 찾지 못했다면 404페이지로 이동
 	if (!resource_file.good())
+	{
+		std::cout << "bbbbbbbbb" << std::endl;
 		return errorResponse(client_fd);
+	}
 
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;

@@ -1,22 +1,22 @@
-#!/usr/bin/env python3
-import os
-import cgi
+# #!/usr/bin/env python3
+# import os
+# import cgi
 
-html_text = '<!DOCTYPE html>\n<html>\n<head>\n'
-html_text += '\t<title>'+'test'+'</title>\n'
-html_text += '\t<meta charset="utf-8">\n'
-html_text += '</head>\n\n'
-html_text += '<body>\n'
+# html_text = '<!DOCTYPE html>\n<html>\n<head>\n'
+# html_text += '\t<title>'+'test'+'</title>\n'
+# html_text += '\t<meta charset="utf-8">\n'
+# html_text += '</head>\n\n'
+# html_text += '<body>\n'
 
-html_text += '<h3>Hello world by python cgi</h3>'
+# html_text += '<h3>Hello world by python cgi</h3>'
 
-if os.getenv('QUERY_STRING') != None:
-    html_text += 'String from browser: ' + os.getenv('QUERY_STRING')
+# if os.getenv('QUERY_STRING') != None:
+#     html_text += 'String from browser: ' + os.getenv('QUERY_STRING')
 
-html_text += '</body>\n</html>\n'
+# html_text += '</body>\n</html>\n'
 
 
-print (html_text)
+# print (html_text)
 
 # import sys
 # import cgi
@@ -38,3 +38,7 @@ print (html_text)
 
 # print("</body>")
 # print("</html>")
+import sys
+import cgi
+
+print("Hello World!!")
