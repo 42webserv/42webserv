@@ -6,11 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/05/13 18:50:03 by yje              ###   ########.fr       */
-=======
 /*   Updated: 2023/05/11 18:14:40 by chanwjeo         ###   ########.fr       */
->>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,16 +50,12 @@ private:
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-<<<<<<< HEAD
 	bool isCGIRequest(const HTTPRequest &request);
-	std::string	extractCGIPath (const HTTPRequest &request);
+	std::string extractCGIPath(const HTTPRequest &request);
 
-
-=======
 	int getSuitableServer(int port);
 	std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
->>>>>>> develop
 
 public:
 	Worker(Master &master);

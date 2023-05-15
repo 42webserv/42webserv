@@ -6,11 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/05/10 20:32:28 by chanwjeo         ###   ########.fr       */
-=======
 /*   Updated: 2023/05/14 17:59:51 by chanwjeo         ###   ########.fr       */
->>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +81,6 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
         error_exit("Error : duplicate port number 80\n");
     tmpServ.port.push_back(80);
     this->validPort.push_back(80);
-<<<<<<< HEAD
-=======
 }
 
 /**
@@ -109,7 +103,6 @@ void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serve
                 tmpServ.limitExcept.push_back(token);
         }
     }
->>>>>>> develop
 }
 
 /**

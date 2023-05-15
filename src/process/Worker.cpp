@@ -6,11 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/05/13 16:43:20 by seokchoi         ###   ########.fr       */
-=======
 /*   Updated: 2023/05/14 18:02:04 by chanwjeo         ###   ########.fr       */
->>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,11 +112,7 @@ void Worker::run()
 						{
 							// if (n < 0) // 여기 들어온다는 것은 읽지 못하는 것을 읽었다는 뜻인데 그럼...
 							// 	std::cerr << "Client read error!" << '\n';
-<<<<<<< HEAD
 							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
-=======
-							// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
->>>>>>> develop
 
 							struct kevent new_event;
 							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -185,7 +177,6 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-<<<<<<< HEAD
 
 	if (request.method == "GET")
 	{
@@ -207,7 +198,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		testCGI.close();
 		// CGI cgi("");
 		// cgi.excuteCGI("./src/cgi-bin/hello3.py");
-		getResponse(request, client_fd);
+		//  getResponse(request, client_fd);
 		// if (isCGIRequest(request))
 		// {
 		// 	CGI cgi("hello.py");
@@ -219,31 +210,30 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// {
 		// 	getResponse(request, client_fd);
 		// }
-=======
-	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
-	if (getSuitableServer(request.port) == -1)
-		return;
-	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
-	ServerInfo thisServer = this->server.server[nServer];
-	ResponseData *response = getResponseData(request, client_fd, thisServer);
-	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
-	{
-		getResponse(response);
->>>>>>> develop
+		std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
+		if (getSuitableServer(request.port) == -1)
+			return;
+		size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
+		ServerInfo thisServer = this->server.server[nServer];
+		ResponseData *response = getResponseData(request, client_fd, thisServer);
+		if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
+		{
+			getResponse(response);
+		}
+		if (request.method == "POST")
+		{
+		}
+		else
+		{
+			// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
+			// 잘못된 메서드일경우
+			std::string response_body = "Method not allowed";
+			std::string response_header = generateErrorHeader(405, response_body);
+			write(response->clientFd, response_header.c_str(), response_header.length());
+			write(response->clientFd, response_body.c_str(), response_body.length());
+		}
+		delete response;
 	}
-	if (request.method == "POST")
-	{
-	}
-	else
-	{
-		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
-		// 잘못된 메서드일경우
-		std::string response_body = "Method not allowed";
-		std::string response_header = generateErrorHeader(405, response_body);
-		write(response->clientFd, response_header.c_str(), response_header.length());
-		write(response->clientFd, response_body.c_str(), response_body.length());
-	}
-	delete response;
 }
 
 /**
@@ -304,14 +294,6 @@ void Worker::getResponse(ResponseData *response)
 	if (!stat(path, &st))
 		std::cerr << "Failed to get information about " << path << std::endl;
 	// 리소스를 찾지 못했다면 404페이지로 이동
-<<<<<<< HEAD
-	if (!resource_file.good())
-	{
-		std::cout << "bbbbbbbbb" << std::endl;
-		return errorResponse(client_fd);
-	}
-
-=======
 	if (!S_ISREG(st.st_mode))
 	{
 		if (!response->index.empty())
@@ -327,7 +309,6 @@ void Worker::getResponse(ResponseData *response)
 			return errorResponse(response->clientFd);
 	}
 	std::ifstream resource_file(response->resourcePath);
->>>>>>> develop
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;
 	std::istringstream iss(response->resourcePath);
@@ -398,7 +379,6 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	return oss.str();
 }
 
-<<<<<<< HEAD
 // CGI 처리
 
 std::string Worker::extractCGIPath(const HTTPRequest &request)
@@ -411,7 +391,6 @@ std::string Worker::extractCGIPath(const HTTPRequest &request)
 	std::string cgiPath = request.path.substr(request.path.find("/cgi-bin/"));
 	return cgiPath;
 }
-=======
 /**
  * path중 location에 매칭되는게있는지 판단하고, 매칭되는게 몇번째 location인지 찾는다.
  *
@@ -543,4 +522,3 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 //     write(client_fd, response_header.c_str(), response_header.length());
 //     write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
 // }
->>>>>>> develop
