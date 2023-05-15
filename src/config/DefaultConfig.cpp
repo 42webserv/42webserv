@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DefaultConfig.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 20:14:50 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/15 18:28:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,16 +138,16 @@ void addMainDirectives(Directive &main)
 
 DefaultConfig::DefaultConfig()
 {
-	this->directives.clear();
+	this->_directives.clear();
 	Directive main = newDir("main", "");
 
 	addMainDirectives(main);
-	this->directives.push_back(main);
+	this->_directives.push_back(main);
 }
 
 DefaultConfig::~DefaultConfig()
 {
-	this->directives.clear();
+	this->_directives.clear();
 }
 
 void DefaultConfig::setDefaults()
