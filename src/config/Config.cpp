@@ -3,10 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
+<<<<<<< HEAD
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
 /*   Updated: 2023/05/13 16:40:30 by seokchoi         ###   ########.fr       */
+=======
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
+/*   Updated: 2023/05/14 18:55:34 by chanwjeo         ###   ########.fr       */
+>>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +111,10 @@ void Config::_setRelation()
 	_server.insert(std::make_pair("root", "fail"));
 	_server.insert(std::make_pair("location", "fail"));
 	_server.insert(std::make_pair("index", "fail"));
+<<<<<<< HEAD
+=======
+	_server.insert(std::make_pair("limit_except", "fail"));
+>>>>>>> develop
 
 	// location
 	_location.insert(std::make_pair("root", "fail"));

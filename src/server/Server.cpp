@@ -6,7 +6,11 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/05/10 20:32:28 by chanwjeo         ###   ########.fr       */
+=======
+/*   Updated: 2023/05/14 17:59:51 by chanwjeo         ###   ########.fr       */
+>>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +85,31 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
         error_exit("Error : duplicate port number 80\n");
     tmpServ.port.push_back(80);
     this->validPort.push_back(80);
+<<<<<<< HEAD
+=======
+}
+
+/**
+ * server 블록 내부에서 listen 지시자를 찾아 포트번호 벡터에 저장. 중복된 포트번호가 존재한다면 에러 반환
+ *
+ * @param tmpServ 현재 서버 정보를 저장할 구조체
+ * @param serverBlock 파싱된 서버 블록
+ */
+void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+{
+    for (size_t i = 0; i < serverBlock.size(); i++)
+    {
+        if (serverBlock[i].name == "limit_except")
+        {
+            std::vector<std::string> tokens;
+            std::istringstream iss(serverBlock[i].value);
+            std::string token;
+
+            while (iss >> token)
+                tmpServ.limitExcept.push_back(token);
+        }
+    }
+>>>>>>> develop
 }
 
 /**
@@ -129,6 +158,25 @@ std::string Server::findRoot(std::vector<Directive> &serverBlock)
             return serverBlock[i].value;
     }
     return "";
+}
+
+/**
+ * server 블록 내부에서 location 지시자를 찾아 location vector 세팅
+ *
+ * @param tmpServ 현재 서버 정보를 저장할 구조체
+ * @param serverBlock 파싱된 서버 블록
+ */
+void Server::setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+{
+    for (size_t i = 0; i < serverBlock.size(); i++)
+    {
+        if (serverBlock[i].name == "index")
+        {
+            tmpServ.index = serverBlock[i].value;
+            return;
+        }
+    }
+    tmpServ.index = "index.html";
 }
 
 /**
@@ -188,7 +236,9 @@ void Server::setUpServer(std::vector<Directive> &serverBlock)
         tmpServ.serverName = findServerName(serverBlock[i].block);
         tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlock[i].block);
         tmpServ.root = findRoot(serverBlock[i].block);
+        setUpIndex(tmpServ, serverBlock[i].block);
         setUpErrorPage(tmpServ, serverBlock[i].block);
+        setUpLimitExcept(tmpServ, serverBlock[i].block);
         setUpLocation(tmpServ, serverBlock[i].block);
         this->server.push_back(tmpServ);
     }
@@ -208,6 +258,7 @@ void Server::printServer()
             std::cout << this->server[i].port[j] << " ";
         std::cout << std::endl;
         std::cout << "Server_name: " << this->server[i].serverName << std::endl;
+        std::cout << "Index: " << this->server[i].index << std::endl;
         std::cout << "Client_max_body_size: " << this->server[i].clientMaxBodySize << std::endl;
         std::cout << "Root: " << this->server[i].root << std::endl;
         for (size_t j = 0; j < this->server[i].location.size(); j++)

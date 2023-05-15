@@ -6,7 +6,11 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/05/10 20:30:26 by chanwjeo         ###   ########.fr       */
+=======
+/*   Updated: 2023/05/14 17:40:58 by chanwjeo         ###   ########.fr       */
+>>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +33,8 @@ struct ServerInfo
     size_t clientMaxBodySize;
     std::string serverName;
     std::string root;
+    std::string index;
+    std::vector<std::string> limitExcept;
     std::vector<Directive> location;
     std::map<int, std::string> errorPage;
 };
@@ -42,9 +48,11 @@ private:
      * Add it if you feel necessary additional member functions.
      */
     void setUpServer(std::vector<Directive> &servrBlock);
+    void setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &servrBlock);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     void setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     void setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
+    void setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serverBlock);
     std::string findServerName(std::vector<Directive> &serverBlock);
     size_t findClientMaxBodySize(std::vector<Directive> &serverBlock);
     std::string findRoot(std::vector<Directive> &serverBlock);
