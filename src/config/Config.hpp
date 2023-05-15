@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 16:39:52 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/15 17:30:40 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,13 +66,13 @@ private:
     std::map<std::string, std::string> _location;
     void _setRelation();
     void _setIncludes();
-    void _checkRealtion(std::vector<Directive> &directive);
+    void _checkRealtion(std::vector<Directive> &directive, std::vector<Directive> &preDirective);
     void _checkParent(std::string &parentName, std::string rightPre, std::string blockName) const;
     void _checkChildes(std::vector<Directive> &block, std::map<std::string, std::string> &blockFormat, std::string prarentBlockName);
     void _checkRepeatition(std::vector<Directive> &directives, std::string &parentName);
-    void _checkValidValue(std::vector<Directive> &directives);
+    void _checkValidValue(std::vector<Directive> &directives, std::vector<Directive> &preDirective);
     void _checkEmpty(std::string &value, std::string directiveName, bool exist);
-    bool _isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName);
+    bool _isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName, std::vector<Directive> &preDirective);
     bool _isDirectoryExists(const std::string &directoryPath, std::string directiveName);
 
 protected:
