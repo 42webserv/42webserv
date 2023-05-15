@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 15:40:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/11 18:29:53 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 	}
 	this->config.parsedConfig(argc, argv);
 	this->server.setServer(this->config);
-	this->server.printServer();
+	// this->server.printServer();
 }
 
 Master::~Master()
