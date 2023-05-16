@@ -38,6 +38,9 @@ import cgi
 # print("</body>")
 # print("</html>")
 
+from datetime import datetime
+
+current_time = datetime.now()
 
 
 print("<!DOCTYPE html>")
@@ -51,7 +54,7 @@ print("</head>")
 print("<body>")
 print("	<h1>Hello, World!</h1>")
 print("	<h2>aaaaaaaaaaaaa</h2>")
-
+print(current_time)
 form = cgi.FieldStorage()
 id = form.getvalue('id')
 name = form.getvalue('name')
