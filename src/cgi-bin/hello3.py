@@ -55,6 +55,7 @@ print("<body>")
 print("	<h1>Hello, World!</h1>")
 print("	<h2>aaaaaaaaaaaaa</h2>")
 print(current_time)
+# 새로고침할때 마다 시간 표시
 form = cgi.FieldStorage()
 id = form.getvalue('id')
 name = form.getvalue('name')
