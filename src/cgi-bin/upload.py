@@ -6,7 +6,7 @@
 #    By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/17 13:17:19 by yje               #+#    #+#              #
-#    Updated: 2023/05/17 14:08:29 by yje              ###   ########.fr        #
+#    Updated: 2023/05/17 14:40:14 by yje              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ import cgi
 import os
 
 # 업로드된 파일이 저장된 디렉토리 경로
-upload_dir = "./cgi-bin/upload"
+upload_dir = "/src/cgi-bin/upload"
 
 # Content-Type 헤더 출력
 print("Content-Type: text/html")
