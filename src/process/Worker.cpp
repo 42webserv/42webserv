@@ -271,25 +271,20 @@ bool Worker::isCGIRequest(const HTTPRequest &request)
 void Worker::getResponse(ResponseData *response)
 {
 	struct stat st;
-	const char *path = response->resourcePath.c_str();
-	if (!stat(path, &st))
-		std::cerr << "Failed to get information about " << path << std::endl;
-	// 리소스를 찾지 못했다면 404페이지로 이동
-	if (!S_ISREG(st.st_mode))
+	if (!stat(response->resourcePath.c_str(), &st)) //파일인지 디렉토리인지 검사하기위해 stat함수 사용
+		std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+	if (!S_ISREG(st.st_mode)) //root + index을 검사해 파일이 아닐시 if로 분기
 	{
-		if (!response->index.empty())
-		{
-			response->resourcePath = response->root + '/' + response->index;
-			std::ifstream resource_file(response->resourcePath);
-			if (!resource_file.is_open())
-			{
-				return errorResponse(response->clientFd);
-			}
-		}
-		else
+		response->resourcePath = response->root + response->cgi->path; //root + path로 다시 검사
+		std::memset(&st, 0, sizeof(st));
+		if (!stat(response->resourcePath.c_str(), &st))
+			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+		if (!S_ISREG(st.st_mode))
 			return errorResponse(response->clientFd);
 	}
-	std::ifstream resource_file(response->resourcePath);
+	std::ifstream resource_file(response->resourcePath); //위에서 stat함수로 파일검사는 완료
+	if (!resource_file.is_open()) //혹시 open이 안될수있으니 한번더 체크
+		return errorResponse(response->clientFd);
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;
 	std::istringstream iss(response->resourcePath);
@@ -381,21 +376,22 @@ bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &i
 			return (true);
 		}
 	}
-	// size_t pos = request.path.rfind('/');
-	// while (pos != std::string::npos)
-	// {
-	// 	std::string tmp = request.path.substr(0, pos); //
-	// 	for (size_t i = 0; i < thisServer.location.size(); ++i)
-	// 	{
-	// 		if (thisServer.location[i].value == tmp)
-	// 		{
-	// 			idx = i;
-	// 			return (true);
-	// 		}
-	// 	}
-	// 	tmp = tmp.erase(pos);
-	// 	pos = tmp.rfind('/');
-	// }
+	// while돌면서 "/" 부분을 지우고 찾는 부분인데 "/" 까지 지우지 때문에 "/" 하나와 매칭되지않음.
+	size_t pos = request.path.rfind('.'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+	while (pos != std::string::npos)
+	{
+		std::string tmp = request.path.substr(0, pos);
+		for (size_t i = 0; i < thisServer.location.size(); ++i)
+		{
+			if (thisServer.location[i].value == tmp)
+			{
+				idx = i;
+				return (true);
+			}
+		}
+		tmp = tmp.erase(pos);
+		pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
+	}
 	return (false);
 }
 
@@ -466,7 +462,7 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 	}
 	if (response->limit_except.size() == 0)
 		response->limit_except = thisServer.limitExcept;
-	response->resourcePath = response->root + request.path;
+	response->resourcePath = response->root + "/" + response->index; //index 정보는 server 또는 location에서 가져왔음
 	return (response);
 }
 
