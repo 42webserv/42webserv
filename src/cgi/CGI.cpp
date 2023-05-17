@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/13 17:10:51 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/17 13:54:52 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,44 +14,46 @@
 #include "CGI.hpp"
 // CGI 환경변수 세팅
 
-// CGI::CGI()
-// {
-// }
+CGI::CGI()
+{
+}
+
 CGI::CGI(const std::string &cgiPath)
 	: cgiPath_(cgiPath)
 {
 }
 
-// void CGI::initEnvp(HTTPRequest &request, Config &config) // request config 이름 확인해서 받아오기
-// {
-// 	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
-// 	HTTPRequestParser request_parser;
-// 	const std::string &method = request.method;
-// 	// std::size_t content_length = request.getContentLength(); // contentlength
-// 	// if (method == "POST" && content_length > 0)
-// 	// {
-// 	// 	headers["CONTENT_LENGTH"] = toString(content_length);
-// 	// }
-// 	this->envp_["AUTH_TYPE"] = "";
-// 	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
-// 	this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request);
-// 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
-// 	this->envp_["PATH_INFO"] = request.path;
-// 	this->envp_["PATH_TRANSLATED"] = request.path;
-// 	// PATH_INFO의 변환. 스크립트의 가상경로를, 실제 호출 할 때 사용되는 경로로 맵핑.
-// 	//  요청 URI의 PATH_INFO 구성요소를 가져와, 적합한 가상 : 실제 변환을 수행하여 맵핑.
-// 	this->envp_["QUERY_STRING"] = request.query;
-// 	this->envp_["REMOTE_ADDR"] = request.addr;
-// 	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
-// 	this->envp_["REMOTE_USER"] = "";
-// 	this->envp_["REQUEST_METHOD"] = method;
-// 	this->envp_["REQUEST_URI"] = request.name; //
-// 	this->envp_["SCRIPT_NAME"] = request.name;//
-// 	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
-// 	this->envp_["SERVER_PORT"] = request.port; // 요청을 수신한 서버의 포트 번호.
-// 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
-// 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
-// };
+void CGI::initEnvp(HTTPRequest &request, Config &config) // request config 이름 확인해서 받아오기
+{
+	(void)config;
+	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
+	HTTPRequestParser request_parser;
+	const std::string &method = request.method;
+	// std::size_t content_length = request.getContentLength(); // contentlength
+	// if (method == "POST" && content_length > 0)
+	// {
+	// 	headers["CONTENT_LENGTH"] = toString(content_length);
+	// }
+	this->envp_["AUTH_TYPE"] = "";
+	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
+	this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request);
+	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
+	this->envp_["PATH_INFO"] = request.path;
+	this->envp_["PATH_TRANSLATED"] = request.path;
+	// PATH_INFO의 변환. 스크립트의 가상경로를, 실제 호출 할 때 사용되는 경로로 맵핑.
+	//  요청 URI의 PATH_INFO 구성요소를 가져와, 적합한 가상 : 실제 변환을 수행하여 맵핑.
+	this->envp_["QUERY_STRING"] = request.query;
+	this->envp_["REMOTE_ADDR"] = request.addr;
+	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
+	this->envp_["REMOTE_USER"] = "";
+	this->envp_["REQUEST_METHOD"] = method;
+	this->envp_["REQUEST_URI"] = request.name; //
+	this->envp_["SCRIPT_NAME"] = request.name; //
+	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
+	this->envp_["SERVER_PORT"] = request.port; // 요청을 수신한 서버의 포트 번호.
+	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
+	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
+};
 
 std::string CGI::getBody() const
 {
@@ -142,8 +144,9 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 	int fileFD[2];
 	char **envp;
 	std::string body;
-	// initEnvp();
-
+	HTTPRequest request;
+	Config config;
+	initEnvp(request, config);
 	try
 	{
 		envp = this->ENVPChangeStringArray();
@@ -207,8 +210,8 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 			body += buffer;
 		}
 	}
-	std::cout << "\n\nabcdefghijklmnopqrstuvwxyz\n\n"
-			  << std::endl;
+	// std::cout << "\n\nabcdefghijklmnopqrstuvwxyz\n\n"
+	// << std::endl;
 	setBody(body);
 	dup2(oldFD[0], 0);
 	dup2(oldFD[1], 1);
