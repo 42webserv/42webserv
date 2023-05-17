@@ -182,7 +182,7 @@ bool HTTPRequestParser::parseBody()
     if (method_ == "POST")
     {
         std::map<std::string, std::string>::iterator it =
-            headers_.find("Content-Length");
+            headers_.find("content-length");
         if (it != headers_.end())
         {
             int content_length = atoi(it->second.c_str());
