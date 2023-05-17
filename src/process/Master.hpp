@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Master.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:14 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 14:22:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 18:49:21 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <vector>
 #include "Config.hpp"
 #include "Config.hpp"
-#include "Server.hpp"
+#include "server/Server.hpp"
 
 class Master
 {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/15 18:10:31 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/17 17:28:31 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,8 @@ void Config::_setRelation()
 	_location.insert(std::make_pair("autoindex", "off"));
 	_location.insert(std::make_pair("limit_except", "fail"));
 	_location.insert(std::make_pair("return", "fail"));
+	_location.insert(std::make_pair("cgi_extension", "fail"));
+	_location.insert(std::make_pair("cgi_path", "fail"));
 };
 
 void Config::_setIncludes()
@@ -359,7 +361,7 @@ void Config::_checkEmpty(std::string &value, std::string directiveName, bool exi
 	}
 }
 
-void Config::_checkValidValue(std::vector<Directive> &directives,  std::vector<Directive> &preDirective)
+void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Directive> &preDirective)
 {
 	std::string defaultRoot = "";
 	for (size_t i = 0; i < directives.size(); i++)

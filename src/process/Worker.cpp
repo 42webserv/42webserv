@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/14 18:02:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/17 17:24:47 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,7 @@ void Worker::run()
 						{
 							// if (n < 0) // 여기 들어온다는 것은 읽지 못하는 것을 읽었다는 뜻인데 그럼...
 							// 	std::cerr << "Client read error!" << '\n';
-							// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 
 							struct kevent new_event;
 							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -169,14 +169,29 @@ void Worker::run()
 	}
 }
 
-/**
- * 각각 method 실행과 해당 포트에 response를 보내줌
- *
- * @param request request 를 파싱완료한 구조체
- * @param client_fd 서버의 fd
- */
+//  * 각각 method 실행과 해당 포트에 response를 보내줌
+//  *
+//  * @param request request 를 파싱완료한 구조체
+//  * @param client_fd 서버의 fd
+
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
+	if (request.method == "GET")
+	{
+		if (isCGIRequest(request))
+		{
+			CGI cgi("");
+			std::string cgiFullPath = "./src" + request.path + ".py";
+			std::string filename = "result.html";
+			std::string filepath = "./assets/html/";
+			std::string fullpath = filepath + filename;
+			// 파일을 열고 문자열을 쓴 후 닫습니다.
+			std::ofstream testCGI(fullpath);
+			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
+			testCGI << cgi.excuteCGI(cgiFullPath);
+			testCGI.close();
+		}
+	}
 	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
 	if (getSuitableServer(request.port) == -1)
 		return;
@@ -235,6 +250,16 @@ std::string Worker::getRootDirectory(const HTTPRequest &request, const ServerInf
 	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
 		return "./assets/images";
 	return thisServer.root;
+}
+
+bool Worker::isCGIRequest(const HTTPRequest &request)
+{
+	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
+	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
+	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
+	// return request.find(".py") != std::string::npos;
+	size_t pos = request.path.find("cgi-bin");
+	return (pos != std::string::npos);
 }
 
 /**
@@ -334,6 +359,8 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	oss << "Connection: close\r\n\r\n";
 	return oss.str();
 }
+
+// CGI 처리
 
 /**
  * path중 location에 매칭되는게있는지 판단하고, 매칭되는게 몇번째 location인지 찾는다.

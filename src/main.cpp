@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
 /*   Updated: 2023/05/13 13:25:43 by chanwjeo         ###   ########.fr       */
@@ -13,7 +13,9 @@
 #include "DefaultConfig.hpp"
 #include "Master.hpp"
 #include "Worker.hpp"
+#include "server/Server.hpp"
 #include "Config.hpp"
+#include "CGI.hpp"
 #include "CheckConfigValid.hpp"
 #include "MimeTypesParser.hpp"
 
