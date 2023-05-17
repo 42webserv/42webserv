@@ -22,6 +22,16 @@
 #include "HTTPRequestParser.hpp"
 #include "CGI.hpp"
 
+struct Cgi
+{
+	int port;
+    std::string path;
+	std::string body;
+    std::string query;
+    std::string addr;
+    std::string name;
+};
+
 struct ResponseData
 {
 	int clientFd;
@@ -33,6 +43,8 @@ struct ResponseData
 	std::vector<std::string> limit_except;
 	std::string return_state;
 	std::string redirect;
+	Cgi *cgi;
+	bool autoindex;
 };
 
 class Worker

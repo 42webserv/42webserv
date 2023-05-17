@@ -410,6 +410,16 @@ bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &i
 ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer)
 {
 	ResponseData *response = new ResponseData;
+	{
+		Cgi *cgi = new Cgi;
+		cgi->addr = request.addr;
+		cgi->body = request.body;
+		cgi->port = request.port;
+		cgi->name = thisServer.serverName;
+		cgi->query = request.query;
+		cgi->path = request.path;
+		response->cgi = cgi;
+	}
 	response->index = thisServer.index;
 	response->clientFd = client_fd;
 	response->root = getRootDirectory(request, thisServer);
@@ -422,8 +432,8 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 				response->root = thisServer.location[i].block[j].value;
 			else if (thisServer.location[i].block[j].name == "index")
 				response->index = thisServer.location[i].block[j].value;
-			// else if (thisServer.location[i].block[j].name == "autoindex") //켜져있다면 동적으로 index를 만들어야함
-			// 	thisServer.location[i].block[j].value == "on" ? :
+			else if (thisServer.location[i].block[j].name == "autoindex")
+				thisServer.location[i].block[j].value == "on" ? response->autoindex = true : response->autoindex = false;
 			else if (thisServer.location[i].block[j].name == "limit_except")
 			{
 				size_t pos = thisServer.location[i].block[j].value.find(' ');
