@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/17 13:54:52 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/17 16:16:38 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,9 @@
 #include "CGI.hpp"
 // CGI 환경변수 세팅
 
-CGI::CGI()
+CGI::CGI(const HTTPRequest &request) : cgiPath_(""), body_(request.body)
 {
+	initEnvp(request);
 }
 
 CGI::CGI(const std::string &cgiPath)
@@ -23,9 +24,10 @@ CGI::CGI(const std::string &cgiPath)
 {
 }
 
-void CGI::initEnvp(HTTPRequest &request, Config &config) // request config 이름 확인해서 받아오기
+CGI::~CGI() {}
+
+void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인해서 받아오기
 {
-	(void)config;
 	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
 	HTTPRequestParser request_parser;
 	const std::string &method = request.method;
@@ -65,17 +67,25 @@ void CGI::setBody(const std::string &body)
 	this->body_ = body;
 }
 
-// int CGI::getFileDescriptor(int fdIndex) const
-// {
-// 	if (fdIndex == 0 || fdIndex == 1)
-// 		return fileFD_[fdIndex];
-// 	else
-// 		throw std::out_of_range("Invalid file descriptor index");
-// }
+std::string CGI::getResponseBody() const
+{
+	return this->body_;
+}
 
 void CGI::setEnv(const std::map<std::string, std::string> &envp)
 {
 	this->envp_ = envp;
+}
+
+bool CGI::isCgiPath(void) const
+{
+	char *cgiPath = const_cast<char *>(cgiPath_.c_str());
+	// const char *filepath = const_cast<char *>(cgiPath_.c_str()); > filepath를 이용하는 경우 사용
+	if (access(cgiPath, X_OK) == -1)
+	{
+		return false;
+	}
+	return true;
 }
 
 char **CGI::ENVPChangeStringArray()
@@ -93,34 +103,6 @@ char **CGI::ENVPChangeStringArray()
 	return envp;
 }
 
-// void Cgi::tofile(std::string path)
-// {
-//     std::stringstream ss;
-//     std::ifstream ifs(path, std::ifstream::in);
-//     std::string response;
-//     std::string str;
-
-//     ss << ifs.rdbuf();
-//     str = ss.str();
-//     ss.clear();
-//     ss.str("");
-//     std::string res = str;
-//     size_t pos = str.find("\r\n\r\n");
-//     if (pos != std::string::npos)
-//     {
-//         res = str.substr(pos + 4, str.length() - (pos + 4));
-//     }
-//     ss << res.length();
-// 	response += "HTTP/1.1 " + (std::string)"200" + " " + "ok" + "\r\n";
-// 	response += "Content-Length: " + ss.str() + "\r\n";
-// 	response += "Server: webserv\r\n";
-//     // if ("py")//경로가 맞으면
-//   	response += "Content-Type: text/html\r\n\r\n";
-// 	response += str;
-//     ifs.close();
-//     this->cont->setResponse(response);
-// }
-
 /**
  * cgi 실행
  *
@@ -130,23 +112,18 @@ char **CGI::ENVPChangeStringArray()
  * @param filefd[2] 새로운 파일 디스크립터를 저장하는 변수입니다. pipe() 함수를 사용하여 파이프를 열면, 새로운 파일 디스크립터가 반환.
  */
 
-// void leaks()
-// {
-// 	system("leaks a.out");
-// }
-
 std::string CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
 {
-	// this->_body = HTTPRequest.body_;
+	HTTPRequest request;
 	pid_t pid;
 	FILE *file[2];
 	int oldFD[2];
 	int fileFD[2];
 	char **envp;
 	std::string body;
-	HTTPRequest request;
 	Config config;
-	initEnvp(request, config);
+	initEnvp(request);
+
 	try
 	{
 		envp = this->ENVPChangeStringArray();
@@ -175,14 +152,10 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 	lseek(fileFD[0], 0, SEEK_SET);
 
 	pid = fork();
-	// std::cout << "pid" << pid << std::endl;
 	if (pid == -1)
 		throw std::runtime_error("Error create child process");
 	else if (pid == 0)
 	{
-		// redirect input and output to the file descriptors
-		// std::cout << "cgiPath_: " << cgiPath_ << std::endl;
-		// std::cout << "context: " << context << std::endl;
 		isCgiPath();
 		dup2(fileFD[0], STDIN_FILENO);
 		dup2(fileFD[1], STDOUT_FILENO);
@@ -210,8 +183,7 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 			body += buffer;
 		}
 	}
-	// std::cout << "\n\nabcdefghijklmnopqrstuvwxyz\n\n"
-	// << std::endl;
+
 	setBody(body);
 	dup2(oldFD[0], 0);
 	dup2(oldFD[1], 1);
@@ -224,7 +196,6 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 	close(oldFD[0]);
 	close(oldFD[1]);
 	// delete envp
-	// tofile(body);
 	for (int i = 0; envp[i]; ++i)
 	{
 		delete[] envp[i];
@@ -232,23 +203,5 @@ std::string CGI::excuteCGI(const std::string &context) // context 받기 아마�
 	delete[] envp;
 	if (pid == 0)
 		exit(0);
-	// atexit(leaks);
 	return (body);
-}
-
-std::string CGI::getResponseBody() const
-{
-	return this->body_;
-}
-
-bool CGI::isCgiPath(void) const
-{
-	char *cgiPath = const_cast<char *>(cgiPath_.c_str());
-	const char *filepath = const_cast<char *>(cgiPath_.c_str());
-	chmod(filepath, S_IRWXU | S_IRWXG | S_IRWXO);
-	if (access(cgiPath, X_OK) == -1)
-	{
-		return false;
-	}
-	return true;
 }

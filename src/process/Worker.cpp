@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/17 14:05:28 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/17 17:24:47 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,78 +169,52 @@ void Worker::run()
 	}
 }
 
-/**
- * 각각 method 실행과 해당 포트에 response를 보내줌
- *
- * @param request request 를 파싱완료한 구조체
- * @param client_fd 서버의 fd
- */
+//  * 각각 method 실행과 해당 포트에 response를 보내줌
+//  *
+//  * @param request request 를 파싱완료한 구조체
+//  * @param client_fd 서버의 fd
+
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-
 	if (request.method == "GET")
 	{
-
-		// std::string filepath = "/Users/han/42Seoul/webserv/cgi-bin/";
-		// 파일 경로와 이름을 합칩니다.
-
-		// std::ofstream outfile(fullpath);
-		// Print response body
-		// std::cout
-		// << "Response body :\n\n\n\n"
-		// << cgi.getResponseBody()
-		// << std::endl;
-		// CGI cgi("");
-		// cgi.excuteCGI("./src/cgi-bin/hello3.py");
-		//  getResponse(request, client_fd);
 		if (isCGIRequest(request))
 		{
-			// 	std::string cgiPath = extractCGIPath(request);
-			// std::string cgiPath = "/src/cgi-bin/upload.py";
-
-			std::string filename = "helloworld.html";
+			CGI cgi("");
+			std::string cgiFullPath = "./src" + request.path + ".py";
+			std::string filename = "result.html";
 			std::string filepath = "./assets/html/";
 			std::string fullpath = filepath + filename;
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			std::ofstream testCGI(fullpath);
-			CGI cgi("upload.py");
-			testCGI << cgi.excuteCGI("./src/cgi-bin/upload.py");
-			testCGI << cgi.body_;
-
-			// testCGI.close();
-
-			std::cout
-				<< "aaaaaaaaaaa   " << std::endl;
-			// 	// 	cgi.excuteCGI(cgiPath);
-			// 	// }
-			// 	// else
-			// 	// {
-			// 	// 	getResponse(request, client_fd);
+			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
+			testCGI << cgi.excuteCGI(cgiFullPath);
+			testCGI.close();
 		}
-		std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
-		if (getSuitableServer(request.port) == -1)
-			return;
-		size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
-		ServerInfo thisServer = this->server.server[nServer];
-		ResponseData *response = getResponseData(request, client_fd, thisServer);
-		if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
-		{
-			getResponse(response);
-		}
-		if (request.method == "POST")
-		{
-		}
-		else
-		{
-			// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
-			// 잘못된 메서드일경우
-			std::string response_body = "Method not allowed";
-			std::string response_header = generateErrorHeader(405, response_body);
-			write(response->clientFd, response_header.c_str(), response_header.length());
-			write(response->clientFd, response_body.c_str(), response_body.length());
-		}
-		delete response;
 	}
+	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
+	if (getSuitableServer(request.port) == -1)
+		return;
+	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
+	ServerInfo thisServer = this->server.server[nServer];
+	ResponseData *response = getResponseData(request, client_fd, thisServer);
+	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
+	{
+		getResponse(response);
+	}
+	if (request.method == "POST")
+	{
+	}
+	else
+	{
+		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
+		// 잘못된 메서드일경우
+		std::string response_body = "Method not allowed";
+		std::string response_header = generateErrorHeader(405, response_body);
+		write(response->clientFd, response_header.c_str(), response_header.length());
+		write(response->clientFd, response_body.c_str(), response_body.length());
+	}
+	delete response;
 }
 
 /**
@@ -286,8 +260,6 @@ bool Worker::isCGIRequest(const HTTPRequest &request)
 	// return request.find(".py") != std::string::npos;
 	size_t pos = request.path.find("cgi-bin");
 	return (pos != std::string::npos);
-	// (void)request;
-	// return true;
 }
 
 /**
@@ -390,16 +362,6 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 
 // CGI 처리
 
-std::string Worker::extractCGIPath(const HTTPRequest &request)
-{
-	// CGI 경로 추출 로직을 구현합니다.
-	// 예를 들어, 요청 URL에서 경로 부분을 추출하는 방식으로 구현할 수 있습니다.
-	// 추출된 경로를 반환합니다.
-	// 예: http://example.com/cgi-bin/cgi_program.cgi
-	// 추출된 경로: /cgi-bin/cgi_program.cgi
-	std::string cgiPath = request.path.substr(request.path.find("/cgi-bin/"));
-	return cgiPath;
-}
 /**
  * path중 location에 매칭되는게있는지 판단하고, 매칭되는게 몇번째 location인지 찾는다.
  *
