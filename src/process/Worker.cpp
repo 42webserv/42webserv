@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/14 18:02:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/17 14:05:28 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,18 +196,21 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		if (isCGIRequest(request))
 		{
 			// 	std::string cgiPath = extractCGIPath(request);
+			// std::string cgiPath = "/src/cgi-bin/upload.py";
 
 			std::string filename = "helloworld.html";
 			std::string filepath = "./assets/html/";
 			std::string fullpath = filepath + filename;
-			// // 	// 파일을 열고 문자열을 쓴 후 닫습니다.
+			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			std::ofstream testCGI(fullpath);
-			CGI cgi("hello3.py");
-			testCGI << cgi.excuteCGI("./src/cgi-bin/hello3.py");
+			CGI cgi("upload.py");
+			testCGI << cgi.excuteCGI("./src/cgi-bin/upload.py");
+			testCGI << cgi.body_;
 
 			// testCGI.close();
 
-			std::cout << "aaaaaaaaaaa   " << std::endl;
+			std::cout
+				<< "aaaaaaaaaaa   " << std::endl;
 			// 	// 	cgi.excuteCGI(cgiPath);
 			// 	// }
 			// 	// else
