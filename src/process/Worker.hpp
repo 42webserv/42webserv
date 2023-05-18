@@ -6,32 +6,28 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 18:14:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 19:28:58 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WORKER_HPP
 #define WORKER_HPP
 
+#include <iostream>
+#include <sys/event.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include "MimeTypesParser.hpp"
+#include "common_error.hpp"
 #include "Master.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
 #include "Config.hpp"
 #include "Server.hpp"
+#include "Response.hpp"
 #include "HTTPRequestParser.hpp"
 
-struct ResponseData
-{
-	int clientFd;
-	std::ifstream resourceFile;
-	std::string root;
-	std::string index;
-	std::string resourcePath;
-	std::string contentType;
-	std::vector<std::string> limit_except;
-	std::string return_state;
-	std::string redirect;
-};
+struct ResponseData;
 
 class Worker
 {
@@ -48,9 +44,9 @@ private:
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-	int getSuitableServer(int port);
-	std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
-	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
+	// int getSuitableServer(int port);
+	// std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
+	// ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 
 public:
 	Worker(Master &master);
