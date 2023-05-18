@@ -217,6 +217,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		write(response->clientFd, response_header.c_str(), response_header.length());
 		write(response->clientFd, response_body.c_str(), response_body.length());
 	}
+	delete response->cgi;
 	delete response;
 }
 
@@ -499,7 +500,6 @@ void Worker::broad(ResponseData *response)
 	while ((file = readdir(dirPtr)))
 	{
 		broadHtml << "<p><a href=" << response->locationName << "/" << file->d_name << ">" << file->d_name << "</a></p>";
-		// broadHtml << "<p><a href=" << "/index" << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 	}
     broadHtml << "</body></html>";
     std::string tmp = broadHtml.str();
