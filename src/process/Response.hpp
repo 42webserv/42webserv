@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/18 20:37:06 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 22:59:30 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,17 @@
 #include "Server.hpp"
 #include "Worker.hpp"
 #include "HTTPRequestParser.hpp"
+#include "CGI.hpp"
+
+struct CGIData
+{
+    int port;
+    std::string path;
+    std::string body;
+    std::string query;
+    std::string addr;
+    std::string name;
+};
 
 struct ResponseData
 {
@@ -32,6 +43,10 @@ struct ResponseData
     std::vector<std::string> limitExcept;
     std::string returnState;
     std::string redirect;
+    std::string locationName;
+    std::string path; // path중 locationName 부분을 지운 나머지 경로
+    CGIData *cgi;
+    bool autoindex;
 };
 
 class Response
@@ -45,6 +60,7 @@ private:
     std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
     void setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response);
+    void setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpReturnState(std::vector<Directive> &locationBlock, ResponseData *response);
 

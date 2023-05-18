@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/18 20:38:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 23:01:39 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
         size_t i = static_cast<size_t>(idx);
         setUpRoot(this->thisServer.location[i].block, response);
         setUpIndex(this->thisServer.location[i].block, response);
+        setUpAutoindex(this->thisServer.location[i].block, response);
         setUpLimitExcept(this->thisServer.location[i].block, response);
         setUpReturnState(this->thisServer.location[i].block, response);
     }
@@ -107,6 +108,21 @@ void Response::setUpIndex(std::vector<Directive> &locationBlock, ResponseData *r
     {
         if (locationBlock[i].name == "index")
             response->index = locationBlock[i].value;
+    }
+}
+
+/**
+ * location 블록 내부에서 autoindex 지시자를 찾아 responseData->autoindex 세팅
+ *
+ * @param locationBlock 파싱된 location 블록
+ * @param response 반환될 responseData 구조체
+ */
+void Response::setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response)
+{
+    for (size_t i = 0; i < locationBlock.size(); i++)
+    {
+        if (locationBlock[i].name == "autoindex")
+            locationBlock[i].value == "on" ? response->autoindex = true : response->autoindex = false;
     }
 }
 
@@ -192,6 +208,18 @@ int Response::matchLocation(const HTTPRequest &request, ServerInfo &thisServer)
         thisServer.location[i].value.erase(thisServer.location[i].value.find_last_not_of(' ') + 1);
         if (thisServer.location[i].value == request.path)
             return static_cast<int>(i);
+    }
+    size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+    while (pos != std::string::npos)
+    {
+        std::string tmp = request.path.substr(0, pos);
+        for (size_t i = 0; i < thisServer.location.size(); ++i)
+        {
+            if (thisServer.location[i].value == tmp)
+                return static_cast<int>(i);
+        }
+        tmp = tmp.erase(pos);
+        pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
     }
     return -1;
 }

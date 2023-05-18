@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:35:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 22:53:30 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,16 +29,7 @@
 #include "HTTPRequestParser.hpp"
 #include "CGI.hpp"
 
-struct Cgi
-{
-	int port;
-	std::string path;
-	std::string body;
-	std::string query;
-	std::string addr;
-	std::string name;
-};
-
+struct CGIData;
 struct ResponseData;
 struct HTTPRequest;
 

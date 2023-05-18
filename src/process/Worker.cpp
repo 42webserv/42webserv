@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:35:23 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 22:54:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,30 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	Response responseClass(request.port, this->server);
 	ResponseData *response = responseClass.getResponseData(request, client_fd);
 	// if (request.method == "GET" && (std::find(response->limitExcept.begin(), response->limitExcept.end(), "GET") != response->limitExcept.end()))
-	if (request.method == "GET")
+	// if (request.method == "GET")
+	// {
+	// 	if (isCGIRequest(request))
+	// 	{
+	// 		CGI cgi("");
+	// 		std::string cgiFullPath = "./src" + request.path + ".py";
+	// 		std::string filename = "result.html";
+	// 		std::string filepath = "./assets/html/";
+	// 		std::string fullpath = filepath + filename;
+	// 		// 파일을 열고 문자열을 쓴 후 닫습니다.
+	// 		std::ofstream testCGI(fullpath);
+	// 		std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
+	// 		testCGI << cgi.excuteCGI(cgiFullPath);
+	// 		testCGI.close();
+	// 	}
+	// }
+	// std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
+	// if (getSuitableServer(request.port) == -1)
+	// 	return;
+	// size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
+	// ServerInfo thisServer = this->server.server[nServer];
+	// ResponseData *response = getResponseData(request, client_fd, thisServer);
+	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
+	if (request.method == "GET" && (std::find(response->limitExcept.begin(), response->limitExcept.end(), "GET") != response->limitExcept.end()))
 	{
 		if (isCGIRequest(request))
 		{
@@ -162,16 +185,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			testCGI << cgi.excuteCGI(cgiFullPath);
 			testCGI.close();
 		}
-	}
-	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
-	if (getSuitableServer(request.port) == -1)
-		return;
-	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
-	ServerInfo thisServer = this->server.server[nServer];
-	ResponseData *response = getResponseData(request, client_fd, thisServer);
-	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
-	{
 		getResponse(response);
 	}
 	if (request.method == "POST")
