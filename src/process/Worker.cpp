@@ -18,6 +18,7 @@
 #include "Worker.hpp"
 #include "MimeTypesParser.hpp"
 #include <sys/stat.h>
+#include <dirent.h>
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
@@ -198,7 +199,9 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
 	ServerInfo thisServer = this->server.server[nServer];
 	ResponseData *response = getResponseData(request, client_fd, thisServer);
+	//현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
+	// if (request.method == "GET")
 	{
 		getResponse(response);
 	}
@@ -276,13 +279,17 @@ void Worker::getResponse(ResponseData *response)
 	if (!S_ISREG(st.st_mode)) //root + index을 검사해 파일이 아닐시 if로 분기
 	{
 		response->resourcePath = response->root + response->cgi->path; //root + path로 다시 검사
+		// std::cout << response->resourcePath
 		std::memset(&st, 0, sizeof(st));
 		if (!stat(response->resourcePath.c_str(), &st))
 			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
 		if (!S_ISREG(st.st_mode))
 		{
-			if (response->autoindex == true)
+			if (response->autoindex)
+			{
 				broad(response);
+				return ;
+			}
 			else
 				return errorResponse(response->clientFd);
 		}
@@ -434,7 +441,9 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 			else if (thisServer.location[i].block[j].name == "index")
 				response->index = thisServer.location[i].block[j].value;
 			else if (thisServer.location[i].block[j].name == "autoindex")
+			{
 				thisServer.location[i].block[j].value == "on" ? response->autoindex = true : response->autoindex = false;
+			}
 			else if (thisServer.location[i].block[j].name == "limit_except")
 			{
 				size_t pos = thisServer.location[i].block[j].value.find(' ');
@@ -477,21 +486,24 @@ void Worker::broad(ResponseData *response)
     broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
     DIR *dirPtr = NULL;
 	dirent *file;
-    if ((dirPtr = opendir(response->root.c_str())) != NULL)
+	std::cout << "------ " << response->root << std::endl;
+    // if ((dirPtr = opendir(response->root.c_str())) != NULL)
+    if ((dirPtr = opendir(response->root.c_str())) == NULL)
     {
         std::cout << "broad: location path err" << std::endl;
         return;
     }
 	while ((file = readdir(dirPtr)))
 	{
-		broadHtml << "<p><a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+		broadHtml << "<p><a href=" << response->root << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+		// broadHtml << "<p><a href=" << "/index" << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 	}
-    broadHtml << "</body></html>"
+    broadHtml << "</body></html>";
     std::string tmp = broadHtml.str();
     /* 헤더를 작성해주는과정 */
     MimeTypesParser mime(config);
     std::string contentType = mime.getMimeType("html");
     std::string response_header = generateHeader(tmp, contentType);
-    write(client_fd, response_header.c_str(), response_header.length());
-    write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
+    write(response->clientFd, response_header.c_str(), response_header.length());
+    write(response->clientFd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
 }

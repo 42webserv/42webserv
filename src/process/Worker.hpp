@@ -68,7 +68,7 @@ private:
 	int getSuitableServer(int port);
 	std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
-	void Worker::broad(ResponseData *response)
+	void broad(ResponseData *response);
 
 public:
 	Worker(Master &master);
