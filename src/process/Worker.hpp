@@ -43,6 +43,8 @@ struct ResponseData
 	std::vector<std::string> limit_except;
 	std::string return_state;
 	std::string redirect;
+	std::string locationName;
+	std::string path; // path중 locationName 부분을 지운 나머지 경로
 	Cgi *cgi;
 	bool autoindex;
 };

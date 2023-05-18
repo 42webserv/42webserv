@@ -278,8 +278,7 @@ void Worker::getResponse(ResponseData *response)
 		std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
 	if (!S_ISREG(st.st_mode)) //root + index을 검사해 파일이 아닐시 if로 분기
 	{
-		response->resourcePath = response->root + response->cgi->path; //root + path로 다시 검사
-		// std::cout << response->resourcePath
+		response->resourcePath = response->root + response->path; //root + path로 다시 검사
 		std::memset(&st, 0, sizeof(st));
 		if (!stat(response->resourcePath.c_str(), &st))
 			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
@@ -389,7 +388,7 @@ bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &i
 		}
 	}
 	// while돌면서 "/" 부분을 지우고 찾는 부분인데 "/" 까지 지우지 때문에 "/" 하나와 매칭되지않음.
-	size_t pos = request.path.rfind('.'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+	size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
 	while (pos != std::string::npos)
 	{
 		std::string tmp = request.path.substr(0, pos);
@@ -434,10 +433,15 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 	size_t i = 0;
 	if (matchLocation(request, thisServer, i))
 	{
+		response->locationName = thisServer.location[i].value;
 		for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
 		{
 			if (thisServer.location[i].block[j].name == "root")
+			{
+				std::string tmp = response->cgi->path;
 				response->root = thisServer.location[i].block[j].value;
+				response->path = tmp.erase(tmp.find(thisServer.location[i].value), thisServer.location[i].value.size());
+			}
 			else if (thisServer.location[i].block[j].name == "index")
 				response->index = thisServer.location[i].block[j].value;
 			else if (thisServer.location[i].block[j].name == "autoindex")
@@ -486,7 +490,6 @@ void Worker::broad(ResponseData *response)
     broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
     DIR *dirPtr = NULL;
 	dirent *file;
-	std::cout << "------ " << response->root << std::endl;
     // if ((dirPtr = opendir(response->root.c_str())) != NULL)
     if ((dirPtr = opendir(response->root.c_str())) == NULL)
     {
@@ -495,7 +498,7 @@ void Worker::broad(ResponseData *response)
     }
 	while ((file = readdir(dirPtr)))
 	{
-		broadHtml << "<p><a href=" << response->root << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+		broadHtml << "<p><a href=" << response->locationName << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 		// broadHtml << "<p><a href=" << "/index" << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 	}
     broadHtml << "</body></html>";
