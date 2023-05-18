@@ -280,7 +280,12 @@ void Worker::getResponse(ResponseData *response)
 		if (!stat(response->resourcePath.c_str(), &st))
 			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
 		if (!S_ISREG(st.st_mode))
-			return errorResponse(response->clientFd);
+		{
+			if (response->autoindex == true)
+				broad(response);
+			else
+				return errorResponse(response->clientFd);
+		}
 	}
 	std::ifstream resource_file(response->resourcePath); //위에서 stat함수로 파일검사는 완료
 	if (!resource_file.is_open()) //혹시 open이 안될수있으니 한번더 체크
@@ -466,36 +471,27 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 	return (response);
 }
 
-// //broad 페이지 작업중입니다...
-// void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *dirPtr)
-// {
-//     dirent *file;
-//     broadHtml << "<p>";
-//     if ((file = readdir(dirPtr)) == NULL)
-//         return;
-//     broadHtml << "<a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a><p>";
-//     recursionDir(path, broadHtml, dirPtr);
-//     return;
-// }
-
-// void broad(const HTTPRequest &request, int client_fd, Config &config)
-// {
-//     std::stringstream broadHtml;
-//     broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
-//     DIR *dirPtr = NULL;
-//     std::string path = "/example"; // location + path로 교체예정
-//     if ((dirPtr = opendir(path.c_str())) != NULL)
-//     {
-//         std::cout << "broad: location path err" << std::endl;
-//         return;
-//     }
-//     recursionDir(path, broadHtml, dirPtr);
-//     broadHtml << "</body></html>"
-//     std::string tmp = broadHtml.str();
-//     /* 헤더를 작성해주는과정 */
-//     MimeTypesParser mime(config);
-//     std::string contentType = mime.getMimeType("html");
-//     std::string response_header = generateHeader(tmp, contentType);
-//     write(client_fd, response_header.c_str(), response_header.length());
-//     write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
-// }
+void Worker::broad(ResponseData *response)
+{
+    std::stringstream broadHtml;
+    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
+    DIR *dirPtr = NULL;
+	dirent *file;
+    if ((dirPtr = opendir(response->root.c_str())) != NULL)
+    {
+        std::cout << "broad: location path err" << std::endl;
+        return;
+    }
+	while ((file = readdir(dirPtr)))
+	{
+		broadHtml << "<p><a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+	}
+    broadHtml << "</body></html>"
+    std::string tmp = broadHtml.str();
+    /* 헤더를 작성해주는과정 */
+    MimeTypesParser mime(config);
+    std::string contentType = mime.getMimeType("html");
+    std::string response_header = generateHeader(tmp, contentType);
+    write(client_fd, response_header.c_str(), response_header.length());
+    write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
+}
