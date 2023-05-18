@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/18 19:31:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 20:38:58 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,48 +69,99 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     if (idx != -1)
     {
         size_t i = static_cast<size_t>(idx);
-        for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
-        {
-            if (thisServer.location[i].block[j].name == "root")
-                response->root = thisServer.location[i].block[j].value;
-            else if (thisServer.location[i].block[j].name == "index")
-                response->index = thisServer.location[i].block[j].value;
-            // else if (thisServer.location[i].block[j].name == "autoindex") //켜져있다면 동적으로 index를 만들어야함
-            // 	thisServer.location[i].block[j].value == "on" ? :
-            else if (thisServer.location[i].block[j].name == "limit_except")
-            {
-                size_t pos = thisServer.location[i].block[j].value.find(' ');
-                size_t start = 0;
-                while (pos != std::string::npos)
-                {
-                    std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
-                    response->limit_except.push_back(tmp);
-                    start = pos;
-                    while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
-                        start++;
-                    pos = thisServer.location[i].block[j].value.find(' ', start);
-                }
-                std::string tmp = thisServer.location[i].block[j].value.substr(start);
-                response->limit_except.push_back(tmp);
-            }
-            else if (thisServer.location[i].block[j].name == "return")
-            {
-                size_t pos = thisServer.location[i].block[j].value.find(' ');
-                size_t start = 0;
-                std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
-                response->return_state = tmp;
-                start = pos;
-                while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
-                    start++;
-                tmp = thisServer.location[i].block[j].value.substr(start);
-                response->redirect = tmp;
-            }
-        }
+        setUpRoot(this->thisServer.location[i].block, response);
+        setUpIndex(this->thisServer.location[i].block, response);
+        setUpLimitExcept(this->thisServer.location[i].block, response);
+        setUpReturnState(this->thisServer.location[i].block, response);
     }
-    if (response->limit_except.size() == 0)
-        response->limit_except = thisServer.limitExcept;
+    if (response->limitExcept.size() == 0)
+        response->limitExcept = thisServer.limitExcept;
     response->resourcePath = response->root + request.path;
     return (response);
+}
+
+/**
+ * location 블록 내부에서 root 지시자를 찾아 responseData->root 세팅
+ *
+ * @param locationBlock 파싱된 location 블록
+ * @param response 반환될 responseData 구조체
+ */
+void Response::setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response)
+{
+    for (size_t i = 0; i < locationBlock.size(); i++)
+    {
+        if (locationBlock[i].name == "root")
+            response->root = locationBlock[i].value;
+    }
+}
+
+/**
+ * location 블록 내부에서 index 지시자를 찾아 responseData->index 세팅
+ *
+ * @param locationBlock 파싱된 location 블록
+ * @param response 반환될 responseData 구조체
+ */
+void Response::setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response)
+{
+    for (size_t i = 0; i < locationBlock.size(); i++)
+    {
+        if (locationBlock[i].name == "index")
+            response->index = locationBlock[i].value;
+    }
+}
+
+/**
+ * location 블록 내부에서 limit_except 지시자를 찾아 responseData->limitExcept 세팅
+ *
+ * @param locationBlock 파싱된 location 블록
+ * @param response 반환될 responseData 구조체
+ */
+void Response::setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseData *response)
+{
+    for (size_t i = 0; i < locationBlock.size(); i++)
+    {
+        if (locationBlock[i].name == "limit_except")
+        {
+            size_t pos = locationBlock[i].value.find(' ');
+            size_t start = 0;
+            while (pos != std::string::npos)
+            {
+                std::string tmp = locationBlock[i].value.substr(start, pos - start);
+                response->limitExcept.push_back(tmp);
+                start = pos;
+                while (locationBlock[i].value[start] != '\0' && locationBlock[i].value[start] == ' ')
+                    start++;
+                pos = locationBlock[i].value.find(' ', start);
+            }
+            std::string tmp = locationBlock[i].value.substr(start);
+            response->limitExcept.push_back(tmp);
+        }
+    }
+}
+
+/**
+ * location 블록 내부에서 return 지시자를 찾아 responseData->returnState, redirect 세팅
+ *
+ * @param locationBlock 파싱된 location 블록
+ * @param response 반환될 responseData 구조체
+ */
+void Response::setUpReturnState(std::vector<Directive> &locationBlock, ResponseData *response)
+{
+    for (size_t i = 0; i < locationBlock.size(); i++)
+    {
+        if (locationBlock[i].name == "return")
+        {
+            size_t pos = locationBlock[i].value.find(' ');
+            size_t start = 0;
+            std::string tmp = locationBlock[i].value.substr(start, pos - start);
+            response->returnState = tmp;
+            start = pos;
+            while (locationBlock[i].value[start] != '\0' && locationBlock[i].value[start] == ' ')
+                start++;
+            tmp = locationBlock[i].value.substr(start);
+            response->redirect = tmp;
+        }
+    }
 }
 
 /**

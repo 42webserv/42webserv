@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/18 19:31:16 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 20:37:06 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,8 @@ struct ResponseData
     std::string index;
     std::string resourcePath;
     std::string contentType;
-    std::vector<std::string> limit_except;
-    std::string return_state;
+    std::vector<std::string> limitExcept;
+    std::string returnState;
     std::string redirect;
 };
 
@@ -43,6 +43,10 @@ private:
     int matchLocation(const HTTPRequest &request, ServerInfo &thisServer);
     int getSuitableServer(int port, Server &server);
     std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
+    void setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response);
+    void setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response);
+    void setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseData *response);
+    void setUpReturnState(std::vector<Directive> &locationBlock, ResponseData *response);
 
 public:
     /*
