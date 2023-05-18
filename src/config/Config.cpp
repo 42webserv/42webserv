@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/13 16:40:30 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/17 17:28:31 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,7 @@ void Config::_setRelation()
 	_server.insert(std::make_pair("root", "fail"));
 	_server.insert(std::make_pair("location", "fail"));
 	_server.insert(std::make_pair("index", "fail"));
+	_server.insert(std::make_pair("limit_except", "fail"));
 
 	// location
 	_location.insert(std::make_pair("root", "fail"));
@@ -112,6 +113,8 @@ void Config::_setRelation()
 	_location.insert(std::make_pair("autoindex", "off"));
 	_location.insert(std::make_pair("limit_except", "fail"));
 	_location.insert(std::make_pair("return", "fail"));
+	_location.insert(std::make_pair("cgi_extension", "fail"));
+	_location.insert(std::make_pair("cgi_path", "fail"));
 };
 
 void Config::_setIncludes()
@@ -170,7 +173,7 @@ void Config::parsedConfig(int argc, char const **argv)
 		_directives[0].name = "main";
 		_directives[0].block = tmp;
 	}
-	_checkRealtion(_directives);
+	_checkRealtion(_directives[0].block, _directives);
 	_setIncludes();
 	infile.close();
 }
@@ -312,9 +315,17 @@ bool Config::_isDirectoryExists(const std::string &directoryPath, std::string di
 	return false;
 }
 
-bool Config::_isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName)
+bool Config::_isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName, std::vector<Directive> &preDirective)
 {
 	std::string root = "";
+	for (size_t k = 0; k < preDirective.size(); k++)
+	{
+		if (preDirective[k].name == "root")
+		{
+			root = preDirective[k].value;
+			break;
+		}
+	}
 	for (size_t k = 0; k < directives.size(); k++)
 	{
 		if (directives[k].name == "root")
@@ -350,8 +361,9 @@ void Config::_checkEmpty(std::string &value, std::string directiveName, bool exi
 	}
 }
 
-void Config::_checkValidValue(std::vector<Directive> &directives)
+void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Directive> &preDirective)
 {
+	std::string defaultRoot = "";
 	for (size_t i = 0; i < directives.size(); i++)
 	{
 		if (directives[i].name == "http")
@@ -363,7 +375,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 		if (directives[i].name == "include")
 		{
 			_checkEmpty(directives[i].value, "include", true);
-			_isFileExists(directives, directives[i].value, "include");
+			_isFileExists(directives, directives[i].value, "include", preDirective);
 		}
 		if (directives[i].name == "server_name")
 			_checkEmpty(directives[i].value, "server_name", true);
@@ -407,7 +419,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 				}
 			}
 
-			_isFileExists(directives, errorPage[errorPage.size() - 1], "error_page");
+			_isFileExists(directives, errorPage[errorPage.size() - 1], "error_page", preDirective);
 		}
 		if (directives[i].name == "client_max_body_size")
 		{
@@ -433,7 +445,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 		if (directives[i].name == "index")
 		{
 			_checkEmpty(directives[i].value, "index", true);
-			_isFileExists(directives, directives[i].value, "index");
+			_isFileExists(directives, directives[i].value, "index", preDirective);
 		}
 		if (directives[i].name == "limit_except")
 		{
@@ -477,7 +489,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
  *
  *	directive : 확인할 지시자들
  */
-void Config::_checkRealtion(std::vector<Directive> &directive)
+void Config::_checkRealtion(std::vector<Directive> &directive, std::vector<Directive> &preDirective)
 {
 	for (size_t i = 0; i < directive.size(); i++)
 	{
@@ -504,7 +516,7 @@ void Config::_checkRealtion(std::vector<Directive> &directive)
 			continue;
 		else
 			_checkRepeatition(directive[i].block, directive[i].name);
-		Config::_checkRealtion(directive[i].block);
+		_checkRealtion(directive[i].block, directive);
 	}
-	_checkValidValue(directive);
+	_checkValidValue(directive, preDirective);
 }

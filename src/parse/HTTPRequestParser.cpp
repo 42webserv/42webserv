@@ -151,7 +151,7 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos = buffer_.find("\r\n");
     if (pos == std::string::npos)
         return false;
-    std::string header_value = buffer_.substr(0, pos);
+    std::string header_value = buffer_.substr(1, pos);
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos + 2);
     if (current_header_name_ == "Host")
@@ -182,7 +182,7 @@ bool HTTPRequestParser::parseBody()
     if (method_ == "POST")
     {
         std::map<std::string, std::string>::iterator it =
-            headers_.find("Content-Length");
+            headers_.find("content-length");
         if (it != headers_.end())
         {
             int content_length = atoi(it->second.c_str());
