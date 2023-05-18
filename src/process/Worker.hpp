@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:15:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 21:24:16 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,9 +41,11 @@ private:
 	int fd;
 	Config config;
 	Server server;
+	HTTPRequestParser parser;
 
 	void eventEVError(int k);
 	bool eventFilterRead(int k);
+	bool eventFilterWrite(int k);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void errorResponse(int client_fd);

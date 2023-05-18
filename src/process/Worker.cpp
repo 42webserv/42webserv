@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:17:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 21:24:40 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,13 +74,32 @@ bool Worker::eventFilterRead(int k)
 	return true;
 }
 
+bool Worker::eventFilterWrite(int k)
+{
+	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+	if (found == sockets[k]->clientFds.end())
+		return false;
+	HTTPRequest *result = parser.parse(clients[fd]);
+	if (clients.find(fd) != clients.end())
+	{
+		if (result)
+		{
+			this->requestHandler(*result, fd);
+			delete result;
+		}
+		else
+			std::cout << "Failed to parse request" << std::endl;
+		sockets[k]->disconnectClient(fd, clients);
+		clients[fd].clear();
+	}
+	return true;
+}
+
 void Worker::run()
 {
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
-	HTTPRequestParser parser;
-	HTTPRequest *result = NULL;
 
 	while (true)
 	{
@@ -108,23 +127,8 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
-					found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-					if (found == sockets[k]->clientFds.end())
+					if (eventFilterWrite(k) == false)
 						continue;
-					result = parser.parse(clients[fd]);
-					if (clients.find(fd) != clients.end())
-					{
-						if (result)
-						{
-							// TODO: HTTP Response 구현
-							this->requestHandler(*result, fd);
-							delete result;
-						}
-						else
-							std::cout << "Failed to parse request" << std::endl;
-						sockets[k]->disconnectClient(fd, clients);
-						clients[fd].clear();
-					}
 				}
 				else if (event.filter == EVFILT_SIGNAL)
 					signal.handleEvent(event, sockets);
