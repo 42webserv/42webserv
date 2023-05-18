@@ -18,6 +18,7 @@
 #include "Worker.hpp"
 #include "MimeTypesParser.hpp"
 #include <sys/stat.h>
+#include <dirent.h>
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
@@ -198,7 +199,9 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
 	ServerInfo thisServer = this->server.server[nServer];
 	ResponseData *response = getResponseData(request, client_fd, thisServer);
+	//현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
+	// if (request.method == "GET")
 	{
 		getResponse(response);
 	}
@@ -214,6 +217,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		write(response->clientFd, response_header.c_str(), response_header.length());
 		write(response->clientFd, response_body.c_str(), response_body.length());
 	}
+	delete response->cgi;
 	delete response;
 }
 
@@ -271,25 +275,28 @@ bool Worker::isCGIRequest(const HTTPRequest &request)
 void Worker::getResponse(ResponseData *response)
 {
 	struct stat st;
-	const char *path = response->resourcePath.c_str();
-	if (!stat(path, &st))
-		std::cerr << "Failed to get information about " << path << std::endl;
-	// 리소스를 찾지 못했다면 404페이지로 이동
-	if (!S_ISREG(st.st_mode))
+	if (!stat(response->resourcePath.c_str(), &st)) //파일인지 디렉토리인지 검사하기위해 stat함수 사용
+		std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+	if (!S_ISREG(st.st_mode)) //root + index을 검사해 파일이 아닐시 if로 분기
 	{
-		if (!response->index.empty())
+		response->resourcePath = response->root + response->path; //root + path로 다시 검사
+		std::memset(&st, 0, sizeof(st));
+		if (!stat(response->resourcePath.c_str(), &st))
+			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+		if (!S_ISREG(st.st_mode))
 		{
-			response->resourcePath = response->root + '/' + response->index;
-			std::ifstream resource_file(response->resourcePath);
-			if (!resource_file.is_open())
+			if (response->autoindex)
 			{
-				return errorResponse(response->clientFd);
+				broad(response);
+				return ;
 			}
+			else
+				return errorResponse(response->clientFd);
 		}
-		else
-			return errorResponse(response->clientFd);
 	}
-	std::ifstream resource_file(response->resourcePath);
+	std::ifstream resource_file(response->resourcePath); //위에서 stat함수로 파일검사는 완료
+	if (!resource_file.is_open()) //혹시 open이 안될수있으니 한번더 체크
+		return errorResponse(response->clientFd);
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;
 	std::istringstream iss(response->resourcePath);
@@ -381,21 +388,22 @@ bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &i
 			return (true);
 		}
 	}
-	// size_t pos = request.path.rfind('/');
-	// while (pos != std::string::npos)
-	// {
-	// 	std::string tmp = request.path.substr(0, pos); //
-	// 	for (size_t i = 0; i < thisServer.location.size(); ++i)
-	// 	{
-	// 		if (thisServer.location[i].value == tmp)
-	// 		{
-	// 			idx = i;
-	// 			return (true);
-	// 		}
-	// 	}
-	// 	tmp = tmp.erase(pos);
-	// 	pos = tmp.rfind('/');
-	// }
+	// while돌면서 "/" 부분을 지우고 찾는 부분인데 "/" 까지 지우지 때문에 "/" 하나와 매칭되지않음.
+	size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+	while (pos != std::string::npos)
+	{
+		std::string tmp = request.path.substr(0, pos);
+		for (size_t i = 0; i < thisServer.location.size(); ++i)
+		{
+			if (thisServer.location[i].value == tmp)
+			{
+				idx = i;
+				return (true);
+			}
+		}
+		tmp = tmp.erase(pos);
+		pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
+	}
 	return (false);
 }
 
@@ -410,20 +418,37 @@ bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &i
 ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer)
 {
 	ResponseData *response = new ResponseData;
+	{
+		Cgi *cgi = new Cgi;
+		cgi->addr = request.addr;
+		cgi->body = request.body;
+		cgi->port = request.port;
+		cgi->name = thisServer.serverName;
+		cgi->query = request.query;
+		cgi->path = request.path;
+		response->cgi = cgi;
+	}
 	response->index = thisServer.index;
 	response->clientFd = client_fd;
 	response->root = getRootDirectory(request, thisServer);
 	size_t i = 0;
 	if (matchLocation(request, thisServer, i))
 	{
+		response->locationName = thisServer.location[i].value;
 		for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
 		{
 			if (thisServer.location[i].block[j].name == "root")
+			{
+				std::string tmp = response->cgi->path;
 				response->root = thisServer.location[i].block[j].value;
+				response->path = tmp.erase(tmp.find(thisServer.location[i].value), thisServer.location[i].value.size());
+			}
 			else if (thisServer.location[i].block[j].name == "index")
 				response->index = thisServer.location[i].block[j].value;
-			// else if (thisServer.location[i].block[j].name == "autoindex") //켜져있다면 동적으로 index를 만들어야함
-			// 	thisServer.location[i].block[j].value == "on" ? :
+			else if (thisServer.location[i].block[j].name == "autoindex")
+			{
+				thisServer.location[i].block[j].value == "on" ? response->autoindex = true : response->autoindex = false;
+			}
 			else if (thisServer.location[i].block[j].name == "limit_except")
 			{
 				size_t pos = thisServer.location[i].block[j].value.find(' ');
@@ -456,40 +481,32 @@ ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &cli
 	}
 	if (response->limit_except.size() == 0)
 		response->limit_except = thisServer.limitExcept;
-	response->resourcePath = response->root + request.path;
+	response->resourcePath = response->root + "/" + response->index; //index 정보는 server 또는 location에서 가져왔음
 	return (response);
 }
 
-// //broad 페이지 작업중입니다...
-// void recursionDir(const std::string &path, std::stringstream &broadHtml, DIR *dirPtr)
-// {
-//     dirent *file;
-//     broadHtml << "<p>";
-//     if ((file = readdir(dirPtr)) == NULL)
-//         return;
-//     broadHtml << "<a href=" << path << "/" << file->d_name << ">" << file->d_name << "</a><p>";
-//     recursionDir(path, broadHtml, dirPtr);
-//     return;
-// }
-
-// void broad(const HTTPRequest &request, int client_fd, Config &config)
-// {
-//     std::stringstream broadHtml;
-//     broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
-//     DIR *dirPtr = NULL;
-//     std::string path = "/example"; // location + path로 교체예정
-//     if ((dirPtr = opendir(path.c_str())) != NULL)
-//     {
-//         std::cout << "broad: location path err" << std::endl;
-//         return;
-//     }
-//     recursionDir(path, broadHtml, dirPtr);
-//     broadHtml << "</body></html>"
-//     std::string tmp = broadHtml.str();
-//     /* 헤더를 작성해주는과정 */
-//     MimeTypesParser mime(config);
-//     std::string contentType = mime.getMimeType("html");
-//     std::string response_header = generateHeader(tmp, contentType);
-//     write(client_fd, response_header.c_str(), response_header.length());
-//     write(client_fd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
-// }
+void Worker::broad(ResponseData *response)
+{
+    std::stringstream broadHtml;
+    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
+    DIR *dirPtr = NULL;
+	dirent *file;
+    // if ((dirPtr = opendir(response->root.c_str())) != NULL)
+    if ((dirPtr = opendir(response->root.c_str())) == NULL)
+    {
+        std::cout << "broad: location path err" << std::endl;
+        return;
+    }
+	while ((file = readdir(dirPtr)))
+	{
+		broadHtml << "<p><a href=" << response->locationName << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+	}
+    broadHtml << "</body></html>";
+    std::string tmp = broadHtml.str();
+    /* 헤더를 작성해주는과정 */
+    MimeTypesParser mime(config);
+    std::string contentType = mime.getMimeType("html");
+    std::string response_header = generateHeader(tmp, contentType);
+    write(response->clientFd, response_header.c_str(), response_header.length());
+    write(response->clientFd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
+}

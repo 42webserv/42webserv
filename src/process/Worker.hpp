@@ -22,6 +22,16 @@
 #include "HTTPRequestParser.hpp"
 #include "CGI.hpp"
 
+struct Cgi
+{
+	int port;
+    std::string path;
+	std::string body;
+    std::string query;
+    std::string addr;
+    std::string name;
+};
+
 struct ResponseData
 {
 	int clientFd;
@@ -33,6 +43,10 @@ struct ResponseData
 	std::vector<std::string> limit_except;
 	std::string return_state;
 	std::string redirect;
+	std::string locationName;
+	std::string path; // path중 locationName 부분을 지운 나머지 경로
+	Cgi *cgi;
+	bool autoindex;
 };
 
 class Worker
@@ -56,6 +70,7 @@ private:
 	int getSuitableServer(int port);
 	std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
+	void broad(ResponseData *response);
 
 public:
 	Worker(Master &master);

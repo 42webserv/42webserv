@@ -169,7 +169,8 @@ void Server::setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &serverBlock
             return;
         }
     }
-    tmpServ.index = "index.html";
+    // tmpServ.index = "index.html";
+    tmpServ.index = "";
 }
 
 /**
