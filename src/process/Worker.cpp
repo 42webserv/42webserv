@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:11:25 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 21:17:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,12 +43,42 @@ void Worker::eventEVError(int k)
 	}
 }
 
+bool Worker::eventFilterRead(int k)
+{
+	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+	if (found == sockets[k]->clientFds.end())
+		return false;
+	if (fd == sockets[k]->server_fd)
+	{
+		int client_fd = sockets[k]->handleEvent(event_list);
+		clients[client_fd].clear();
+	}
+	else if (clients.find(fd) != clients.end())
+	{
+		char buf[1024];
+		int n = 1;
+		while (0 < (n = read(fd, buf, sizeof(buf))))
+		{
+			buf[n] = '\0';
+			clients[fd] += buf;
+		}
+		if (n < 1)
+		{
+			// HTML 요청 메세지 보기
+			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+			struct kevent new_event;
+			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			event_list.push_back(new_event);
+		}
+	}
+	return true;
+}
+
 void Worker::run()
 {
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
-	// int fd;
 	HTTPRequestParser parser;
 	HTTPRequest *result = NULL;
 
@@ -68,49 +98,13 @@ void Worker::run()
 			{
 				event = events[i];
 				fd = event.ident;
-				std::vector<int>::iterator found;
 
 				if (event.flags & EV_ERROR)
 					eventEVError(k);
-				// {
-				// 	// 서버 소켓 에러
-				// 	if (fd == sockets[k]->server_fd)
-				// 		error_exit("Server socket error");
-				// 	else
-				// 	{
-				// 		// 클라이언트 소켓 에러 아니면 다른 에러
-				// 		if (clients.find(fd) != clients.end())
-				// 			sockets[k]->disconnectClient(fd, clients);
-				// 	}
-				// }
 				if (event.filter == EVFILT_READ)
 				{
-					found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-					if (found == sockets[k]->clientFds.end())
+					if (eventFilterRead(k) == false)
 						continue;
-					if (fd == sockets[k]->server_fd)
-					{
-						int client_fd = sockets[k]->handleEvent(event_list);
-						clients[client_fd].clear();
-					}
-					else if (clients.find(fd) != clients.end())
-					{
-						char buf[1024];
-						int n = 1;
-						while (0 < (n = read(fd, buf, sizeof(buf))))
-						{
-							buf[n] = '\0';
-							clients[fd] += buf;
-						}
-						if (n < 1)
-						{
-							// HTML 요청 메세지 보기
-							// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
-							struct kevent new_event;
-							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-							event_list.push_back(new_event);
-						}
-					}
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{

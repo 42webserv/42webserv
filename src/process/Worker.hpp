@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:11:01 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 21:15:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,13 @@ private:
 	std::vector<Socket *> sockets;
 	std::vector<struct kevent> &event_list;
 	std::map<int, std::string> clients;
+	std::vector<int>::iterator found;
 	int fd;
 	Config config;
 	Server server;
 
 	void eventEVError(int k);
+	bool eventFilterRead(int k);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void errorResponse(int client_fd);
