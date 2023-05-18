@@ -6,18 +6,11 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/14 18:02:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 19:30:17 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include <sys/event.h>
-#include <unistd.h>
-#include "common_error.hpp"
-#include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
-#include "MimeTypesParser.hpp"
-#include <sys/stat.h>
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
@@ -177,12 +170,8 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
-	if (getSuitableServer(request.port) == -1)
-		return;
-	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
-	ServerInfo thisServer = this->server.server[nServer];
-	ResponseData *response = getResponseData(request, client_fd, thisServer);
+	Response responseClass(request.port, this->server);
+	ResponseData *response = responseClass.getResponseData(request, client_fd);
 	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
 	{
 		getResponse(response);
@@ -200,41 +189,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		write(response->clientFd, response_body.c_str(), response_body.length());
 	}
 	delete response;
-}
-
-/**
- * 특정 포트번호가 몇 번째 서버에 위치하는지 찾아서 위치값 반환. 서버 내에서 포트번호를 찾지 못할경우 -1 반환
- *
- * @param port 위치 찾고싶은 포트번호
- * @return 서버 위치
- */
-int Worker::getSuitableServer(int port)
-{
-	std::vector<ServerInfo> serv = this->server.server;
-	for (size_t i = 0; i < serv.size(); i++)
-	{
-		for (size_t j = 0; j < serv[i].port.size(); j++)
-		{
-			if (serv[i].port[j] == port)
-				return static_cast<int>(i);
-		}
-	}
-	return -1;
-}
-
-/**
- * 해당 서버의 root 경로를 반환. 요청이 favicon.ico 일 경우, 미리 지정한 이미지 경로 반환
- *
- * @param request 파싱된 HTTP 요청 메세지 구조체
- * @param thisServer 현재 해당하는 서버
- * @return 경로 문자열
- */
-std::string Worker::getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer)
-{
-	//.ico파일일 경우 임의로 이미지폴더로 이동
-	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
-		return "./assets/images";
-	return thisServer.root;
 }
 
 /**
@@ -333,104 +287,6 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	oss << "Content-Type: text/html\r\n";
 	oss << "Connection: close\r\n\r\n";
 	return oss.str();
-}
-
-/**
- * path중 location에 매칭되는게있는지 판단하고, 매칭되는게 몇번째 location인지 찾는다.
- *
- * @param request request 를 파싱완료한 구조체
- * @param thisServer 현재 해당하는 서버
- * @param idx 몇번째 location블록과 매칭되는지 값을 받아온다.
- * @return 매칭된다면 true 그렇지않다면 false
- */
-bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &idx)
-{
-	for (size_t i = 0; i < thisServer.location.size(); ++i)
-	{
-		thisServer.location[i].value.erase(thisServer.location[i].value.find_last_not_of(' ') + 1);
-		if (thisServer.location[i].value == request.path)
-		{
-			idx = i;
-			return (true);
-		}
-	}
-	// size_t pos = request.path.rfind('/');
-	// while (pos != std::string::npos)
-	// {
-	// 	std::string tmp = request.path.substr(0, pos); //
-	// 	for (size_t i = 0; i < thisServer.location.size(); ++i)
-	// 	{
-	// 		if (thisServer.location[i].value == tmp)
-	// 		{
-	// 			idx = i;
-	// 			return (true);
-	// 		}
-	// 	}
-	// 	tmp = tmp.erase(pos);
-	// 	pos = tmp.rfind('/');
-	// }
-	return (false);
-}
-
-/**
- * ResponseDate구조체를 얻어옴. 만약 location과 일치한다면 location을 우선으로 가져옴
- *
- * @param request request 를 파싱완료한 구조체
- * @param client_fd 웹 소켓
- * @param thisServer 현재 해당하는 서버
- * @return 전부 채워진 ResponseDate구조체
- */
-ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer)
-{
-	ResponseData *response = new ResponseData;
-	response->index = thisServer.index;
-	response->clientFd = client_fd;
-	response->root = getRootDirectory(request, thisServer);
-	size_t i = 0;
-	if (matchLocation(request, thisServer, i))
-	{
-		for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
-		{
-			if (thisServer.location[i].block[j].name == "root")
-				response->root = thisServer.location[i].block[j].value;
-			else if (thisServer.location[i].block[j].name == "index")
-				response->index = thisServer.location[i].block[j].value;
-			// else if (thisServer.location[i].block[j].name == "autoindex") //켜져있다면 동적으로 index를 만들어야함
-			// 	thisServer.location[i].block[j].value == "on" ? :
-			else if (thisServer.location[i].block[j].name == "limit_except")
-			{
-				size_t pos = thisServer.location[i].block[j].value.find(' ');
-				size_t start = 0;
-				while (pos != std::string::npos)
-				{
-					std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
-					response->limit_except.push_back(tmp);
-					start = pos;
-					while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
-						start++;
-					pos = thisServer.location[i].block[j].value.find(' ', start);
-				}
-				std::string tmp = thisServer.location[i].block[j].value.substr(start);
-				response->limit_except.push_back(tmp);
-			}
-			else if (thisServer.location[i].block[j].name == "return")
-			{
-				size_t pos = thisServer.location[i].block[j].value.find(' ');
-				size_t start = 0;
-				std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
-				response->return_state = tmp;
-				start = pos;
-				while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
-					start++;
-				tmp = thisServer.location[i].block[j].value.substr(start);
-				response->redirect = tmp;
-			}
-		}
-	}
-	if (response->limit_except.size() == 0)
-		response->limit_except = thisServer.limitExcept;
-	response->resourcePath = response->root + request.path;
-	return (response);
 }
 
 // //broad 페이지 작업중입니다...
