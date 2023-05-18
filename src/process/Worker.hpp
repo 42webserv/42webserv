@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 19:28:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 21:11:01 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,17 +36,17 @@ private:
 	const Signal signal;
 	std::vector<Socket *> sockets;
 	std::vector<struct kevent> &event_list;
+	std::map<int, std::string> clients;
+	int fd;
 	Config config;
 	Server server;
 
+	void eventEVError(int k);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-	// int getSuitableServer(int port);
-	// std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
-	// ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 
 public:
 	Worker(Master &master);
