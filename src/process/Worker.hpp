@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 21:24:16 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/18 21:35:09 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <sys/event.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include "MimeTypesParser.hpp"
 #include "common_error.hpp"
 #include "Master.hpp"
@@ -26,8 +27,20 @@
 #include "Server.hpp"
 #include "Response.hpp"
 #include "HTTPRequestParser.hpp"
+#include "CGI.hpp"
+
+struct Cgi
+{
+	int port;
+	std::string path;
+	std::string body;
+	std::string query;
+	std::string addr;
+	std::string name;
+};
 
 struct ResponseData;
+struct HTTPRequest;
 
 class Worker
 {
@@ -51,6 +64,9 @@ private:
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
+	bool isCGIRequest(const HTTPRequest &request);
+	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
+	void broad(ResponseData *response);
 
 public:
 	Worker(Master &master);
