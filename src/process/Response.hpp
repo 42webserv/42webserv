@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/18 22:59:30 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/19 15:05:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ struct CGIData
 struct ResponseData
 {
     int clientFd;
-    std::ifstream resourceFile;
     std::string root;
     std::string index;
     std::string resourcePath;
