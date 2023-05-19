@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 23:04:50 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/19 12:47:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -211,10 +211,7 @@ void Worker::getResponse(ResponseData *response)
 		if (!S_ISREG(st.st_mode))
 		{
 			if (response->autoindex)
-			{
-				broad(response);
-				return;
-			}
+				return broad(response);
 			else
 				return errorResponse(response->clientFd);
 		}
