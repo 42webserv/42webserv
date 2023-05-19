@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/17 17:14:07 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/18 22:53:30 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,40 +14,24 @@
 #define WORKER_HPP
 
 #include <iostream>
+#include <sys/event.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include "MimeTypesParser.hpp"
+#include "common_error.hpp"
 #include "Master.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
 #include "Config.hpp"
-#include "server/Server.hpp"
+#include "Server.hpp"
+#include "Response.hpp"
 #include "HTTPRequestParser.hpp"
 #include "CGI.hpp"
 
-struct Cgi
-{
-	int port;
-    std::string path;
-	std::string body;
-    std::string query;
-    std::string addr;
-    std::string name;
-};
-
-struct ResponseData
-{
-	int clientFd;
-	std::ifstream resourceFile;
-	std::string root;
-	std::string index;
-	std::string resourcePath;
-	std::string contentType;
-	std::vector<std::string> limit_except;
-	std::string return_state;
-	std::string redirect;
-	std::string locationName;
-	std::string path; // path중 locationName 부분을 지운 나머지 경로
-	Cgi *cgi;
-	bool autoindex;
-};
+struct CGIData;
+struct ResponseData;
+struct HTTPRequest;
 
 class Worker
 {
@@ -56,19 +40,22 @@ private:
 	const Signal signal;
 	std::vector<Socket *> sockets;
 	std::vector<struct kevent> &event_list;
+	std::map<int, std::string> clients;
+	std::vector<int>::iterator found;
+	int fd;
 	Config config;
 	Server server;
+	HTTPRequestParser parser;
 
+	void eventEVError(int k);
+	bool eventFilterRead(int k);
+	bool eventFilterWrite(int k);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(const HTTPRequest &request);
-	std::string extractCGIPath(const HTTPRequest &request);
-
-	int getSuitableServer(int port);
-	std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 	void broad(ResponseData *response);
 

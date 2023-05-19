@@ -3,22 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/17 17:24:47 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/19 16:16:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include <sys/event.h>
-#include <unistd.h>
-#include "common_error.hpp"
-#include "HTTPRequestParser.hpp"
 #include "Worker.hpp"
-#include "MimeTypesParser.hpp"
-#include <sys/stat.h>
-#include <dirent.h>
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
@@ -38,20 +30,79 @@ Worker::~Worker()
 		delete (sockets[i]);
 }
 
+void Worker::eventEVError(int k)
+{
+	// 서버 소켓 에러
+	if (fd == sockets[k]->server_fd)
+		error_exit("Server socket error");
+	else
+	{
+		// 클라이언트 소켓 에러 아니면 다른 에러
+		if (clients.find(fd) != clients.end())
+			sockets[k]->disconnectClient(fd, clients);
+	}
+}
+
+bool Worker::eventFilterRead(int k)
+{
+	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+	if (found == sockets[k]->clientFds.end())
+		return false;
+	if (fd == sockets[k]->server_fd)
+	{
+		int client_fd = sockets[k]->handleEvent(event_list);
+		clients[client_fd].clear();
+	}
+	else if (clients.find(fd) != clients.end())
+	{
+		char buf[1024];
+		int n = 1;
+		while (0 < (n = read(fd, buf, sizeof(buf))))
+		{
+			buf[n] = '\0';
+			clients[fd] += buf;
+		}
+		if (n < 1)
+		{
+			// HTML 요청 메세지 보기
+			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+			struct kevent new_event;
+			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			event_list.push_back(new_event);
+		}
+	}
+	return true;
+}
+
+bool Worker::eventFilterWrite(int k)
+{
+	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+	if (found == sockets[k]->clientFds.end())
+		return false;
+	HTTPRequest *result = parser.parse(clients[fd]);
+	if (clients.find(fd) != clients.end())
+	{
+		if (result)
+		{
+			this->requestHandler(*result, fd);
+			delete result;
+		}
+		else
+			std::cout << "Failed to parse request" << std::endl;
+		sockets[k]->disconnectClient(fd, clients);
+		clients[fd].clear();
+	}
+	return true;
+}
+
 void Worker::run()
 {
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
-	int fd;
-	std::map<int, std::string> clients;
-	HTTPRequestParser parser;
-	HTTPRequest *result = NULL;
 
 	while (true)
 	{
-		// event_list	-> events we want to monitor
-		// event		-> events that were triggered
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
 		if (nevents == -1)
 		{
@@ -66,194 +117,78 @@ void Worker::run()
 			{
 				event = events[i];
 				fd = event.ident;
-				std::vector<int>::iterator found;
 
 				if (event.flags & EV_ERROR)
-				{
-					// handle error
-					if (fd == sockets[k]->server_fd)
-						// 서버 소켓 에러
-						error_exit("Server socket error");
-					else
-					{
-						// 클라이언트 소켓 에러 아니면 다른 에러
-						if (clients.find(fd) != clients.end())
-							sockets[k]->disconnectClient(fd, clients);
-					}
-				}
+					eventEVError(k);
 				if (event.filter == EVFILT_READ)
 				{
-					found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-					if (found == sockets[k]->clientFds.end())
+					if (eventFilterRead(k) == false)
 						continue;
-
-					// 돌아가는 방식 보고 싶을때
-
-					// std::cout << fd << " 의 Read event  소켓 포트 번호는 " << sockets[k]->_port << std::endl;
-					// std::cout << "그리고 socket에 저장되어있는 fd들은 [";
-					// for (size_t i = 0; i < sockets[k]->clientFds.size(); i++)
-					// 	std::cout << sockets[k]->clientFds[i] << ", ";
-					// std::cout << "]" << std::endl;
-
-					if (fd == sockets[k]->server_fd)
-					{
-						int client_fd = sockets[k]->handleEvent(event_list);
-						clients[client_fd].clear();
-					}
-					else if (clients.find(fd) != clients.end())
-					{
-						char buf[1024];
-						int n = 1;
-						while (0 < (n = read(fd, buf, sizeof(buf))))
-						{
-							buf[n] = '\0';
-							clients[fd] += buf;
-						}
-						if (n < 1)
-						{
-							// if (n < 0) // 여기 들어온다는 것은 읽지 못하는 것을 읽었다는 뜻인데 그럼...
-							// 	std::cerr << "Client read error!" << '\n';
-							std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
-
-							struct kevent new_event;
-							EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-							event_list.push_back(new_event);
-						}
-					}
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
-					found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-					if (found == sockets[k]->clientFds.end())
+					if (eventFilterWrite(k) == false)
 						continue;
-
-					// 돌아가는 방식 보고 싶을때
-
-					// std::cout << fd << " 의 Write event  소켓 포트 번호는 " << sockets[k]->_port << std::endl;
-					// std::cout << "그리고 socket에 저장되어있는 fd들은 [";
-					// for (size_t i = 0; i < sockets[k]->clientFds.size(); i++)
-					// 	std::cout << sockets[k]->clientFds[i] << ", ";
-					// std::cout << "]" << std::endl;
-
-					result = parser.parse(clients[fd]);
-					if (clients.find(fd) != clients.end())
-					{
-						if (result)
-						{
-							// TODO: HTTP Response 구현
-							this->requestHandler(*result, fd);
-							delete result;
-						}
-						else
-							std::cout << "Failed to parse request" << std::endl;
-						sockets[k]->disconnectClient(fd, clients);
-						clients[fd].clear();
-					}
-					// 큰 파일 처리할 때
-					// off_t offset = (off_t)event.udata;
-					// off_t len = 0;
-					// if (sendfile(junk, fd, offset, &len, NULL, 0) != 0)
-					// {
-					// 	if (errno == EAGAIN)
-					// 	{
-					// 		EV_SET(&event, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, (void *)(offset + len));
-					// 		event_list.push_back(event);
-					// 	}
-					// }
-					// bytes_written += len;
 				}
 				else if (event.filter == EVFILT_SIGNAL)
 					signal.handleEvent(event, sockets);
-				// system("leaks webserv");
 			}
 		}
 	}
 }
 
-//  * 각각 method 실행과 해당 포트에 response를 보내줌
-//  *
-//  * @param request request 를 파싱완료한 구조체
-//  * @param client_fd 서버의 fd
-
+/*
+ * 각각 method 실행과 해당 포트에 response를 보내줌
+ *
+ * @param request request 를 파싱완료한 구조체
+ * @param client_fd 서버의 fd
+ */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
+	Response responseClass(request.port, this->server);
+	ResponseData *response = responseClass.getResponseData(request, client_fd);
+	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
+	{
+		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
+		// 잘못된 메서드일경우
+		// method not allowed
+		std::string response_body = "Method not allowed";
+		std::string response_header = generateErrorHeader(405, response_body);
+		write(response->clientFd, response_header.c_str(), response_header.length());
+		write(response->clientFd, response_body.c_str(), response_body.length());
+		delete response->cgi;
+		delete response;
+		return;
+	}
+	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (request.method == "GET")
 	{
 		if (isCGIRequest(request))
 		{
 			CGI cgi("");
 			std::string cgiFullPath = "./src" + request.path + ".py";
+
+			// test
 			std::string filename = "result.html";
 			std::string filepath = "./assets/html/";
 			std::string fullpath = filepath + filename;
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			std::ofstream testCGI(fullpath);
+
 			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
 			testCGI << cgi.excuteCGI(cgiFullPath);
 			testCGI.close();
 		}
-	}
-	std::cout << "requestHandler port: " << request.port << ", Server[" << getSuitableServer(request.port) << "]" << std::endl;
-	if (getSuitableServer(request.port) == -1)
-		return;
-	size_t nServer = static_cast<size_t>(getSuitableServer(request.port));
-	ServerInfo thisServer = this->server.server[nServer];
-	ResponseData *response = getResponseData(request, client_fd, thisServer);
-	//현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (request.method == "GET" && (std::find(response->limit_except.begin(), response->limit_except.end(), "GET") != response->limit_except.end()))
-	// if (request.method == "GET")
-	{
 		getResponse(response);
 	}
-	if (request.method == "POST")
+	else if (request.method == "POST")
 	{
 	}
-	else
+	else // DELETE
 	{
-		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
-		// 잘못된 메서드일경우
-		std::string response_body = "Method not allowed";
-		std::string response_header = generateErrorHeader(405, response_body);
-		write(response->clientFd, response_header.c_str(), response_header.length());
-		write(response->clientFd, response_body.c_str(), response_body.length());
 	}
 	delete response->cgi;
 	delete response;
-}
-
-/**
- * 특정 포트번호가 몇 번째 서버에 위치하는지 찾아서 위치값 반환. 서버 내에서 포트번호를 찾지 못할경우 -1 반환
- *
- * @param port 위치 찾고싶은 포트번호
- * @return 서버 위치
- */
-int Worker::getSuitableServer(int port)
-{
-	std::vector<ServerInfo> serv = this->server.server;
-	for (size_t i = 0; i < serv.size(); i++)
-	{
-		for (size_t j = 0; j < serv[i].port.size(); j++)
-		{
-			if (serv[i].port[j] == port)
-				return static_cast<int>(i);
-		}
-	}
-	return -1;
-}
-
-/**
- * 해당 서버의 root 경로를 반환. 요청이 favicon.ico 일 경우, 미리 지정한 이미지 경로 반환
- *
- * @param request 파싱된 HTTP 요청 메세지 구조체
- * @param thisServer 현재 해당하는 서버
- * @return 경로 문자열
- */
-std::string Worker::getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer)
-{
-	//.ico파일일 경우 임의로 이미지폴더로 이동
-	if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
-		return "./assets/images";
-	return thisServer.root;
 }
 
 bool Worker::isCGIRequest(const HTTPRequest &request)
@@ -275,27 +210,24 @@ bool Worker::isCGIRequest(const HTTPRequest &request)
 void Worker::getResponse(ResponseData *response)
 {
 	struct stat st;
-	if (!stat(response->resourcePath.c_str(), &st)) //파일인지 디렉토리인지 검사하기위해 stat함수 사용
+	if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
 		std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
-	if (!S_ISREG(st.st_mode)) //root + index을 검사해 파일이 아닐시 if로 분기
+	if (!S_ISREG(st.st_mode)) // root + index을 검사해 파일이 아닐시 if로 분기
 	{
-		response->resourcePath = response->root + response->path; //root + path로 다시 검사
+		response->resourcePath = response->root + response->path; // root + path로 다시 검사
 		std::memset(&st, 0, sizeof(st));
 		if (!stat(response->resourcePath.c_str(), &st))
 			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
 		if (!S_ISREG(st.st_mode))
 		{
 			if (response->autoindex)
-			{
-				broad(response);
-				return ;
-			}
+				return broad(response);
 			else
 				return errorResponse(response->clientFd);
 		}
 	}
-	std::ifstream resource_file(response->resourcePath); //위에서 stat함수로 파일검사는 완료
-	if (!resource_file.is_open()) //혹시 open이 안될수있으니 한번더 체크
+	std::ifstream resource_file(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
+	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
 		return errorResponse(response->clientFd);
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
 	std::vector<std::string> tokens;
@@ -367,146 +299,28 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 	return oss.str();
 }
 
-// CGI 처리
-
-/**
- * path중 location에 매칭되는게있는지 판단하고, 매칭되는게 몇번째 location인지 찾는다.
- *
- * @param request request 를 파싱완료한 구조체
- * @param thisServer 현재 해당하는 서버
- * @param idx 몇번째 location블록과 매칭되는지 값을 받아온다.
- * @return 매칭된다면 true 그렇지않다면 false
- */
-bool matchLocation(const HTTPRequest &request, ServerInfo &thisServer, size_t &idx)
-{
-	for (size_t i = 0; i < thisServer.location.size(); ++i)
-	{
-		thisServer.location[i].value.erase(thisServer.location[i].value.find_last_not_of(' ') + 1);
-		if (thisServer.location[i].value == request.path)
-		{
-			idx = i;
-			return (true);
-		}
-	}
-	// while돌면서 "/" 부분을 지우고 찾는 부분인데 "/" 까지 지우지 때문에 "/" 하나와 매칭되지않음.
-	size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
-	while (pos != std::string::npos)
-	{
-		std::string tmp = request.path.substr(0, pos);
-		for (size_t i = 0; i < thisServer.location.size(); ++i)
-		{
-			if (thisServer.location[i].value == tmp)
-			{
-				idx = i;
-				return (true);
-			}
-		}
-		tmp = tmp.erase(pos);
-		pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
-	}
-	return (false);
-}
-
-/**
- * ResponseDate구조체를 얻어옴. 만약 location과 일치한다면 location을 우선으로 가져옴
- *
- * @param request request 를 파싱완료한 구조체
- * @param client_fd 웹 소켓
- * @param thisServer 현재 해당하는 서버
- * @return 전부 채워진 ResponseDate구조체
- */
-ResponseData *Worker::getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer)
-{
-	ResponseData *response = new ResponseData;
-	{
-		Cgi *cgi = new Cgi;
-		cgi->addr = request.addr;
-		cgi->body = request.body;
-		cgi->port = request.port;
-		cgi->name = thisServer.serverName;
-		cgi->query = request.query;
-		cgi->path = request.path;
-		response->cgi = cgi;
-	}
-	response->index = thisServer.index;
-	response->clientFd = client_fd;
-	response->root = getRootDirectory(request, thisServer);
-	size_t i = 0;
-	if (matchLocation(request, thisServer, i))
-	{
-		response->locationName = thisServer.location[i].value;
-		for (size_t j = 0; j < thisServer.location[i].block.size(); ++j)
-		{
-			if (thisServer.location[i].block[j].name == "root")
-			{
-				std::string tmp = response->cgi->path;
-				response->root = thisServer.location[i].block[j].value;
-				response->path = tmp.erase(tmp.find(thisServer.location[i].value), thisServer.location[i].value.size());
-			}
-			else if (thisServer.location[i].block[j].name == "index")
-				response->index = thisServer.location[i].block[j].value;
-			else if (thisServer.location[i].block[j].name == "autoindex")
-			{
-				thisServer.location[i].block[j].value == "on" ? response->autoindex = true : response->autoindex = false;
-			}
-			else if (thisServer.location[i].block[j].name == "limit_except")
-			{
-				size_t pos = thisServer.location[i].block[j].value.find(' ');
-				size_t start = 0;
-				while (pos != std::string::npos)
-				{
-					std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
-					response->limit_except.push_back(tmp);
-					start = pos;
-					while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
-						start++;
-					pos = thisServer.location[i].block[j].value.find(' ', start);
-				}
-				std::string tmp = thisServer.location[i].block[j].value.substr(start);
-				response->limit_except.push_back(tmp);
-			}
-			else if (thisServer.location[i].block[j].name == "return")
-			{
-				size_t pos = thisServer.location[i].block[j].value.find(' ');
-				size_t start = 0;
-				std::string tmp = thisServer.location[i].block[j].value.substr(start, pos - start);
-				response->return_state = tmp;
-				start = pos;
-				while (thisServer.location[i].block[j].value[start] != '\0' && thisServer.location[i].block[j].value[start] == ' ')
-					start++;
-				tmp = thisServer.location[i].block[j].value.substr(start);
-				response->redirect = tmp;
-			}
-		}
-	}
-	if (response->limit_except.size() == 0)
-		response->limit_except = thisServer.limitExcept;
-	response->resourcePath = response->root + "/" + response->index; //index 정보는 server 또는 location에서 가져왔음
-	return (response);
-}
-
 void Worker::broad(ResponseData *response)
 {
-    std::stringstream broadHtml;
-    broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
-    DIR *dirPtr = NULL;
+	std::stringstream broadHtml;
+	broadHtml << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>broad page</title></head><body><h1>show</h1>";
+	DIR *dirPtr = NULL;
 	dirent *file;
-    // if ((dirPtr = opendir(response->root.c_str())) != NULL)
-    if ((dirPtr = opendir(response->root.c_str())) == NULL)
-    {
-        std::cout << "broad: location path err" << std::endl;
-        return;
-    }
+	// if ((dirPtr = opendir(response->root.c_str())) != NULL)
+	if ((dirPtr = opendir(response->root.c_str())) == NULL)
+	{
+		std::cout << "broad: location path err" << std::endl;
+		return;
+	}
 	while ((file = readdir(dirPtr)))
 	{
 		broadHtml << "<p><a href=" << response->locationName << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 	}
-    broadHtml << "</body></html>";
-    std::string tmp = broadHtml.str();
-    /* 헤더를 작성해주는과정 */
-    MimeTypesParser mime(config);
-    std::string contentType = mime.getMimeType("html");
-    std::string response_header = generateHeader(tmp, contentType);
-    write(response->clientFd, response_header.c_str(), response_header.length());
-    write(response->clientFd, tmp.c_str(), tmp.length()); //완성된 html 을 body로 보냄
+	broadHtml << "</body></html>";
+	std::string tmp = broadHtml.str();
+	/* 헤더를 작성해주는과정 */
+	MimeTypesParser mime(config);
+	std::string contentType = mime.getMimeType("html");
+	std::string response_header = generateHeader(tmp, contentType);
+	write(response->clientFd, response_header.c_str(), response_header.length());
+	write(response->clientFd, tmp.c_str(), tmp.length()); // 완성된 html 을 body로 보냄
 }
