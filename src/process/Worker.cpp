@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/19 12:47:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/19 16:16:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,35 +147,45 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	Response responseClass(request.port, this->server);
 	ResponseData *response = responseClass.getResponseData(request, client_fd);
+	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
+	{
+		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
+		// 잘못된 메서드일경우
+		// method not allowed
+		std::string response_body = "Method not allowed";
+		std::string response_header = generateErrorHeader(405, response_body);
+		write(response->clientFd, response_header.c_str(), response_header.length());
+		write(response->clientFd, response_body.c_str(), response_body.length());
+		delete response->cgi;
+		delete response;
+		return;
+	}
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (request.method == "GET" && (std::find(response->limitExcept.begin(), response->limitExcept.end(), "GET") != response->limitExcept.end()))
+	if (request.method == "GET")
 	{
 		if (isCGIRequest(request))
 		{
 			CGI cgi("");
 			std::string cgiFullPath = "./src" + request.path + ".py";
+
+			// test
 			std::string filename = "result.html";
 			std::string filepath = "./assets/html/";
 			std::string fullpath = filepath + filename;
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			std::ofstream testCGI(fullpath);
+
 			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
 			testCGI << cgi.excuteCGI(cgiFullPath);
 			testCGI.close();
 		}
 		getResponse(response);
 	}
-	if (request.method == "POST")
+	else if (request.method == "POST")
 	{
 	}
-	else
+	else // DELETE
 	{
-		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
-		// 잘못된 메서드일경우
-		std::string response_body = "Method not allowed";
-		std::string response_header = generateErrorHeader(405, response_body);
-		write(response->clientFd, response_header.c_str(), response_header.length());
-		write(response->clientFd, response_body.c_str(), response_body.length());
 	}
 	delete response->cgi;
 	delete response;
