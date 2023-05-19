@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/18 23:03:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/19 23:42:26 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,12 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     }
     if (response->limitExcept.size() == 0)
         response->limitExcept = thisServer.limitExcept;
-    response->resourcePath = response->root + request.path;
+    // response->resourcePath = response->root + request.path;
+    response->resourcePath = response->root + "/" + response->index;
+    std::cout << "resourcePath : " << response->resourcePath << std::endl;
+    std::cout << "root : " << response->root << std::endl;
+    std::cout << "index : " << response->index << std::endl;
+    std::cout << "autoindex : " << response->autoindex << std::endl;
     return (response);
 }
 
@@ -119,10 +124,14 @@ void Response::setUpIndex(std::vector<Directive> &locationBlock, ResponseData *r
  */
 void Response::setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response)
 {
+    response->autoindex = false;
     for (size_t i = 0; i < locationBlock.size(); i++)
     {
         if (locationBlock[i].name == "autoindex")
+        {
             locationBlock[i].value == "on" ? response->autoindex = true : response->autoindex = false;
+            return;
+        }
     }
 }
 
