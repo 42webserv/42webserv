@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DefaultConfig.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/15 18:28:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/19 22:08:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,16 +24,11 @@
 
 #include <utility>
 #include "DefaultConfig.hpp"
+#include "Directive.hpp"
+#include "common_error.hpp"
 
-Directive newDir(const std::string name, const std::string value)
-{
-	Directive dir = Directive();
-
-	dir.name = name;
-	dir.value = value;
-
-	return dir;
-}
+#define ERROR_DIRECTIVE_NAME "Error: Invalid name to "
+#define ERROR_DIRECTIVE_SIZE "Error: Invalid size to "
 
 void addServerDirective(Directive &http, std::string type)
 {
@@ -146,42 +141,115 @@ void DefaultConfig::checkDirectives()
 
 void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
 {
+	const std::string name = "main";
 	std::vector<Directive> tmp;
-	config.getAllDirectives(tmp, dirs, "main");
-	if (tmp.size() != 1)
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	if (tmp.size() == 0)
 	{
-		Directive main = newDir("main", "");
-		// addMainDirectives(main);
-		tmp.insert(tmp.begin(), main);
+		dir = newDir(name, "");
+		tmp.insert(tmp.begin(), dir);
 	}
-	Directive main = tmp.front();
-	if (main.name != "main")
+	else if (tmp.size() == 1)
 	{
-		Directive main = newDir("main", "");
-		// addMainDirectives(main);
-		tmp.insert(tmp.begin(), main);
+		dir = tmp.front();
+		if (dir.name == name)
+		{
+			// TODO main 필수 지시자 넣어주기
+			checkHttpDirectives(dirs);
+		}
+		else
+			stderr_exit(ERROR_DIRECTIVE_NAME + name);
 	}
-	checkHttpDirectives(dirs);
+	else
+		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
 }
 
 void DefaultConfig::checkHttpDirectives(std::vector<Directive> &dirs)
 {
+	const std::string name = "http";
 	std::vector<Directive> tmp;
-	config.getAllDirectives(tmp, dirs, "http");
-	checkServerDirectives(dirs);
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	if (tmp.size() == 0)
+	{
+		dir = newDir(name, "");
+		tmp.insert(tmp.begin(), dir);
+	}
+	else if (tmp.size() == 1)
+	{
+		dir = tmp.front();
+		if (dir.name == name)
+		{
+			// TODO http 필수 지시자 넣어주기
+			checkServerDirectives(dirs);
+		}
+		else
+			stderr_exit(ERROR_DIRECTIVE_NAME + name);
+	}
+	else
+		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
 }
 
 void DefaultConfig::checkServerDirectives(std::vector<Directive> &dirs)
 {
+	const std::string name = "server";
 	std::vector<Directive> tmp;
-	config.getAllDirectives(tmp, dirs, "server");
-	checkLocationDirectives(dirs);
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	if (0 == tmp.size())
+	{
+		dir = newDir(name, "");
+		tmp.insert(tmp.begin(), dir);
+	}
+	else if (0 < tmp.size())
+	{
+		for (std::vector<Directive>::iterator it = tmp.begin(); it != tmp.end(); it++)
+		{
+			dir = *it;
+			if (dir.name == name)
+			{
+				// TODO server 필수 지시자 넣어주기
+				checkLocationDirectives(dirs);
+			}
+			else
+				stderr_exit(ERROR_DIRECTIVE_NAME + name);
+		}
+	}
 }
 
 void DefaultConfig::checkLocationDirectives(std::vector<Directive> &dirs)
 {
+	const std::string name = "location";
 	std::vector<Directive> tmp;
-	config.getAllDirectives(tmp, dirs, "location");
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	if (0 == tmp.size())
+	{
+		dir = newDir(name, "");
+		tmp.insert(tmp.begin(), dir);
+	}
+	else if (0 < tmp.size())
+	{
+
+		for (std::vector<Directive>::iterator it = tmp.begin(); it != tmp.end(); it++)
+		{
+			dir = *it;
+			if (dir.name == name)
+			{
+				// TODO location 필수 지시자 넣어주기
+				for (std::vector<Directive>::iterator it2 = dir.block.begin(); it2 != dir.block.end(); it2++)
+				{
+				}
+			}
+			else
+				stderr_exit(ERROR_DIRECTIVE_NAME + name);
+		}
+	}
 }
 
 DefaultConfig::~DefaultConfig() {}

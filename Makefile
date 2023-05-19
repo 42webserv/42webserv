@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+         #
+#    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/13 18:54:47 by yje              ###   ########.fr        #
+#    Updated: 2023/05/19 22:04:14 by sunhwang         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,7 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= CheckConfigValid Config DefaultConfig
+SRC_CONFIG	= CheckConfigValid Config DefaultConfig ft_directive
 SRC_ERROR	= common_error
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
 SRC_PROCESS	= Master Worker
