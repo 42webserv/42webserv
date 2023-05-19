@@ -18,11 +18,20 @@
 class DefaultConfig
 {
 private:
-    setCoreDirective();
+    Config &config;
+    void checkMainDirectives(std::vector<Directive> &dirs);
+    void checkHttpDirectives(std::vector<Directive> &dirs);
+    void checkServerDirectives(std::vector<Directive> &dirs);
+    void checkLocationDirectives(std::vector<Directive> &dirs);
+    // void addMainDirectives(std::vector<Directive> &main);
+    // void addHttpDirectives(std::vector<Directive> &http);
+    // void addServerDirectives(std::vector<Directive> &server);
+    // void addLocationDirectives(std::vector<Directive> &location);
 
 public:
     DefaultConfig(Config &config);
     ~DefaultConfig();
+    void checkDirectives();
 };
 
 #endif

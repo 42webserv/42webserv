@@ -120,7 +120,7 @@ void addMainDirectives(Directive &main)
 {
 	std::pair<std::string, std::string> p[] = {
 		std::make_pair("user", "www www"),
-		std::make_pair("worker_processes", "5"),
+		std::make_pair("worker_processes", "1"),
 		std::make_pair("error_log", "logs/error.log"),
 		std::make_pair("pid", "logs/nginx.pid"),
 		std::make_pair("worker_rlimit_nofile", "8192"),
@@ -129,18 +129,59 @@ void addMainDirectives(Directive &main)
 	for (size_t i = 0; i < 5; i++)
 		main.block.push_back(newDir(p[i].first, p[i].second));
 
-	Directive events = newDir("events", "");
-	events.block.push_back(newDir("worker_connections", "4096"));
-	main.block.push_back(events);
-
 	addHttpDirectives(main);
 }
 
-DefaultConfig::DefaultConfig(Config &config)
+DefaultConfig::DefaultConfig(Config &config) : config(config)
 {
-	Directive main = newDir("main", "");
+	// checkDirectives();
+}
 
-	addMainDirectives(main);
+void DefaultConfig::checkDirectives()
+{
+	std::vector<Directive> dirs = config.getDirectives();
+
+	checkMainDirectives(dirs);
+}
+
+void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
+{
+	std::vector<Directive> tmp;
+	config.getAllDirectives(tmp, dirs, "main");
+	if (tmp.size() != 1)
+	{
+		Directive main = newDir("main", "");
+		// addMainDirectives(main);
+		tmp.insert(tmp.begin(), main);
+	}
+	Directive main = tmp.front();
+	if (main.name != "main")
+	{
+		Directive main = newDir("main", "");
+		// addMainDirectives(main);
+		tmp.insert(tmp.begin(), main);
+	}
+	checkHttpDirectives(dirs);
+}
+
+void DefaultConfig::checkHttpDirectives(std::vector<Directive> &dirs)
+{
+	std::vector<Directive> tmp;
+	config.getAllDirectives(tmp, dirs, "http");
+	checkServerDirectives(dirs);
+}
+
+void DefaultConfig::checkServerDirectives(std::vector<Directive> &dirs)
+{
+	std::vector<Directive> tmp;
+	config.getAllDirectives(tmp, dirs, "server");
+	checkLocationDirectives(dirs);
+}
+
+void DefaultConfig::checkLocationDirectives(std::vector<Directive> &dirs)
+{
+	std::vector<Directive> tmp;
+	config.getAllDirectives(tmp, dirs, "location");
 }
 
 DefaultConfig::~DefaultConfig() {}

@@ -23,14 +23,22 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 		perror("kqueue");
 		exit(EXIT_FAILURE);
 	}
-	this->config.parsedConfig(argc, argv);
+
+	// Parse the config file
+	// this->config.parsedConfig(argc, argv);
+	(void)argc;
+	(void)argv;
+	DefaultConfig defaultConfig(this->config); // TODO config 안에다 추가할 수 있을지 확인해보기
+	defaultConfig.checkDirectives();
+
+	// Set the server
 	this->server.setServer(this->config);
 	// this->server.printServer();
 }
 
 Master::~Master()
 {
-	delete config;
+	// delete config;
 	close(kq);
 }
 

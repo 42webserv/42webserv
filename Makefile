@@ -27,7 +27,7 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= Config CheckConfigValid
+SRC_CONFIG	= CheckConfigValid Config DefaultConfig
 SRC_ERROR	= common_error
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
 SRC_PROCESS	= Master Worker
