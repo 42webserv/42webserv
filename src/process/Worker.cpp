@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/19 16:16:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/20 13:14:36 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,14 +210,16 @@ bool Worker::isCGIRequest(const HTTPRequest &request)
 void Worker::getResponse(ResponseData *response)
 {
 	struct stat st;
-	if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
-		std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+	// if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
+	// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+	stat(response->resourcePath.c_str(), &st);
 	if (!S_ISREG(st.st_mode)) // root + index을 검사해 파일이 아닐시 if로 분기
 	{
 		response->resourcePath = response->root + response->path; // root + path로 다시 검사
 		std::memset(&st, 0, sizeof(st));
-		if (!stat(response->resourcePath.c_str(), &st))
-			std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+		// if (!stat(response->resourcePath.c_str(), &st))
+		// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+		stat(response->resourcePath.c_str(), &st);
 		if (!S_ISREG(st.st_mode))
 		{
 			if (response->autoindex)
