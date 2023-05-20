@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/19 15:05:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/20 13:58:23 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ struct ResponseData
     std::string index;
     std::string resourcePath;
     std::string contentType;
+    std::string method;
     std::vector<std::string> limitExcept;
     std::string returnState;
     std::string redirect;

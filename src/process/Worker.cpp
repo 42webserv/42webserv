@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/20 13:14:36 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/20 14:00:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,10 +161,12 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		return;
 	}
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (request.method == "GET")
+	if (response->method == "GET")
 	{
-		if (isCGIRequest(request))
+		if (isCGIRequest(response))
 		{
+			std::cout << "request.path : " << request.path << std::endl;
+			std::cout << "response.path : " << response->path << std::endl;
 			CGI cgi("");
 			std::string cgiFullPath = "./src" + request.path + ".py";
 
@@ -181,7 +183,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		}
 		getResponse(response);
 	}
-	else if (request.method == "POST")
+	else if (response->method == "POST")
 	{
 	}
 	else // DELETE
@@ -191,13 +193,13 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	delete response;
 }
 
-bool Worker::isCGIRequest(const HTTPRequest &request)
+bool Worker::isCGIRequest(ResponseData *response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
-	size_t pos = request.path.find("cgi-bin");
+	size_t pos = response->path.find("cgi-bin");
 	return (pos != std::string::npos);
 }
 

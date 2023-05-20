@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/19 23:42:26 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/20 13:58:37 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,8 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
 {
     ResponseData *response = new ResponseData;
     response->index = this->thisServer.index;
+    response->path = request.path;
+    response->method = request.method;
     response->clientFd = client_fd;
     response->root = getRootDirectory(request, thisServer);
     int idx = matchLocation(request, thisServer);
