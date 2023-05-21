@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/17 17:28:31 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/19 16:05:09 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,12 +158,12 @@ void Config::parsedConfig(int argc, char const **argv)
 	}
 	else
 	{
-		if (!CheckConfigValid::Parse("src/config/default.conf"))
+		if (!CheckConfigValid::Parse(DEFAULT_CONF_PATH))
 		{
 			std::cerr << "Error: Invalid config file" << std::endl;
 			exit(1);
 		}
-		filename = "src/config/default.conf";
+		filename = DEFAULT_CONF_PATH;
 	}
 	infile.open(filename);
 	_setBlock(infile, _directives, "main");

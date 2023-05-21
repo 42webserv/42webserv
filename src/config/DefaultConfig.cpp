@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DefaultConfig.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/15 18:28:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/21 19:48:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,132 +24,190 @@
 
 #include <utility>
 #include "DefaultConfig.hpp"
+#include "Directive.hpp"
+#include "common_error.hpp"
 
-Directive newDir(const std::string name, const std::string value)
+#define ERROR_DIRECTIVE_NAME "Error: Invalid name to "
+#define ERROR_DIRECTIVE_SIZE "Error: Invalid size to "
+
+DefaultConfig::DefaultConfig(Config &config) : config(config) {}
+
+void DefaultConfig::addAndCheckChildDirectives(Directive &dir, std::vector<Directive> &dirs, const std::string &name, void (DefaultConfig::*fn_addDirs)(Directive &dir, const std::string name), void (DefaultConfig::*fn_checkDirs)(std::vector<Directive> &dirs, const std::string pre_name))
 {
-	Directive dir = Directive();
-
-	dir.name = name;
-	dir.value = value;
-
-	return dir;
+	if (dir.name == name)
+	{
+		if (fn_addDirs)
+			(this->*fn_addDirs)(dir, name);
+		if (fn_checkDirs)
+			(this->*fn_checkDirs)(dirs, name);
+	}
+	else
+		stderr_exit(ERROR_DIRECTIVE_NAME + name);
 }
 
-void addServerDirective(Directive &http, std::string type)
+void DefaultConfig::checkDirectives()
 {
-	Directive server = newDir("server", "");
-	Directive location = newDir("location", "");
-	if (type == "php")
-	{
-		std::pair<std::string, std::string> p[] = {
-			std::make_pair("listen", "80"),
-			std::make_pair("server_name", "domain1.com www.domain1.com"),
-			std::make_pair("access_log", "logs/domain1.access.log  main"),
-			std::make_pair("root", "html"),
-		};
-		for (size_t i = 0; i < 4; i++)
-			server.block.push_back(newDir(p[i].first, p[i].second));
+	std::vector<Directive> dirs = config.getDirectives();
 
-		location.value = "~ \\.php$";
-		location.block.push_back(newDir("fastcgi_pass", "127.0.0.1:1025"));
-	}
-	else if (type == "reverse-proxy")
-	{
-		std::pair<std::string, std::string> p[] = {
-			std::make_pair("listen", "80"),
-			std::make_pair("server_name", "domain2.com www.domain2.com"),
-			std::make_pair("access_log", "logs/domain2.access.log  main"),
-		};
-		for (size_t i = 0; i < 4; i++)
-			server.block.push_back(newDir(p[i].first, p[i].second));
-
-		location.value = "~ ^/(images|javascript|js|css|flash|media|static)/";
-		location.block.push_back(newDir("root", "/var/www/virtual/big.server.com/htdocs"));
-		location.block.push_back(newDir("expires", "30d"));
-		server.block.push_back(location);
-
-		location.value = "/";
-		location.block.push_back(newDir("proxy_pass", "http://127.0.0.1:8080"));
-	}
-	else if (type == "load-balancing")
-	{
-		std::pair<std::string, std::string> p[] = {
-			std::make_pair("listen", "80"),
-			std::make_pair("server_name", "big.server.com"),
-			std::make_pair("access_log", "logs/big.server.access.log main"),
-		};
-		for (size_t i = 0; i < 4; i++)
-			server.block.push_back(newDir(p[i].first, p[i].second));
-
-		location.value = "/";
-		location.block.push_back(newDir("proxy_pass", "http://big_server_com"));
-	}
-	server.block.push_back(location);
-	http.block.push_back(server);
+	checkMainDirectives(dirs);
 }
 
-void addHttpDirectives(Directive &main)
+void DefaultConfig::addDirectives(std::map<std::string, std::string> &dirs, Directive &dir, const std::string name)
 {
-	Directive http = newDir("http", "");
-	std::pair<std::string, std::string> p[] = {
-		std::make_pair("include", "conf/mime.types"),
-		std::make_pair("include", "/etc/nginx/proxy.conf"),
-		std::make_pair("include", "/etc/nginx/fastcgi.conf"),
+	std::pair<std::string, std::string> p;
+	for (std::map<std::string, std::string>::iterator it = dirs.begin(); it != dirs.end(); it++)
+	{
+		p = *it;
+		if (!hasDirInBlock(dir, p.first))
+			dir.block.push_back(newDir(p.first, p.second, name));
+	}
+}
+
+void DefaultConfig::addMainDirectives(Directive &main, const std::string name)
+{
+	std::map<std::string, std::string> dirs;
+	const std::pair<std::string, std::string> ps[] = {
+		std::make_pair("user", "nobody nobody"),
+		std::make_pair("worker_processes", "1"),
+		std::make_pair("error_log", "logs/error.log error"),
+		std::make_pair("pid", "logs/nginx.pid"),
+	};
+
+	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
+	addDirectives(dirs, main, name);
+}
+
+void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
+{
+	const std::string name = "main";
+	std::vector<Directive> tmp;
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	if (tmp.size() == 0)
+	{
+		dir = newDir(name, "", name); // TODO Config.cpp에도 동일하게 하고 있음.
+		tmp.insert(tmp.begin(), dir);
+	}
+	if (tmp.size() == 1)
+	{
+		dir = tmp.front();
+		addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addMainDirectives, &DefaultConfig::checkHttpDirectives);
+	}
+	else
+		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
+}
+
+void DefaultConfig::addHttpDirectives(Directive &http, const std::string name)
+{
+	std::map<std::string, std::string> dirs;
+	const std::pair<std::string, std::string> ps[] = {
+		std::make_pair("include", "./assets/conf/mime.types"),
+		// std::make_pair("include", "/etc/nginx/proxy.conf"),
+		// std::make_pair("include", "/etc/nginx/fastcgi.conf"),
 		std::make_pair("index", "index.html index.htm index.php"),
 		std::make_pair("default_type", "application/octet-stream"),
-		// TODO log_format value 처리가 까다로움 실제 예시
-		// main '$remote_addr - $remote_user [$time_local]  $status '
-		// '"$request" $body_bytes_sent "$http_referer" '
-		// '"$http_user_agent" "$http_x_forwarded_for"';
-		std::make_pair("log_format", "main '$remote_addr - $remote_user [$time_local]  $status '"),
-		std::make_pair("access_log", "logs/access.log  main"),
 		std::make_pair("sendfile", "on"),
 		std::make_pair("tcp_nopush", "on"),
-		std::make_pair("server_names_hash_bucket_size", "128"),
-	};
-	for (size_t i = 0; i < 7; i++)
-		http.block.push_back(newDir(p[i].first, p[i].second));
-
-	addServerDirective(http, "php");
-	addServerDirective(http, "reverse-proxy");
-	addServerDirective(http, "load-balancing");
-	main.block.push_back(http);
-}
-
-void addMainDirectives(Directive &main)
-{
-	std::pair<std::string, std::string> p[] = {
-		std::make_pair("user", "www www"),
-		std::make_pair("worker_processes", "5"),
-		std::make_pair("error_log", "logs/error.log"),
-		std::make_pair("pid", "logs/nginx.pid"),
-		std::make_pair("worker_rlimit_nofile", "8192"),
 	};
 
-	for (size_t i = 0; i < 5; i++)
-		main.block.push_back(newDir(p[i].first, p[i].second));
-
-	Directive events = newDir("events", "");
-	events.block.push_back(newDir("worker_connections", "4096"));
-	main.block.push_back(events);
-
-	addHttpDirectives(main);
+	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
+	addDirectives(dirs, http, name);
 }
 
-DefaultConfig::DefaultConfig()
+void DefaultConfig::checkHttpDirectives(std::vector<Directive> &dirs, const std::string pre_name)
 {
-	this->_directives.clear();
-	Directive main = newDir("main", "");
+	const std::string name = "http";
+	std::vector<Directive> tmp;
+	Directive dir;
 
-	addMainDirectives(main);
-	this->_directives.push_back(main);
+	config.getAllDirectives(tmp, dirs, name);
+	(void)pre_name;
+	// if (tmp.size() == 0)
+	// {
+	// 	dir = newDir(name, "", pre_name);
+	// 	tmp.insert(tmp.begin(), dir);
+	// }
+	if (tmp.size() == 1)
+	{
+		dir = tmp.front();
+		addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addHttpDirectives, &DefaultConfig::checkServerDirectives);
+	}
+	else
+		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
 }
 
-DefaultConfig::~DefaultConfig()
+void DefaultConfig::addServerDirectives(Directive &server, const std::string name)
 {
-	this->_directives.clear();
+	std::map<std::string, std::string> dirs;
+	const std::pair<std::string, std::string> ps[] = {
+		std::make_pair("listen", "80"),
+		std::make_pair("server_name", "domain1.com www.domain1.com"),
+		std::make_pair("access_log", "logs/domain1.access.log  main"),
+		std::make_pair("root", "html"),
+	};
+
+	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
+	addDirectives(dirs, server, name);
 }
 
-void DefaultConfig::setDefaults()
+void DefaultConfig::checkServerDirectives(std::vector<Directive> &dirs, const std::string pre_name)
 {
+	const std::string name = "server";
+	std::vector<Directive> tmp;
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	(void)pre_name;
+	// if (0 == tmp.size())
+	// {
+	// 	dir = newDir(name, "", pre_name);
+	// 	tmp.insert(tmp.begin(), dir);
+	// }
+	if (0 < tmp.size())
+	{
+		for (std::vector<Directive>::iterator it = tmp.begin(); it != tmp.end(); it++)
+		{
+			dir = *it;
+			addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addServerDirectives, &DefaultConfig::checkLocationDirectives);
+		}
+	}
 }
+
+void DefaultConfig::addLocationDirectives(Directive &location, const std::string name)
+{
+	std::map<std::string, std::string> dirs;
+	std::pair<std::string, std::string> ps[] = {
+		std::make_pair("", ""),
+	};
+
+	(void)location;
+	(void)name;
+	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
+	// addDirectives(dirs, location, name);
+}
+
+void DefaultConfig::checkLocationDirectives(std::vector<Directive> &dirs, const std::string pre_name)
+{
+	const std::string name = "location";
+	std::vector<Directive> tmp;
+	Directive dir;
+
+	config.getAllDirectives(tmp, dirs, name);
+	(void)pre_name;
+	// if (0 == tmp.size())
+	// {
+	// 	dir = newDir(name, "", pre_name);
+	// 	tmp.insert(tmp.begin(), dir);
+	// }
+	if (0 < tmp.size())
+	{
+		for (std::vector<Directive>::iterator it = tmp.begin(); it != tmp.end(); it++)
+		{
+			dir = *it;
+			addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addLocationDirectives, NULL);
+		}
+	}
+}
+
+DefaultConfig::~DefaultConfig() {}
