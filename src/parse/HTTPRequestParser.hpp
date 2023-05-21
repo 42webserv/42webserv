@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 16:36:55 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/05/13 17:18:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,14 @@
 struct HTTPRequest
 {
     std::string method;
+    int port;
     std::string path;
     std::string http_version;
     std::map<std::string, std::string> headers;
     std::string body;
+    std::string query;
+    std::string addr;
+    std::string name;
 };
 
 class HTTPRequestParser
@@ -51,6 +55,10 @@ private:
     std::string body_;
     std::string buffer_;
     std::string current_header_name_;
+    std::string query_;
+    std::string addr_;
+    std::string name_;
+    std::string port_;
 
     bool parseMethod();
     bool parsePath();
@@ -65,7 +73,7 @@ public:
 
     HTTPRequest *parse(const std::string &data);
     std::string getContentType(const HTTPRequest &request);
-
+    int getPort(const HTTPRequest &result);
     void printResult(const HTTPRequest &request);
 };
 

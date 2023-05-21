@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:26:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/11 17:13:58 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string>
 #include <sys/event.h>
+#include <vector>
 
 class Socket
 {
@@ -25,11 +26,13 @@ private:
     struct sockaddr_in server_addr;
 
 public:
+    int _port;
     const int server_fd;
-    Socket(std::vector<struct kevent> &event_list);
+    std::vector<int> clientFds;
+    Socket(std::vector<struct kevent> &event_list, const int port);
     ~Socket();
-    int handleEvent(std::vector<struct kevent> &event_list) const;
-    void disconnectClient(int client_fd, std::map<int, std::string> &clients) const;
+    int handleEvent(std::vector<struct kevent> &event_list);
+    void disconnectClient(int client_fd, std::map<int, std::string> &clients);
 };
 
 #endif

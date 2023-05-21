@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:26:43 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/13 21:15:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,15 +14,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <vector>
 #include "Socket.hpp"
 #include "common_error.hpp"
 
-#define PORT 8080
-
-Socket::Socket(std::vector<struct kevent> &event_list) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
+    this->_port = port;
 
     // Create an AF_INET stream socket to receive incoming connections on
     if (server_fd < 0)
@@ -41,7 +39,7 @@ Socket::Socket(std::vector<struct kevent> &event_list) : server_fd(socket(AF_INE
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     // TODO port는 server.port에서 받아야 함.
-    server_addr.sin_port = htons(PORT);
+    server_addr.sin_port = htons(this->_port);
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         close(server_fd);
@@ -57,8 +55,8 @@ Socket::Socket(std::vector<struct kevent> &event_list) : server_fd(socket(AF_INE
 
     EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     event_list.push_back(event);
-
-    std::cout << "Server listening on port " << PORT << std::endl;
+    clientFds.push_back(server_fd);
+    std::cout << "Server listening on port " << this->_port << std::endl;
 }
 
 Socket::~Socket()
@@ -66,7 +64,7 @@ Socket::~Socket()
     close(server_fd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list) const
+int Socket::handleEvent(std::vector<struct kevent> &event_list)
 {
     socklen_t addrlen = sizeof(server_addr);
     struct sockaddr_in client_addr;
@@ -82,13 +80,17 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list) const
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     event_list.push_back(new_event);
+    clientFds.push_back(client_fd);
     return client_fd;
 }
 
 // TODO 이게 server랑 물려있는 client란 걸 어떻게 알까?
 // 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
-void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients) const
+void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients)
 {
+    // TODO keep-alive면 안지운다. timeout도 해보기.
+    // disconnect하기 전에 이벤트 삭제도 등록하기.
     close(client_fd);
     clients.erase(client_fd);
+    clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
 }

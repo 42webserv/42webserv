@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   common_error.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/24 15:00:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/02 16:25:51 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/19 20:39:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,5 +14,6 @@
 #define COMMON_ERROR_HPP
 
 void error_exit(const char *msg);
+void stderr_exit(const std::string msg);
 
 #endif

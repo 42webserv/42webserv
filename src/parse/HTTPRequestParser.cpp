@@ -53,6 +53,15 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->http_version = http_version_;
         request->headers = headers_;
         request->body = body_;
+        std::map<std::string, std::string>::iterator it = request->headers.find("Host");
+        if (it != headers_.end())
+        {
+            size_t pos = it->second.find(":");
+            request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+        }
+        else
+            request->port = -1;
+        // printResult(*request);
         reset();
         return request;
     }
@@ -93,6 +102,9 @@ bool HTTPRequestParser::parsePath()
     path_ = buffer_.substr(0, pos);
     state_ = HTTP_VERSION;
     buffer_.erase(0, pos + 1);
+    pos = path_.find("?");
+    if (pos != std::string::npos)
+        query_ = path_.substr(pos);
     return true;
 }
 
@@ -139,9 +151,15 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos = buffer_.find("\r\n");
     if (pos == std::string::npos)
         return false;
-    std::string header_value = buffer_.substr(0, pos);
+    std::string header_value = buffer_.substr(1, pos);
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos + 2);
+    if (current_header_name_ == "Host")
+    {
+        pos = header_value.find(":");
+        if (pos != std::string::npos)
+            addr_ = header_value.substr(0, pos);
+    }
     if (buffer_.substr(0, 2) == "\r\n")
     {
         buffer_.erase(0, 2);
@@ -164,7 +182,7 @@ bool HTTPRequestParser::parseBody()
     if (method_ == "POST")
     {
         std::map<std::string, std::string>::iterator it =
-            headers_.find("Content-Length");
+            headers_.find("content-length");
         if (it != headers_.end())
         {
             int content_length = atoi(it->second.c_str());
@@ -218,10 +236,16 @@ void HTTPRequestParser::printResult(const HTTPRequest &result)
 {
     std::cout << "Request method: " << result.method << std::endl;
     std::cout << "Request path: " << result.path << std::endl;
+    std::cout << "Request port: [" << result.port << "]" << std::endl;
     std::cout << "Request HTTP version: " << result.http_version << std::endl;
 
     for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
         std::cout << "Header: " << it->first << " = " << it->second << std::endl;
 
     std::cout << "Body: " << result.body << std::endl;
+}
+
+int HTTPRequestParser::getPort(const HTTPRequest &result)
+{
+    return result.port;
 }

@@ -3,36 +3,32 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/08 15:56:50 by sanghan          ###   ########.fr       */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/09 16:58:56 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/13 13:25:43 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "DefaultConfig.hpp"
 #include "Master.hpp"
 #include "Worker.hpp"
+#include "server/Server.hpp"
 #include "Config.hpp"
+#include "CGI.hpp"
 #include "CheckConfigValid.hpp"
 #include "MimeTypesParser.hpp"
-#include "Server.hpp"
+
+void leaks()
+{
+    system("leaks webserv");
+}
 
 int main(int argc, char const *argv[])
 {
-    // Nginx Config file parsing
-    Config config;
-    config.parsedConfig(argc, argv);
-    config.printDirectives(config.getDirectives(), 0);
-    Server server(config);
-
-    Master master;
+    // atexit(leaks);
+    Master master(argc, argv);
     Worker worker(master);
-    worker.config = config;
     worker.run();
     return 0;
 }
