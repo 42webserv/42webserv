@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 18:29:53 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/21 19:44:23 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,7 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 	}
 
 	// Parse the config file
-	// this->config.parsedConfig(argc, argv);
-	(void)argc;
-	(void)argv;
+	this->config.parsedConfig(argc, argv);
 	DefaultConfig defaultConfig(this->config); // TODO config 안에다 추가할 수 있을지 확인해보기
 	defaultConfig.checkDirectives();
 
