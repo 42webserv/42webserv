@@ -1,6 +1,7 @@
 # common
 .vscode
 out
+.DS_Store
 
 # NAME
 webserv

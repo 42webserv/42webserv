@@ -165,7 +165,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	{
 		if (isCGIRequest(request))
 		{
-			CGI cgi("");
+			CGI cgi(request);
 			std::string cgiFullPath = "./src" + request.path + ".py";
 
 			// test
@@ -175,8 +175,16 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			std::ofstream testCGI(fullpath);
 
-			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
-			testCGI << cgi.excuteCGI(cgiFullPath);
+			// std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
+			// std::cout << "request.addr : " << request.addr << std::endl;
+			// std::cout << "request.path : " << request.path << std::endl;
+			// std::cout << "request.query : " << request.query << std::endl;
+			// std::cout << "request.method : " << request.method << std::endl;
+			// std::cout << "request.name : " << request.name << std::endl;
+			// std::cout << "request.port : " << request.port << std::endl;
+			// std::cout << "request.s_port : " << request.s_port << std::endl;
+
+			testCGI << cgi.excuteCGI(cgiFullPath, request);
 			testCGI.close();
 		}
 		getResponse(response);
