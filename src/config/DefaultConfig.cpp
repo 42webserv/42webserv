@@ -30,7 +30,7 @@
 #define ERROR_DIRECTIVE_NAME "Error: Invalid name to "
 #define ERROR_DIRECTIVE_SIZE "Error: Invalid size to "
 
-DefaultConfig::DefaultConfig(Config &config) : config(config) {}
+DefaultConfig::DefaultConfig(Config &config, std::vector<Directive> &dirs) : config(config), _dirs(dirs) {}
 
 void DefaultConfig::addAndCheckChildDirectives(Directive &dir, std::vector<Directive> &dirs, const std::string &name, void (DefaultConfig::*fn_addDirs)(Directive &dir, const std::string name), void (DefaultConfig::*fn_checkDirs)(std::vector<Directive> &dirs, const std::string pre_name))
 {
@@ -47,9 +47,7 @@ void DefaultConfig::addAndCheckChildDirectives(Directive &dir, std::vector<Direc
 
 void DefaultConfig::checkDirectives()
 {
-	std::vector<Directive> dirs = config.getDirectives();
-
-	checkMainDirectives(dirs);
+	checkMainDirectives(_dirs);
 }
 
 void DefaultConfig::addDirectives(std::map<std::string, std::string> &dirs, Directive &dir, const std::string name)
@@ -87,7 +85,7 @@ void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
 	if (tmp.size() == 0)
 	{
 		dir = newDir(name, "", name); // TODO Config.cpp에도 동일하게 하고 있음.
-		tmp.insert(tmp.begin(), dir);
+		dirs.insert(dirs.begin(), dir);
 	}
 	if (tmp.size() == 1)
 	{

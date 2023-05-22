@@ -19,6 +19,7 @@ class DefaultConfig
 {
 private:
     Config &config;
+    std::vector<Directive> &_dirs;
     void addAndCheckChildDirectives(Directive &dir, std::vector<Directive> &dirs, const std::string &name, void (DefaultConfig::*fn_addDirs)(Directive &dir, const std::string name), void (DefaultConfig::*fn_checkDirs)(std::vector<Directive> &dirs, const std::string pre_name));
     void checkMainDirectives(std::vector<Directive> &dirs);
     void checkHttpDirectives(std::vector<Directive> &dirs, const std::string pre_name);
@@ -31,7 +32,7 @@ private:
     void addLocationDirectives(Directive &location, const std::string name);
 
 public:
-    DefaultConfig(Config &config);
+    DefaultConfig(Config &config, std::vector<Directive> &dirs);
     ~DefaultConfig();
     void checkDirectives();
 };

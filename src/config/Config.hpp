@@ -13,12 +13,12 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 #include "Directive.hpp"
-#include <map>
 #define DEFAULT_CONF_PATH "assets/conf/default.conf"
-// #define DEFAULT_CONF_PATH "/Users/sunhwang/inner-circle/42webserv/assets/conf/default.conf"
+
 /*
  * default 값들을 저장하는 구조체
  *
@@ -33,6 +33,7 @@ typedef struct s_location_default
     std::string limit_except; // 선택
     std::string return_;      // 선택
 } t_location_default;
+
 typedef struct s_server_default
 {
     std::string listen;               // 필수
@@ -49,6 +50,7 @@ typedef struct s_http_default
     std::string index;       // 선택
     t_server_default server; // 필수
 } t_http_default;
+
 typedef struct s_main_default
 {
     std::string types;   // 선택
@@ -58,6 +60,7 @@ typedef struct s_main_default
 class Config
 {
 private:
+    std::vector<Directive> _directives;
     Directive _parseDirective(const std::string &line);
     void _setBlock(std::ifstream &infile, std::vector<Directive> &directive, std::string pre_name);
     std::string trim(const std::string &str);
@@ -77,16 +80,13 @@ private:
     bool _isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName, std::vector<Directive> &preDirective);
     bool _isDirectoryExists(const std::string &directoryPath, std::string directiveName);
 
-protected:
-    std::vector<Directive> _directives;
-
 public:
     Config();
     ~Config();
     void parsedConfig(int argc, char const **argv);
     void printDirectives(std::vector<Directive> directives, size_t tab);
     void getAllDirectives(std::vector<Directive> &newDirectives, std::vector<Directive> directives, std::string dirName);
-    const std::vector<Directive> getDirectives() const;
+    const std::vector<Directive> &getDirectives() const;
 };
 
 #endif

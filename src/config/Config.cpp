@@ -10,14 +10,15 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <exception>
 #include <fstream>
 #include <iostream>
-#include <stack>
-#include "Config.hpp"
-#include "CheckConfigValid.hpp"
-#include <exception>
-#include <sys/stat.h>
 #include <sstream>
+#include <stack>
+#include <sys/stat.h>
+#include "CheckConfigValid.hpp"
+#include "Config.hpp"
+#include "DefaultConfig.hpp"
 
 Config::Config()
 {
@@ -176,6 +177,10 @@ void Config::parsedConfig(int argc, char const **argv)
 	_checkRealtion(_directives[0].block, _directives);
 	_setIncludes();
 	infile.close();
+
+	// Check configuration file
+	DefaultConfig defaultConfig(*this, this->_directives);
+	defaultConfig.checkDirectives();
 }
 
 void Config::printDirectives(std::vector<Directive> directive, size_t tab)
@@ -193,7 +198,7 @@ void Config::printDirectives(std::vector<Directive> directive, size_t tab)
 	}
 }
 
-const std::vector<Directive> Config::getDirectives() const
+const std::vector<Directive> &Config::getDirectives() const
 {
 	return this->_directives;
 }
@@ -215,7 +220,7 @@ void Config::getAllDirectives(std::vector<Directive> &newDirectives, std::vector
 		}
 		if (directives[i].block.empty())
 			continue;
-		Config::getAllDirectives(newDirectives, directives[i].block, dirName);
+		this->getAllDirectives(newDirectives, directives[i].block, dirName);
 	}
 }
 

@@ -13,10 +13,10 @@
 #ifndef CheckConfigValid_HPP
 #define CheckConfigValid_HPP
 
-#include <iostream>
 #include <fstream>
-#include <string>
+#include <iostream>
 #include <stack>
+#include <string>
 
 class CheckConfigValid
 {
