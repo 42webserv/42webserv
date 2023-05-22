@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/19 16:05:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/22 13:03:28 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,8 @@
 #include <vector>
 #include "Directive.hpp"
 #include <map>
-// #define DEFAULT_CONF_PATH "assets/conf/default.conf"
-#define DEFAULT_CONF_PATH "/Users/han/42Seoul/webserv/assets/conf/default.conf"
+#define DEFAULT_CONF_PATH "assets/conf/default.conf"
+// #define DEFAULT_CONF_PATH "/Users/sunhwang/inner-circle/42webserv/assets/conf/default.conf"
 /*
  * default 값들을 저장하는 구조체
  *

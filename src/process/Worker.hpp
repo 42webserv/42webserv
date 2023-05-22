@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/18 22:53:30 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/20 14:00:03 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ private:
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-	bool isCGIRequest(const HTTPRequest &request);
+	bool isCGIRequest(ResponseData *response);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 	void broad(ResponseData *response);
 
