@@ -169,11 +169,11 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			std::string cgiFullPath = "./src" + request.path + ".py";
 
 			// test
-			std::string filename = "result.html";
-			std::string filepath = "./assets/html/";
-			std::string fullpath = filepath + filename;
-			// 파일을 열고 문자열을 쓴 후 닫습니다.
-			std::ofstream testCGI(fullpath);
+			// std::string filename = "result.html";
+			// std::string filepath = "./assets/html/";
+			// std::string fullpath = filepath + filename;
+			// // 파일을 열고 문자열을 쓴 후 닫습니다.
+			// std::ofstream testCGI(fullpath);
 
 			// std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
 			// std::cout << "request.addr : " << request.addr << std::endl;
@@ -184,8 +184,9 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			// std::cout << "request.port : " << request.port << std::endl;
 			// std::cout << "request.s_port : " << request.s_port << std::endl;
 
-			testCGI << cgi.excuteCGI(cgiFullPath, request);
-			testCGI.close();
+			cgi.excuteCGI(cgiFullPath, request);
+			// testCGI << cgi.excuteCGI(cgiFullPath, request);
+			// testCGI.close();
 		}
 		getResponse(response);
 	}
