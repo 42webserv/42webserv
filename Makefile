@@ -21,7 +21,7 @@ DIR_PARSE	= parse
 DIR_PROCESS	= process
 DIR_SOCKET	= socket
 DIR_UTILS	= utils
-DIR_CGI	= cgi
+DIR_CGI		= cgi
 DIR_SERVER	= server
 SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARSE) $(DIR_PARSE)/HTTP $(DIR_PROCESS) $(DIR_SOCKET) $(DIR_UTILS) $(DIR_SERVER) $(DIR_CGI)))
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
@@ -33,7 +33,7 @@ SRC_PARSE	= HTTPRequestParser MimeTypesParser
 SRC_PROCESS	= Master Worker Response
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
-SRC_CGI	= CGI
+SRC_CGI		= CGI
 SRC_SERVER	= Server
 
 ifeq (,$(findstring bonus,$(MAKECMDGOALS)))
@@ -48,8 +48,8 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 			$(addprefix $(DIR_PARSE)/,		$(SRC_PARSE))	\
 			$(addprefix $(DIR_PROCESS)/,	$(SRC_PROCESS))	\
 			$(addprefix $(DIR_SOCKET)/,		$(SRC_SOCKET))	\
-			$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS)) \
-			$(addprefix $(DIR_CGI)/,		$(SRC_CGI)) \
+			$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS)) 	\
+			$(addprefix $(DIR_CGI)/,		$(SRC_CGI)) 	\
 			$(addprefix $(DIR_SERVER)/,		$(SRC_SERVER)))
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
