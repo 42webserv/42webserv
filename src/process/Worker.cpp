@@ -167,7 +167,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		{
 			std::cout << "request.path : " << request.path << std::endl;
 			std::cout << "response.path : " << response->path << std::endl;
-			CGI cgi("");
+			CGI cgi(request);
 			std::string cgiFullPath = "./src" + request.path + ".py";
 
 			// test
@@ -175,11 +175,26 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			std::string filepath = "./assets/html/";
 			std::string fullpath = filepath + filename;
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
-			std::ofstream testCGI(fullpath);
+			// std::ofstream testCGI(fullpath);
 
 			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
-			testCGI << cgi.excuteCGI(cgiFullPath);
-			testCGI.close();
+			// testCGI << cgi.excuteCGI(response->resourcePath, request);
+			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
+			response->resourcePath = fullpath;
+			// testCGI.close();
+			// write(response->clientFd, cgi.excuteCGI(cgiFullPath, request).c_str(), cgi.excuteCGI(cgiFullPath, request).length());
+			// resource_content.c_str() = cgi.excuteCGI(cgiFullPath, request);
+			// testCGI.close();
+			std::ifstream resource_file(response->resourcePath);
+			MimeTypesParser mime(this->config);
+			std::string contentType = mime.getMimeType("html");
+			// std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
+			//							 std::istreambuf_iterator<char>());
+			std::string response_header = generateHeader(resource_content, contentType);
+			write(response->clientFd, response_header.c_str(), response_header.length());
+			write(response->clientFd, resource_content.c_str(), resource_content.length());
+			resource_file.close();
+			return;
 		}
 		getResponse(response);
 	}

@@ -59,7 +59,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         {
             size_t pos = it->second.find(":");
             request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
-            request->s_port = it->second.substr(pos + 1, it->second.length());
+            request->strPort = it->second.substr(pos + 1, it->second.length());
         }
         else
             request->port = -1;

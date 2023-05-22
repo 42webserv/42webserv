@@ -31,7 +31,7 @@ struct HTTPRequest
     std::string query;
     std::string addr;
     std::string name;
-    std::string s_port;
+    std::string strPort;
     //  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
 };
 

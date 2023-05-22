@@ -29,30 +29,30 @@ CGI::~CGI() {}
 void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인해서 받아오기
 {
 	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
-
-	// const std::string &method =
-	// std::size_t content_length = request.getContentLength(); // contentlength
-	// if (method == "POST" && content_length > 0)
-	// {
-	// 	headers["CONTENT_LENGTH"] = toString(content_length);
-	// }
+	HTTPRequestParser request_parser;
+	// const std::string &method = request.method;
+	//  std::size_t content_length = request.getContentLength(); // contentlength
+	//  if (method == "POST" && content_length > 0)
+	//  {
+	//  	headers["CONTENT_LENGTH"] = toString(content_length);
+	//  }
 	this->envp_["AUTH_TYPE"] = "";
 	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
-	// this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request);
+	this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
 	this->envp_["PATH_INFO"] = request.path;
 	this->envp_["PATH_TRANSLATED"] = request.path;
 	// PATH_INFO의 변환. 스크립트의 가상경로를, 실제 호출 할 때 사용되는 경로로 맵핑.
 	//  요청 URI의 PATH_INFO 구성요소를 가져와, 적합한 가상 : 실제 변환을 수행하여 맵핑.
-	// this->envp_["QUERY_STRING"] = request.getQueryString(); // 쿼리스트링
-	// this->envp_["REMOTE_ADDR"] = ""ip주소 받아와야 함
+	this->envp_["QUERY_STRING"] = request.query;
+	this->envp_["REMOTE_ADDR"] = request.addr;
 	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
 	this->envp_["REMOTE_USER"] = "";
-	// this->envp_["REQUEST_METHOD"] = method;
-	this->envp_["REQUEST_URI"] = ""; // request.getUri();
-	// this->envp_["SCRIPT_NAME"] = request.getUri();
-	this->envp_["SERVER_NAME"] = ""; // 요청을 수신한 서버의 호스트 이름.
-	this->envp_["SERVER_PORT"] = ""; // 요청을 수신한 서버의 포트 번호.
+	this->envp_["REQUEST_METHOD"] = request.method;
+	this->envp_["REQUEST_URI"] = request.name; //
+	this->envp_["SCRIPT_NAME"] = request.name; //
+	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
+	this->envp_["SERVER_PORT"] = request.port; // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
 };
@@ -112,7 +112,7 @@ char **CGI::ENVPChangeStringArray()
  * @param filefd[2] 새로운 파일 디스크립터를 저장하는 변수입니다. pipe() 함수를 사용하여 파이프를 열면, 새로운 파일 디스크립터가 반환.
  */
 
-void CGI::excuteCGI(const std::string &context, ) // context 받기 아마두 경로?
+std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &request) // context 받기 아마두 경로?
 {
 	// this->_body = HTTPRequest.body_;
 	pid_t pid;
