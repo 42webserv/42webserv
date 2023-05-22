@@ -210,7 +210,7 @@ const std::vector<Directive> &Config::getDirectives() const
  *	directives : 찾을 Directive vector
  *	dirName :	찾을 Directive의 name
  */
-void Config::getAllDirectives(std::vector<Directive> &newDirectives, std::vector<Directive> directives, std::string dirName)
+void Config::getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName)
 {
 	for (size_t i = 0; i < directives.size(); i++)
 	{

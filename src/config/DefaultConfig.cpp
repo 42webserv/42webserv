@@ -78,19 +78,19 @@ void DefaultConfig::addMainDirectives(Directive &main, const std::string name)
 void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
 {
 	const std::string name = "main";
-	std::vector<Directive> tmp;
+	std::vector<Directive> tmp_dirs;
 	Directive dir;
 
-	config.getAllDirectives(tmp, dirs, name);
-	if (tmp.size() == 0)
+	config.getAllDirectives(tmp_dirs, dirs, name);
+	if (tmp_dirs.size() == 0)
 	{
 		dir = newDir(name, "", name); // TODO Config.cpp에도 동일하게 하고 있음.
 		dirs.insert(dirs.begin(), dir);
 	}
-	if (tmp.size() == 1)
+	if (tmp_dirs.size() == 1)
 	{
-		dir = tmp.front();
-		addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addMainDirectives, &DefaultConfig::checkHttpDirectives);
+		dir = tmp_dirs.front();
+		addAndCheckChildDirectives(dir, tmp_dirs, name, &DefaultConfig::addMainDirectives, &DefaultConfig::checkHttpDirectives);
 	}
 	else
 		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
@@ -116,20 +116,20 @@ void DefaultConfig::addHttpDirectives(Directive &http, const std::string name)
 void DefaultConfig::checkHttpDirectives(std::vector<Directive> &dirs, const std::string pre_name)
 {
 	const std::string name = "http";
-	std::vector<Directive> tmp;
+	std::vector<Directive> tmp_dirs;
 	Directive dir;
 
-	config.getAllDirectives(tmp, dirs, name);
+	config.getAllDirectives(tmp_dirs, dirs, name);
 	(void)pre_name;
 	// if (tmp.size() == 0)
 	// {
 	// 	dir = newDir(name, "", pre_name);
 	// 	tmp.insert(tmp.begin(), dir);
 	// }
-	if (tmp.size() == 1)
+	if (tmp_dirs.size() == 1)
 	{
-		dir = tmp.front();
-		addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addHttpDirectives, &DefaultConfig::checkServerDirectives);
+		dir = tmp_dirs.front();
+		addAndCheckChildDirectives(dir, tmp_dirs, name, &DefaultConfig::addHttpDirectives, &DefaultConfig::checkServerDirectives);
 	}
 	else
 		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
@@ -152,22 +152,22 @@ void DefaultConfig::addServerDirectives(Directive &server, const std::string nam
 void DefaultConfig::checkServerDirectives(std::vector<Directive> &dirs, const std::string pre_name)
 {
 	const std::string name = "server";
-	std::vector<Directive> tmp;
+	std::vector<Directive> tmp_dirs;
 	Directive dir;
 
-	config.getAllDirectives(tmp, dirs, name);
+	config.getAllDirectives(tmp_dirs, dirs, name);
 	(void)pre_name;
 	// if (0 == tmp.size())
 	// {
 	// 	dir = newDir(name, "", pre_name);
 	// 	tmp.insert(tmp.begin(), dir);
 	// }
-	if (0 < tmp.size())
+	if (0 < tmp_dirs.size())
 	{
-		for (std::vector<Directive>::iterator it = tmp.begin(); it != tmp.end(); it++)
+		for (std::vector<Directive>::iterator it = tmp_dirs.begin(); it != tmp_dirs.end(); it++)
 		{
 			dir = *it;
-			addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addServerDirectives, &DefaultConfig::checkLocationDirectives);
+			addAndCheckChildDirectives(dir, tmp_dirs, name, &DefaultConfig::addServerDirectives, &DefaultConfig::checkLocationDirectives);
 		}
 	}
 }
@@ -188,22 +188,22 @@ void DefaultConfig::addLocationDirectives(Directive &location, const std::string
 void DefaultConfig::checkLocationDirectives(std::vector<Directive> &dirs, const std::string pre_name)
 {
 	const std::string name = "location";
-	std::vector<Directive> tmp;
+	std::vector<Directive> tmp_dirs;
 	Directive dir;
 
-	config.getAllDirectives(tmp, dirs, name);
+	config.getAllDirectives(tmp_dirs, dirs, name);
 	(void)pre_name;
 	// if (0 == tmp.size())
 	// {
 	// 	dir = newDir(name, "", pre_name);
 	// 	tmp.insert(tmp.begin(), dir);
 	// }
-	if (0 < tmp.size())
+	if (0 < tmp_dirs.size())
 	{
-		for (std::vector<Directive>::iterator it = tmp.begin(); it != tmp.end(); it++)
+		for (std::vector<Directive>::iterator it = tmp_dirs.begin(); it != tmp_dirs.end(); it++)
 		{
 			dir = *it;
-			addAndCheckChildDirectives(dir, dirs, name, &DefaultConfig::addLocationDirectives, NULL);
+			addAndCheckChildDirectives(dir, tmp_dirs, name, &DefaultConfig::addLocationDirectives, NULL);
 		}
 	}
 }
