@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/14 17:40:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 16:53:59 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,21 @@ struct ServerInfo
     std::vector<std::string> limitExcept;
     std::vector<Directive> location;
     std::map<int, std::string> errorPage;
+};
+
+struct UData
+{
+    UData(int socketFd,
+          int clientFd,
+          bool keepLive)
+    {
+        this->socketFd = socketFd;
+        this->clientFd = clientFd;
+        this->keepLive = keepLive;
+    };
+    int socketFd;
+    int clientFd;
+    bool keepLive;
 };
 
 class Server

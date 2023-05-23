@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 14:52:14 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 16:51:08 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,12 +74,13 @@ bool Worker::eventFilterRead(int k)
 	return true;
 }
 
-bool Worker::eventFilterWrite(int k)
+bool Worker::eventFilterWrite(int k, struct kevent &event;)
 {
 	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
+	registerKeepAlive(result, int client_fd)
 	if (clients.find(fd) != clients.end())
 	{
 		if (result)
@@ -88,7 +89,7 @@ bool Worker::eventFilterWrite(int k)
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
-		sockets[k]->disconnectClient(fd, clients);
+		// sockets[k]->disconnectClient(fd, clients);
 		clients[fd].clear();
 	}
 	if (result)
@@ -129,7 +130,7 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
-					if (eventFilterWrite(k) == false)
+					if (eventFilterWrite(k, event) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_SIGNAL)
@@ -327,4 +328,23 @@ void Worker::broad(ResponseData *response)
 	std::string response_header = generateHeader(tmp, contentType);
 	write(response->clientFd, response_header.c_str(), response_header.length());
 	write(response->clientFd, tmp.c_str(), tmp.length()); // 완성된 html 을 body로 보냄
+}
+
+void Worker::registerKeepAlive(const HTTPRequest &request, int client_fd)
+{
+	std::map<std::string, std::string>::const_iterator it = request.headers.find("Connection");
+	if (it != request.headers.end())
+	{
+		std::string value = it->second;
+		if (value[value.length() - 1] == '\r')
+			value.erase(value.length() - 1);
+		if (value == "keep-alive" && clientState.keepAlive == false)
+		{
+			clientState.keepAlive = true;
+			Socket::setTimer(kq, client_fd);
+			Socket::enableKeepAlive(client_fd);
+		}
+		else
+			clientState.keepAlive = false;
+	}
 }

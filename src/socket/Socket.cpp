@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 21:15:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/23 17:49:34 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ Socket::~Socket()
     close(server_fd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list)
+int Socket::handleEvent(std::vector<struct kevent> &event_list, )
 {
     socklen_t addrlen = sizeof(server_addr);
     struct sockaddr_in client_addr;
@@ -78,7 +78,8 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
-    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    UData *uData = new UData();
+    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL, uData);
     event_list.push_back(new_event);
     clientFds.push_back(client_fd);
     return client_fd;
