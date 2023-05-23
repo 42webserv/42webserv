@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/23 14:52:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 16:27:16 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ int Response::getSuitableServer(int port, Server &server)
  * @param thisServer 현재 해당하는 서버
  * @return 전부 채워진 ResponseDate구조체
  */
-ResponseData *Response::getResponseData(const HTTPRequest &request, const int &client_fd)
+ResponseData *Response::getResponseData(const HTTPRequest &request, const int &client_fd, Config &config)
 {
     ResponseData *response = new ResponseData;
     response->index = this->thisServer.index;
@@ -80,6 +80,15 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     if (response->limitExcept.size() == 0)
         response->limitExcept = thisServer.limitExcept;
     response->resourcePath = response->root + "/" + response->index;
+	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
+	std::vector<std::string> tokens;
+	std::istringstream iss(response->resourcePath);
+	std::string token;
+	while (std::getline(iss, token, '.'))
+		tokens.push_back(token);
+	std::string extension = tokens.back();
+	MimeTypesParser mime(config);
+	response->contentType = mime.getMimeType(extension);
     return (response);
 }
 

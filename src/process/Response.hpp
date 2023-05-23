@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/23 14:52:20 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 16:14:08 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
-    ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd);
+    ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, Config &config);
 };
 
 /*
