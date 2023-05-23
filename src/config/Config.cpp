@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/19 16:05:09 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/23 20:33:55 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,7 +179,7 @@ void Config::parsedConfig(int argc, char const **argv)
 	infile.close();
 
 	// Check configuration file
-	DefaultConfig defaultConfig(*this, this->_directives);
+	DefaultConfig defaultConfig(this->_directives);
 	defaultConfig.checkDirectives();
 }
 
@@ -210,7 +210,7 @@ const std::vector<Directive> &Config::getDirectives() const
  *	directives : 찾을 Directive vector
  *	dirName :	찾을 Directive의 name
  */
-void Config::getAllDirectives(std::vector<Directive> &newDirectives, std::vector<Directive> directives, std::string dirName)
+void Config::getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName)
 {
 	for (size_t i = 0; i < directives.size(); i++)
 	{
