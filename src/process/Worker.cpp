@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 14:52:14 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 16:19:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,7 @@ void Worker::run()
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	Response responseClass(request.port, this->server);
-	ResponseData *response = responseClass.getResponseData(request, client_fd);
+	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
@@ -234,17 +234,17 @@ void Worker::getResponse(ResponseData *response)
 	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
 		return errorResponse(response->clientFd);
 	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
-	std::vector<std::string> tokens;
-	std::istringstream iss(response->resourcePath);
-	std::string token;
-	while (std::getline(iss, token, '.'))
-		tokens.push_back(token);
-	std::string extension = tokens.back();
-	MimeTypesParser mime(this->config);
-	std::string contentType = mime.getMimeType(extension);
+	// std::vector<std::string> tokens;
+	// std::istringstream iss(response->resourcePath);
+	// std::string token;
+	// while (std::getline(iss, token, '.'))
+	// 	tokens.push_back(token);
+	// std::string extension = tokens.back();
+	// MimeTypesParser mime(this->config);
+	// std::string contentType = mime.getMimeType(extension);
 	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
 								 std::istreambuf_iterator<char>());
-	std::string response_header = generateHeader(resource_content, contentType);
+	std::string response_header = generateHeader(resource_content, response->contentType);
 	write(response->clientFd, response_header.c_str(), response_header.length());
 	write(response->clientFd, resource_content.c_str(), resource_content.length());
 	resource_file.close();
