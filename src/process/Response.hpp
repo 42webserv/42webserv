@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/20 13:58:23 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 14:52:20 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ struct ResponseData
     std::string redirect;
     std::string locationName;
     std::string path; // path중 locationName 부분을 지운 나머지 경로
-    CGIData *cgi;
+    // CGIData *cgi;
     bool autoindex;
 };
 
