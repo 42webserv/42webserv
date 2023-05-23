@@ -154,10 +154,10 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
 		// method not allowed
-		std::string response_body = "Method not allowed";
-		std::string response_header = generateErrorHeader(405, response_body);
+		std::string response_content = "Method not allowed";
+		std::string response_header = generateErrorHeader(405, response_content);
 		write(response->clientFd, response_header.c_str(), response_header.length());
-		write(response->clientFd, response_body.c_str(), response_body.length());
+		write(response->clientFd, response_content.c_str(), response_content.length());
 		delete response;
 		return;
 	}
@@ -168,7 +168,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		{
 			std::cout << "request.path : " << request.path << std::endl;
 			std::cout << "response.path : " << response->path << std::endl;
-			CGI cgi("");
+			CGI cgi(request);
 			std::string cgiFullPath = "./src" + request.path + ".py";
 
 			// test
@@ -176,11 +176,26 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			std::string filepath = "./assets/html/";
 			std::string fullpath = filepath + filename;
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
-			std::ofstream testCGI(fullpath);
+			// std::ofstream testCGI(fullpath);
 
 			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
-			testCGI << cgi.excuteCGI(cgiFullPath);
-			testCGI.close();
+
+			std::cout<<"response->resourcePath1" << response->resourcePath << std::endl;
+
+			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
+			response->resourcePath = fullpath;
+
+			std::cout<<"response->resourcePath2" << response->resourcePath << std::endl;
+
+			std::ifstream resource_file(response->resourcePath);
+			MimeTypesParser mime(this->config);
+			std::string contentType = mime.getMimeType("html");
+
+			std::string response_header = generateHeader(resource_content, contentType);
+			write(response->clientFd, response_header.c_str(), response_header.length());
+			write(response->clientFd, resource_content.c_str(), resource_content.length());
+			resource_file.close();
+			return;
 		}
 		getResponse(response);
 	}
@@ -189,8 +204,28 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else // DELETE
 	{
+		std::string resourcePath = response->resourcePath;
+		std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
+		// 리소스 삭제 로직을
+		if (remove(resourcePath.c_str()) != 0) {
+			// 삭제에 실패한 경우
+			std::string response_content = "Failed to delete the resource";
+			std::string response_header = generateErrorHeader(500, "text/html");
+			write(response->clientFd, response_header.c_str(), response_header.length());
+			write(response->clientFd, response_content.c_str(), response_content.length());
+		}
+		else
+		{
+			// 삭제에 성공한 경우
+			std::string response_content = "Resource deleted successfully";
+			std::ifstream resource_file(response->resourcePath);
+			std::string response_header = generateHeader(response_content, "text/html");
+			write(response->clientFd, response_header.c_str(), response_header.length());
+			write(response->clientFd, response_content.c_str(), response_content.length());
+			resource_file.close();
+			return;
+		}
 	}
-	delete response;
 }
 
 bool Worker::isCGIRequest(ResponseData *response)
@@ -233,15 +268,7 @@ void Worker::getResponse(ResponseData *response)
 	std::ifstream resource_file(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
 	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
 		return errorResponse(response->clientFd);
-	// 경로에서 확장자 찾아준 뒤, Content-Type 찾기
-	// std::vector<std::string> tokens;
-	// std::istringstream iss(response->resourcePath);
-	// std::string token;
-	// while (std::getline(iss, token, '.'))
-	// 	tokens.push_back(token);
-	// std::string extension = tokens.back();
-	// MimeTypesParser mime(this->config);
-	// std::string contentType = mime.getMimeType(extension);
+
 	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
 								 std::istreambuf_iterator<char>());
 	std::string response_header = generateHeader(resource_content, response->contentType);
