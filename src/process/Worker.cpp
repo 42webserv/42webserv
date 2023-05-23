@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/20 14:00:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 14:52:14 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,13 +85,14 @@ bool Worker::eventFilterWrite(int k)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
-			delete result;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
 		sockets[k]->disconnectClient(fd, clients);
 		clients[fd].clear();
 	}
+	if (result)
+		delete result;
 	return true;
 }
 
@@ -103,6 +104,7 @@ void Worker::run()
 
 	while (true)
 	{
+		// std::cout << "here" << std::endl;
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
 		if (nevents == -1)
 		{
@@ -156,7 +158,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		std::string response_header = generateErrorHeader(405, response_body);
 		write(response->clientFd, response_header.c_str(), response_header.length());
 		write(response->clientFd, response_body.c_str(), response_body.length());
-		delete response->cgi;
 		delete response;
 		return;
 	}
@@ -189,7 +190,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	else // DELETE
 	{
 	}
-	delete response->cgi;
 	delete response;
 }
 

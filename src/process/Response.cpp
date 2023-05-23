@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/20 13:58:37 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/23 14:52:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,12 +79,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     }
     if (response->limitExcept.size() == 0)
         response->limitExcept = thisServer.limitExcept;
-    // response->resourcePath = response->root + request.path;
     response->resourcePath = response->root + "/" + response->index;
-    std::cout << "resourcePath : " << response->resourcePath << std::endl;
-    std::cout << "root : " << response->root << std::endl;
-    std::cout << "index : " << response->index << std::endl;
-    std::cout << "autoindex : " << response->autoindex << std::endl;
     return (response);
 }
 
