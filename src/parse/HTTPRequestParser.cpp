@@ -34,7 +34,10 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             break;
         case HEADER_VALUE:
             if (!parseHeaderValue())
-                return NULL;
+            {
+                state_ = COMPLETE;
+                buffer_.erase(0, buffer_.length());
+            }
             break;
         case BODY:
             if (!parseBody())

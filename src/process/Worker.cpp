@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 14:03:34 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/24 18:41:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,9 +83,7 @@ bool Worker::eventFilterWrite(int k)
 	if (clients.find(fd) != clients.end())
 	{
 		if (result)
-		{
 			this->requestHandler(*result, fd);
-		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
 		sockets[k]->disconnectClient(fd, clients);
