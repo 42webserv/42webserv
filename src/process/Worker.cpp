@@ -80,6 +80,7 @@ bool Worker::eventFilterWrite(int k)
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
+	std::cout << parser.parse(clients[fd]) << std::endl; // POST method 확인
 	if (clients.find(fd) != clients.end())
 	{
 		if (result)
@@ -184,6 +185,12 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else if (response->method == "POST")
 	{
+		std::cout << "PoSt MeThOd Is WoRkInG" << std::endl;
+		if (isCGIRequest(response))
+		{
+			// cgi post method 실행
+		}
+		postResponse(response);
 	}
 	else // DELETE
 	{
@@ -278,6 +285,40 @@ void Worker::getResponse(ResponseData *response)
 	resource_file.close();
 }
 
+void Worker::postResponse(ResponseData *response) // request body 추가하기
+{
+	// request 사용?
+	struct stat st;
+	// if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
+	// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+	stat(response->resourcePath.c_str(), &st);
+	if (!S_ISREG(st.st_mode)) // root + index을 검사해 파일이 아닐시 if로 분기
+	{
+		response->resourcePath = response->root + response->path; // root + path로 다시 검사
+		std::memset(&st, 0, sizeof(st));
+		// if (!stat(response->resourcePath.c_str(), &st))
+		// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+		stat(response->resourcePath.c_str(), &st);
+		if (!S_ISREG(st.st_mode))
+		{
+			if (response->autoindex)
+				return broad(response);
+			else
+				return errorResponse(response->clientFd);
+		}
+	}
+	std::ifstream resource_file(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
+	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
+		return errorResponse(response->clientFd);
+
+	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
+								 std::istreambuf_iterator<char>());
+	std::string response_header = generateHeader(resource_content, response->contentType);
+	write(response->clientFd, response_header.c_str(), response_header.length());
+	write(response->clientFd, resource_content.c_str(), resource_content.length());
+	resource_file.close();
+}
+
 /**
  * 404 에러일 경우 나와야할 페이지 띄워주는 함수
  *
@@ -312,6 +353,18 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "Connection: close\r\n\r\n";
 	return oss.str();
 }
+
+std::string Worker::tempPostHeader(const std::string &content, const std::string &contentType)
+{
+	HTTPRequestParser parser;
+	std::ostringstream oss;
+
+	oss << "HTTP/1.1 201 Created\r\n";
+	oss << "Content-Length: " << content.length() << "\r\n";
+	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
+	oss << "Connection: close\r\n\r\n";
+	return oss.str();
+} // 코파일럿 미쳤네요 201로 알아서 다 작성해줬어요
 
 /**
  * response의 헤더에 적어줄 내용을 만듬

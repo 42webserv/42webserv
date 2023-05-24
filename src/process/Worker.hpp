@@ -52,8 +52,11 @@ private:
 	bool eventFilterWrite(int k);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
+	void postResponse(ResponseData *response);
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType);
+	// post 응답 201 > generateHeader 안에서 구현 또는 새로...?
+	std::string tempPostHeader(const std::string &content, const std::string &contentType);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData *response);
 	std::string getCGILocation(ResponseData *response);
