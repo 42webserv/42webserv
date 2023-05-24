@@ -165,22 +165,20 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	{
 		if (isCGIRequest(response))
 		{
-			std::cout << "request.path : " << request.path << std::endl;
-			std::cout << "response.path : " << response->path << std::endl;
+			// std::cout << "request.path : " << request.path << std::endl;
+			// std::cout << "response.path : " << response->path << std::endl;
 			CGI cgi(request);
-			std::string cgiFullPath = "./src" + request.path + ".py";
+			// std::string cgiFullPath = "./src" + request.path + ".py";
 
 			// test
-			std::string filename = "result.html";
-			std::string filepath = "./assets/html/";
-			std::string fullpath = filepath + filename;
+			// std::string fullpath = "./assets/html/result.html";
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			// std::ofstream testCGI(fullpath);
 
-			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
+			// std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
 			// testCGI << cgi.excuteCGI(response->resourcePath, request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
-			response->resourcePath = fullpath;
+			response->resourcePath = "./assets/html/result.html";
 			// testCGI.close();
 			// write(response->clientFd, cgi.excuteCGI(cgiFullPath, request).c_str(), cgi.excuteCGI(cgiFullPath, request).length());
 			// resource_content.c_str() = cgi.excuteCGI(cgiFullPath, request);
