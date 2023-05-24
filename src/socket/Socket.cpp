@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 17:49:34 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 15:59:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include "Socket.hpp"
 #include "common_error.hpp"
+#include "Server.hpp"
 
 Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
 {
@@ -64,7 +65,7 @@ Socket::~Socket()
     close(server_fd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list, )
+int Socket::handleEvent(std::vector<struct kevent> &event_list)
 {
     socklen_t addrlen = sizeof(server_addr);
     struct sockaddr_in client_addr;
@@ -78,8 +79,9 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list, )
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
-    UData *uData = new UData();
-    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL, uData);
+    // UData *uData = new UData(client_fd, false, true);
+    // EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
+    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     event_list.push_back(new_event);
     clientFds.push_back(client_fd);
     return client_fd;
@@ -94,4 +96,45 @@ void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients
     close(client_fd);
     clients.erase(client_fd);
     clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
+}
+
+int Socket::enableKeepAlive(int socketFd)
+{
+    int keepAlive = 1;
+    // int keepAliveTime = 15;
+    int keepAliveInterval = 5;
+
+    // SO_KEEPALIVE 옵션 활성화
+    if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive)) < 0)
+    {
+        perror("setsockopt SO_KEEPALIVE");
+        return -1;
+    }
+    std::cout << socketFd << " : keepalive on" << std::endl;
+    // // TCP_KEEPIDLE 옵션 설정 (유휴 시간)
+    // if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPIDLE, &keepAliveTime, sizeof(keepAliveTime)) < 0)
+    // {
+    //     perror("setsockopt TCP_KEEPIDLE");
+    //     return -1;
+    // }
+
+    // TCP_KEEPINTVL 옵션 설정 (유휴 상태에서 keep-alive 패킷 간의 간격)
+    if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPINTVL, &keepAliveInterval, sizeof(keepAliveInterval)) < 0)
+    {
+        perror("setsockopt TCP_KEEPINTVL");
+        return -1;
+    }
+    return 0;
+}
+
+bool Socket::findClientFd(int client_fd)
+{
+    std::vector<int>::iterator it;
+
+    for (it = clientFds.begin(); it != clientFds.end(); ++it)
+    {
+        if (*it == client_fd)
+            return true;
+    }
+    return false;
 }

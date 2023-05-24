@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 16:08:18 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 14:37:39 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ private:
 
 	void eventEVError(int k);
 	bool eventFilterRead(int k);
-	bool eventFilterWrite(int k);
+	bool eventFilterWrite(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void errorResponse(int client_fd);
@@ -58,7 +58,8 @@ private:
 	bool isCGIRequest(ResponseData *response);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 	void broad(ResponseData *response);
-	void registerKeepAlive(const HTTPRequest &request, int client_fd);
+	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
+	int findSocketIndex(struct kevent &event);
 
 public:
 	Worker(Master &master);

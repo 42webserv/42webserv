@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/23 16:53:59 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 13:36:10 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,19 +35,26 @@ struct ServerInfo
     std::map<int, std::string> errorPage;
 };
 
+/*
+ * event에 같이 들고 다닐 user에 대한 데이터이다.
+ *
+ * fd: client의 fd
+ * keepLive: keep-alive인지 아닌지
+ * isClient: client인지 아닌지
+ */
 struct UData
 {
-    UData(int socketFd,
-          int clientFd,
-          bool keepLive)
+    UData(int fd,
+          bool keepLive,
+          bool isClient)
     {
-        this->socketFd = socketFd;
-        this->clientFd = clientFd;
+        this->fd = fd;
         this->keepLive = keepLive;
+        this->isClient = isClient;
     };
-    int socketFd;
-    int clientFd;
+    int fd;
     bool keepLive;
+    bool isClient;
 };
 
 class Server

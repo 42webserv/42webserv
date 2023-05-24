@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 16:51:08 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 16:20:45 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,14 +74,15 @@ bool Worker::eventFilterRead(int k)
 	return true;
 }
 
-bool Worker::eventFilterWrite(int k, struct kevent &event;)
+bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
 	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
-	registerKeepAlive(result, int client_fd)
-	if (clients.find(fd) != clients.end())
+	clients[fd].clear();
+	// registerKeepAlive(result, event, fd);
+	if (clients.find(fd) != clients.end() && result != NULL)
 	{
 		if (result)
 		{
@@ -89,12 +90,30 @@ bool Worker::eventFilterWrite(int k, struct kevent &event;)
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
+		// delete static_cast<UData *>(event.udata);
 		// sockets[k]->disconnectClient(fd, clients);
-		clients[fd].clear();
 	}
 	if (result)
 		delete result;
 	return true;
+}
+
+int Worker::findSocketIndex(struct kevent &event)
+{
+	int k;
+
+	k = 0;
+	for (size_t j = 0; j < sockets.size(); j++)
+	{
+		if (sockets[j]->findClientFd(event.ident) == true)
+		{
+			k = j;
+			return (k);
+		}
+		k = j;
+	}
+	std::cout << "fd is not exist" << std::endl;
+	return (-1);
 }
 
 void Worker::run()
@@ -102,7 +121,7 @@ void Worker::run()
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
-
+	// int k;
 	while (true)
 	{
 		// std::cout << "here" << std::endl;
@@ -112,25 +131,40 @@ void Worker::run()
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
 			break;
 		}
-		event_list.clear();
+		event_list.clear(); // 이벤트가 발생하면 event_list를 비워줌 왜>.?????
 
-		for (size_t k = 0; k < sockets.size(); k++)
+		for (int k = 0; k < nevents; k++)
 		{
 			for (int i = 0; i < nevents; i++)
 			{
+				// std::cout << "filter : " << event.filter << std::endl;
+				// if ((k = findSocketIndex(events[i]) == -1))
+				// {
+				// 	std::cout << k << " : not exist" << std::endl;
+				// 	continue;
+				// }
+
 				event = events[i];
 				fd = event.ident;
 
 				if (event.flags & EV_ERROR)
 					eventEVError(k);
-				if (event.filter == EVFILT_READ)
+				if (event.flags & EV_EOF)
+				{
+					std::cout << "client want to disconnect" << std::endl;
+					if (event.udata)
+						delete static_cast<UData *>(event.udata);
+					std::cout << "띠용" << std::endl;
+					sockets[k]->disconnectClient(fd, clients);
+				}
+				else if (event.filter == EVFILT_READ)
 				{
 					if (eventFilterRead(k) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
-					if (eventFilterWrite(k, event) == false)
+					if (eventFilterWrite(k, events[i]) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_SIGNAL)
@@ -282,7 +316,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "HTTP/1.1 200 OK\r\n";
 	oss << "Content-Length: " << content.length() << "\r\n";
 	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
-	oss << "Connection: close\r\n\r\n";
+	oss << "Connection: keep-alive\r\n\r\n";
 	return oss.str();
 }
 
@@ -330,21 +364,25 @@ void Worker::broad(ResponseData *response)
 	write(response->clientFd, tmp.c_str(), tmp.length()); // 완성된 html 을 body로 보냄
 }
 
-void Worker::registerKeepAlive(const HTTPRequest &request, int client_fd)
+void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
 {
-	std::map<std::string, std::string>::const_iterator it = request.headers.find("Connection");
-	if (it != request.headers.end())
+	UData *uData = static_cast<UData *>(event.udata);
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("Connection");
+	if (it != request->headers.end())
 	{
 		std::string value = it->second;
 		if (value[value.length() - 1] == '\r')
 			value.erase(value.length() - 1);
-		if (value == "keep-alive" && clientState.keepAlive == false)
+		// if (value == "keep-alive" && uData->keepLive == false)
+		if (value == "keep-alive")
 		{
-			clientState.keepAlive = true;
-			Socket::setTimer(kq, client_fd);
+			// uData->keepLive = true;
+			// Socket::setTimer(kq, client_fd);
 			Socket::enableKeepAlive(client_fd);
 		}
 		else
-			clientState.keepAlive = false;
+		{
+			// uData->keepLive = false;
+		}
 	}
 }

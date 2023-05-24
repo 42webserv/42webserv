@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/11 17:13:58 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 15:07:46 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <string>
 #include <sys/event.h>
 #include <vector>
+#include <netinet/tcp.h>
 
 class Socket
 {
@@ -33,6 +34,8 @@ public:
     ~Socket();
     int handleEvent(std::vector<struct kevent> &event_list);
     void disconnectClient(int client_fd, std::map<int, std::string> &clients);
+    static int enableKeepAlive(int socketFd);
+    bool findClientFd(int client_fd);
 };
 
 #endif
