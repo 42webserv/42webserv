@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 15:07:46 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 18:13:12 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,19 +21,46 @@
 #include <vector>
 #include <netinet/tcp.h>
 
+/*
+ * event에 같이 들고 다닐 user에 대한 데이터이다.
+ *
+ * fd: client의 fd
+ * keepLive: keep-alive인지 아닌지
+ * isClient: client인지 아닌지
+ */
+struct UData
+{
+    UData(int fd,
+          bool keepLive,
+          bool isClient)
+    {
+        this->fd = fd;
+        this->keepLive = keepLive;
+        this->isClient = isClient;
+        this->max = 0;
+        this->timer = 0;
+    };
+    int fd;
+    int max;
+    int timer;
+    bool keepLive;
+    bool isClient;
+};
+
 class Socket
 {
 private:
     struct sockaddr_in server_addr;
+    int kq;
 
 public:
     int _port;
     const int server_fd;
     std::vector<int> clientFds;
-    Socket(std::vector<struct kevent> &event_list, const int port);
+    Socket(std::vector<struct kevent> &event_list, const int port, const int kq);
     ~Socket();
     int handleEvent(std::vector<struct kevent> &event_list);
-    void disconnectClient(int client_fd, std::map<int, std::string> &clients);
+    void disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event);
     static int enableKeepAlive(int socketFd);
     bool findClientFd(int client_fd);
 };

@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 16:24:30 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 18:42:26 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.server[i].port.size(); j++)
 		{
-			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
+			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j], kq));
 		}
 	}
 }
@@ -30,7 +30,7 @@ Worker::~Worker()
 		delete (sockets[i]);
 }
 
-void Worker::eventEVError(int k)
+void Worker::eventEVError(int k, struct kevent &event)
 {
 	// 서버 소켓 에러
 	if (fd == sockets[k]->server_fd)
@@ -39,7 +39,10 @@ void Worker::eventEVError(int k)
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
 		if (clients.find(fd) != clients.end())
-			sockets[k]->disconnectClient(fd, clients);
+		{
+			std::cout << "socket 에러로 인한" << std::endl;
+			sockets[k]->disconnectClient(fd, clients, event);
+		}
 	}
 }
 
@@ -67,7 +70,8 @@ bool Worker::eventFilterRead(int k)
 			// HTML 요청 메세지 보기
 			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 			struct kevent new_event;
-			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			UData *uData = new UData(fd, false, true);
+			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(uData));
 			event_list.push_back(new_event);
 		}
 	}
@@ -80,18 +84,19 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
-	clients[fd].clear();
-	// registerKeepAlive(result, event, fd);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
+		if (checkHeaderIsKeepLive(result))
+			registerKeepAlive(result, event, fd);
 		if (result)
 		{
 			this->requestHandler(*result, fd);
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
-		// delete static_cast<UData *>(event.udata);
-		// sockets[k]->disconnectClient(fd, clients);
+		if (!checkHeaderIsKeepLive(result))
+			sockets[k]->disconnectClient(fd, clients, event);
+		clients[fd].clear();
 	}
 	if (result)
 		delete result;
@@ -133,7 +138,7 @@ void Worker::run()
 		}
 		event_list.clear(); // 이벤트가 발생하면 event_list를 비워줌 왜>.?????
 
-		for (int k = 0; k < nevents; k++)
+		for (int k = 0; k < sockets.size(); k++)
 		{
 			for (int i = 0; i < nevents; i++)
 			{
@@ -143,19 +148,15 @@ void Worker::run()
 				// 	std::cout << k << " : not exist" << std::endl;
 				// 	continue;
 				// }
-
 				event = events[i];
 				fd = event.ident;
 
 				if (event.flags & EV_ERROR)
-					eventEVError(k);
+					eventEVError(k, event);
 				if (event.flags & EV_EOF)
 				{
 					std::cout << "client want to disconnect" << std::endl;
-					if (event.udata)
-						delete static_cast<UData *>(event.udata);
-					std::cout << "띠용" << std::endl;
-					sockets[k]->disconnectClient(fd, clients);
+					sockets[k]->disconnectClient(fd, clients, event);
 				}
 				else if (event.filter == EVFILT_READ)
 				{
@@ -392,25 +393,39 @@ void Worker::broad(ResponseData *response)
 	write(response->clientFd, tmp.c_str(), tmp.length()); // 완성된 html 을 body로 보냄
 }
 
-void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
+bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 {
-	UData *uData = static_cast<UData *>(event.udata);
 	std::map<std::string, std::string>::const_iterator it = request->headers.find("Connection");
 	if (it != request->headers.end())
 	{
 		std::string value = it->second;
-		if (value[value.length() - 1] == '\r')
+		if (value.length() != 0 && value[value.length() - 1] == '\r')
 			value.erase(value.length() - 1);
-		// if (value == "keep-alive" && uData->keepLive == false)
 		if (value == "keep-alive")
-		{
-			// uData->keepLive = true;
-			// Socket::setTimer(kq, client_fd);
-			Socket::enableKeepAlive(client_fd);
-		}
+			return true;
 		else
 		{
-			// uData->keepLive = false;
+			std::cout << "헤더에 close 들어옴 " << std::endl;
+			return false;
 		}
+	}
+	return false;
+}
+
+void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
+{
+	if (event.udata == NULL)
+		return;
+	UData *uData = static_cast<UData *>(event.udata);
+	if (uData->keepLive == false)
+	{
+		/*
+		 * 해야할 것들
+		 * 1. uData->keepLive = true;
+		 * 2. 타이머 이벤트 등록
+		 */
+		uData->keepLive = true;
+		// Socket::setTimer(kq, client_fd);
+		Socket::enableKeepAlive(client_fd);
 	}
 }

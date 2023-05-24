@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 16:24:41 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 16:54:15 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ private:
 	Server server;
 	HTTPRequestParser parser;
 
-	void eventEVError(int k);
+	void eventEVError(int k, struct kevent &event);
 	bool eventFilterRead(int k);
 	bool eventFilterWrite(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, int client_fd);
@@ -61,6 +61,7 @@ private:
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
 	int findSocketIndex(struct kevent &event);
+	bool checkHeaderIsKeepLive(const HTTPRequest *request);
 
 public:
 	Worker(Master &master);
