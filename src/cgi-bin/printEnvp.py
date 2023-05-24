@@ -3,8 +3,8 @@ import os
 import cgi
 
 # Content-Type 헤더 출력
-print("Content-Type: text/html")
-print()
+# print("Content-Type: text/html\n")
+# print()
 
 # HTML 페이지 출력
 print("<html><body>")

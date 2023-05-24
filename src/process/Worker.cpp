@@ -166,31 +166,29 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	{
 		if (isCGIRequest(response))
 		{
-			std::cout << "request.path : " << request.path << std::endl;
-			std::cout << "response.path : " << response->path << std::endl;
+			// std::cout << "request.path : " << request.path << std::endl;
+			// std::cout << "response.path : " << response->path << std::endl;
 			CGI cgi(request);
-			std::string cgiFullPath = "./src" + request.path + ".py";
+			// std::string cgiFullPath = "./src" + request.path + ".py";
 
 			// test
-			std::string filename = "result.html";
-			std::string filepath = "./assets/html/";
-			std::string fullpath = filepath + filename;
+			// std::string fullpath = "./assets/html/result.html";
 			// 파일을 열고 문자열을 쓴 후 닫습니다.
 			// std::ofstream testCGI(fullpath);
 
-			std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
-
-			std::cout<<"response->resourcePath1" << response->resourcePath << std::endl;
-
+			// std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
+			// testCGI << cgi.excuteCGI(response->resourcePath, request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
-			response->resourcePath = fullpath;
-
-			std::cout<<"response->resourcePath2" << response->resourcePath << std::endl;
-
+			response->resourcePath = "./assets/html/result.html";
+			// testCGI.close();
+			// write(response->clientFd, cgi.excuteCGI(cgiFullPath, request).c_str(), cgi.excuteCGI(cgiFullPath, request).length());
+			// resource_content.c_str() = cgi.excuteCGI(cgiFullPath, request);
+			// testCGI.close();
 			std::ifstream resource_file(response->resourcePath);
 			MimeTypesParser mime(this->config);
 			std::string contentType = mime.getMimeType("html");
-
+			// std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
+			//							 std::istreambuf_iterator<char>());
 			std::string response_header = generateHeader(resource_content, contentType);
 			write(response->clientFd, response_header.c_str(), response_header.length());
 			write(response->clientFd, resource_content.c_str(), resource_content.length());
@@ -207,7 +205,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		std::string resourcePath = response->resourcePath;
 		std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
 		// 리소스 삭제 로직을
-		if (remove(resourcePath.c_str()) != 0) {
+		if (remove(resourcePath.c_str()) != 0)
+		{
 			// 삭제에 실패한 경우
 			std::string response_content = "Failed to delete the resource";
 			std::string response_header = generateErrorHeader(500, "text/html");
