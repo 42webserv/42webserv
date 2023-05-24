@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 16:19:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/24 14:03:34 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,30 +166,15 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	{
 		if (isCGIRequest(response))
 		{
-			// std::cout << "request.path : " << request.path << std::endl;
-			// std::cout << "response.path : " << response->path << std::endl;
 			CGI cgi(request);
-			// std::string cgiFullPath = "./src" + request.path + ".py";
-
-			// test
-			// std::string fullpath = "./assets/html/result.html";
-			// 파일을 열고 문자열을 쓴 후 닫습니다.
-			// std::ofstream testCGI(fullpath);
-
-			// std::cout << "cgipath -> full :  " << cgiFullPath << std::endl;
-			// testCGI << cgi.excuteCGI(response->resourcePath, request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
-			response->resourcePath = "./assets/html/result.html";
-			// testCGI.close();
-			// write(response->clientFd, cgi.excuteCGI(cgiFullPath, request).c_str(), cgi.excuteCGI(cgiFullPath, request).length());
-			// resource_content.c_str() = cgi.excuteCGI(cgiFullPath, request);
-			// testCGI.close();
+			if ((response->resourcePath = getCGILocation(response)) == "")
+			{
+				// error_page
+				return;
+			}
 			std::ifstream resource_file(response->resourcePath);
-			MimeTypesParser mime(this->config);
-			std::string contentType = mime.getMimeType("html");
-			// std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
-			//							 std::istreambuf_iterator<char>());
-			std::string response_header = generateHeader(resource_content, contentType);
+			std::string response_header = generateHeader(resource_content, "text/html");
 			write(response->clientFd, response_header.c_str(), response_header.length());
 			write(response->clientFd, resource_content.c_str(), resource_content.length());
 			resource_file.close();
@@ -227,6 +212,24 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 }
 
+/**
+ * GET 요청 중 CGI일 경우, CGI 반환에 필요한 location을 찾아 경로 반환
+ *
+ * @param response 응답시 사용될 구조체
+ * @return 경로 문자열
+ */
+std::string Worker::getCGILocation(ResponseData *response)
+{
+	for (size_t i = 0; i < response->location.size(); ++i)
+	{
+		if (response->location[i].value == "/result ")
+		{
+			return response->root + "/" + response->index;
+		}
+	}
+	return "";
+}
+
 bool Worker::isCGIRequest(ResponseData *response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
@@ -240,8 +243,7 @@ bool Worker::isCGIRequest(ResponseData *response)
 /**
  * GET request일 경우, response에 보내줄 리소스를 찾고 담긴 내용을 가져옴. 파일이 존재하지않으면 에러페이지 반환
  *
- * @param request 파싱된 HTTP 요청 메세지 구조체
- * @param client_fd 웹 소켓
+ * @param response 응답시 사용될 구조체
  */
 void Worker::getResponse(ResponseData *response)
 {

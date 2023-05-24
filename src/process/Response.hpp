@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/23 16:14:08 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/24 13:35:46 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ struct ResponseData
     std::vector<std::string> limitExcept;
     std::string returnState;
     std::string redirect;
+    std::vector<Directive> location;
     std::string locationName;
     std::string path; // path중 locationName 부분을 지운 나머지 경로
     // CGIData *cgi;
