@@ -30,12 +30,12 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 {
 	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
 	HTTPRequestParser request_parser;
-	const std::string &method = request.method;
-	// std::size_t content_length = request.getContentLength(); // contentlength
-	// if (method == "POST" && content_length > 0)
-	// {
-	// 	headers["CONTENT_LENGTH"] = toString(content_length);
-	// }
+	// const std::string &method = request.method;
+	//  std::size_t content_length = request.getContentLength(); // contentlength
+	//  if (method == "POST" && content_length > 0)
+	//  {
+	//  	headers["CONTENT_LENGTH"] = toString(content_length);
+	//  }
 	this->envp_["AUTH_TYPE"] = "";
 	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
 	this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request);
@@ -48,11 +48,11 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	this->envp_["REMOTE_ADDR"] = request.addr;
 	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
 	this->envp_["REMOTE_USER"] = "";
-	this->envp_["REQUEST_METHOD"] = method;
+	this->envp_["REQUEST_METHOD"] = request.method;
 	this->envp_["REQUEST_URI"] = request.name; //
 	this->envp_["SCRIPT_NAME"] = request.name; //
 	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
-	this->envp_["SERVER_PORT"] = request.port; // 요청을 수신한 서버의 포트 번호.
+	this->envp_["SERVER_PORT"] = request.strPort; // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
 };
@@ -112,9 +112,9 @@ char **CGI::ENVPChangeStringArray()
  * @param filefd[2] 새로운 파일 디스크립터를 저장하는 변수입니다. pipe() 함수를 사용하여 파이프를 열면, 새로운 파일 디스크립터가 반환.
  */
 
-std::string CGI::excuteCGI(const std::string &context) // context 받기 아마두 경로?
+std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &request) // context 받기 아마두 경로?
 {
-	HTTPRequest request;
+	// this->_body = HTTPRequest.body_;
 	pid_t pid;
 	FILE *file[2];
 	int oldFD[2];

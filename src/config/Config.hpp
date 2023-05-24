@@ -85,7 +85,7 @@ public:
     ~Config();
     void parsedConfig(int argc, char const **argv);
     void printDirectives(std::vector<Directive> directives, size_t tab);
-    void getAllDirectives(std::vector<Directive> &newDirectives, std::vector<Directive> directives, std::string dirName);
+    void getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName);
     const std::vector<Directive> &getDirectives() const;
 };
 

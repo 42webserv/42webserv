@@ -43,7 +43,7 @@ public:
 	CGI(const CGI &src);
 	~CGI(void);
 
-	std::string excuteCGI(const std::string &context);
+	std::string excuteCGI(const std::string &context, const HTTPRequest &request);
 	// void deleteEnvp(char** envp) const; -> 수정 예정
 };
 #endif

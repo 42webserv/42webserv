@@ -53,11 +53,13 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->http_version = http_version_;
         request->headers = headers_;
         request->body = body_;
+        request->addr = addr_;
         std::map<std::string, std::string>::iterator it = request->headers.find("Host");
         if (it != headers_.end())
         {
             size_t pos = it->second.find(":");
             request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+            request->strPort = it->second.substr(pos + 1, it->second.length());
         }
         else
             request->port = -1;
