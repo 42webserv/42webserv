@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 15:59:28 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/24 18:43:39 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 #include "common_error.hpp"
 #include "Server.hpp"
 
-Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &event_list, const int port, const int kq)
+    : server_fd(socket(AF_INET, SOCK_STREAM, 0)), kq(kq)
 {
     struct kevent event;
     this->_port = port;
@@ -79,9 +80,19 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
-    // UData *uData = new UData(client_fd, false, true);
-    // EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+
+    struct linger lingerOption;
+    lingerOption.l_onoff = 1;   // SO_LINGER 활성화
+    lingerOption.l_linger = 10; // linger 시간을 10초로 설정
+
+    // 소켓에 SO_LINGER 옵션 적용
+    // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
+    if (setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
+    {
+        perror("setsockopt SO_LINGER");
+    }
+
     event_list.push_back(new_event);
     clientFds.push_back(client_fd);
     return client_fd;
@@ -89,10 +100,19 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
 
 // TODO 이게 server랑 물려있는 client란 걸 어떻게 알까?
 // 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
-void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients)
+void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event)
 {
     // TODO keep-alive면 안지운다. timeout도 해보기.
     // disconnect하기 전에 이벤트 삭제도 등록하기.
+    EV_SET(&event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
+    kevent(kq, &event, 1, NULL, 0, NULL);
+    EV_SET(&event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+    kevent(kq, &event, 1, NULL, 0, NULL);
+    if (event.udata)
+        delete static_cast<UData *>(event.udata);
+    event.udata = NULL;
+    std::cout << "close client_fd: " << client_fd << std::endl;
+    // shutdown(client_fd, SHUT_RDWR);
     close(client_fd);
     clients.erase(client_fd);
     clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
@@ -101,7 +121,6 @@ void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients
 int Socket::enableKeepAlive(int socketFd)
 {
     int keepAlive = 1;
-    // int keepAliveTime = 15;
     int keepAliveInterval = 5;
 
     // SO_KEEPALIVE 옵션 활성화
@@ -110,14 +129,6 @@ int Socket::enableKeepAlive(int socketFd)
         perror("setsockopt SO_KEEPALIVE");
         return -1;
     }
-    std::cout << socketFd << " : keepalive on" << std::endl;
-    // // TCP_KEEPIDLE 옵션 설정 (유휴 시간)
-    // if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPIDLE, &keepAliveTime, sizeof(keepAliveTime)) < 0)
-    // {
-    //     perror("setsockopt TCP_KEEPIDLE");
-    //     return -1;
-    // }
-
     // TCP_KEEPINTVL 옵션 설정 (유휴 상태에서 keep-alive 패킷 간의 간격)
     if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPINTVL, &keepAliveInterval, sizeof(keepAliveInterval)) < 0)
     {
