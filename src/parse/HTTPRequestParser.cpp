@@ -13,7 +13,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     buffer_.clear();
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
-    // std::cout << data << std::endl;
+    std::cout << data << std::endl;
     state_ = METHOD;
 
     while (!buffer_.empty())
@@ -139,15 +139,10 @@ bool HTTPRequestParser::parseHTTPVersion()
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
     size_t pos3 = buffer_.find("\r\n");
-    std::cout << "HTTPV" << pos1 << ", " << pos2 << ", " << pos3 << std::endl;
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
-    {
-        std::cout << "here" << std::endl;
         return false;
-    }
     size_t pos = minPos(pos1, pos2, pos3);
     http_version_ = buffer_.substr(0, pos);
-    std::cout << "http_version: " << http_version_ << std::endl;
     state_ = HEADER_NAME;
     // 지금까지 사용한 버퍼 지우기
     buffer_.erase(0, pos);
@@ -170,7 +165,11 @@ bool HTTPRequestParser::parseHeaderName()
 {
     size_t pos = buffer_.find(':');
     if (pos == std::string::npos)
-        return false;
+    {
+        state_ = COMPLETE;
+        buffer_.clear();
+        return true;
+    }
     current_header_name_ = buffer_.substr(0, pos);
     buffer_.erase(0, pos + 1);
     state_ = HEADER_VALUE;
@@ -185,12 +184,12 @@ bool HTTPRequestParser::parseHeaderName()
  */
 bool HTTPRequestParser::parseHeaderValue()
 {
-    size_t pos = buffer_.find("\r\n");
-    if (pos == std::string::npos)
-    {
-        // std::cout << "here" << std::endl;
+    size_t pos1 = buffer_.find("\r");
+    size_t pos2 = buffer_.find("\n");
+    size_t pos3 = buffer_.find("\r\n");
+    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
-    }
+    size_t pos = minPos(pos1, pos2, pos3);
     std::string header_value = buffer_.substr(1, pos);
     std::cout << "current_header_name_ : " << current_header_name_ << ", header_value : " << header_value << std::endl;
     headers_.insert(std::make_pair(current_header_name_, header_value));
