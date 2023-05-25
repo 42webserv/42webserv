@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 20:04:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/25 22:27:49 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
     state_ = METHOD;
+    std::cout << "data: [" << data << "]" << std::endl;
 
     while (!buffer_.empty())
     {
@@ -70,6 +71,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             return NULL;
         }
     }
+
     if (state_ == COMPLETE)
     {
         HTTPRequest *request = new HTTPRequest;
@@ -228,6 +230,8 @@ bool HTTPRequestParser::parseHeaderValue()
     {
         buffer_.erase(0, 2);
         state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
+        if (state_ == BODY && buffer_.empty())
+            state_ = COMPLETE;
     }
     else
     {

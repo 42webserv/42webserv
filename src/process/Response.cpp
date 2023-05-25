@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/25 19:53:06 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/25 21:53:55 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     MimeTypesParser mime(config);
     response->contentType = mime.getMimeType(extension);
     response->body = request.body;
-
+    response->contentLength = response->body.length();
     return (response);
 }
 
