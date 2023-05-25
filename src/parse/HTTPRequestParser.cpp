@@ -199,7 +199,14 @@ bool HTTPRequestParser::parseHeaderValue()
     std::string header_value = buffer_.substr(1, pos);
     std::cout << "current_header_name_ : " << current_header_name_ << ", header_value : " << header_value << std::endl;
     headers_.insert(std::make_pair(current_header_name_, header_value));
-    buffer_.erase(0, pos + 2);
+    buffer_.erase(0, pos);
+    // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
+    if (buffer_.find("\n") == 0)
+        buffer_.erase(0, 1);
+    else if (buffer_.find("\r") == 0 && buffer_.find("\n") == 1)
+        buffer_.erase(0, 2);
+    else if (buffer_.find("\r") == 0)
+        buffer_.erase(0, 1);
     if (current_header_name_ == "Host")
     {
         pos = header_value.find(":");
