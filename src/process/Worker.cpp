@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 18:42:26 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/25 15:06:13 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ void Worker::eventEVError(int k, struct kevent &event)
 	}
 }
 
-bool Worker::eventFilterRead(int k)
+bool Worker::eventFilterRead(int k, struct kevent &event)
 {
 	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
 	if (found == sockets[k]->clientFds.end())
@@ -69,10 +69,14 @@ bool Worker::eventFilterRead(int k)
 		{
 			// HTML 요청 메세지 보기
 			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
-			struct kevent new_event;
-			UData *uData = new UData(fd, false, true);
-			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(uData));
-			event_list.push_back(new_event);
+			UData *uData = static_cast<UData *>(event.udata);
+			if (uData->writeEventExist == false)
+			{
+				struct kevent new_event;
+				uData->writeEventExist = true;
+				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
+				event_list.push_back(new_event);
+			}
 		}
 	}
 	return true;
@@ -91,6 +95,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
+			std::cout << fd << " : 응답 완료" << std::endl;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
@@ -103,7 +108,17 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	return true;
 }
 
-int Worker::findSocketIndex(struct kevent &event)
+bool Worker::eventEOF(int k, struct kevent &event)
+{
+	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+	if (found == sockets[k]->clientFds.end())
+		return false;
+	std::cout << "client want to disconnect" << std::endl;
+	sockets[k]->disconnectClient(fd, clients, event);
+	return true;
+}
+
+int Worker::findSocketIndex(struct kevent &event) // 안필요할 것 같은데 일단 남겨둠.
 {
 	int k;
 
@@ -126,6 +141,7 @@ void Worker::run()
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
+	int sockets_size;
 	// int k;
 	while (true)
 	{
@@ -137,8 +153,8 @@ void Worker::run()
 			break;
 		}
 		event_list.clear(); // 이벤트가 발생하면 event_list를 비워줌 왜>.?????
-
-		for (int k = 0; k < sockets.size(); k++)
+		sockets_size = sockets.size();
+		for (int k = 0; k < sockets_size; k++)
 		{
 			for (int i = 0; i < nevents; i++)
 			{
@@ -155,12 +171,12 @@ void Worker::run()
 					eventEVError(k, event);
 				if (event.flags & EV_EOF)
 				{
-					std::cout << "client want to disconnect" << std::endl;
-					sockets[k]->disconnectClient(fd, clients, event);
+					if (eventEOF(k, event) == false)
+						continue;
 				}
 				else if (event.filter == EVFILT_READ)
 				{
-					if (eventFilterRead(k) == false)
+					if (eventFilterRead(k, event) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_WRITE)
@@ -404,10 +420,21 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 		if (value == "keep-alive")
 			return true;
 		else
-		{
-			std::cout << "헤더에 close 들어옴 " << std::endl;
 			return false;
-		}
+	}
+	return false;
+}
+
+bool Worker::checkKeepLiveOptions(const HTTPRequest *request)
+{
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
+
+	if (it != request->headers.end())
+	{
+		std::string value = it->second;
+		if (value.length() != 0 && value[value.length() - 1] == '\r')
+			value.erase(value.length() - 1);
+		std::cout << value << std::endl;
 	}
 	return false;
 }
@@ -425,6 +452,7 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		 * 2. 타이머 이벤트 등록
 		 */
 		uData->keepLive = true;
+		checkKeepLiveOptions(request);
 		// Socket::setTimer(kq, client_fd);
 		Socket::enableKeepAlive(client_fd);
 	}

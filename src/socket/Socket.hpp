@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 18:13:12 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/25 14:03:14 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,19 +39,21 @@ struct UData
         this->isClient = isClient;
         this->max = 0;
         this->timer = 0;
+        this->writeEventExist = false;
     };
     int fd;
     int max;
     int timer;
     bool keepLive;
     bool isClient;
+    bool writeEventExist;
 };
 
 class Socket
 {
 private:
     struct sockaddr_in server_addr;
-    int kq;
+    const int kq;
 
 public:
     int _port;

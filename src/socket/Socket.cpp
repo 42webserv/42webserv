@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 18:43:39 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/25 13:59:50 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include "Server.hpp"
 
 Socket::Socket(std::vector<struct kevent> &event_list, const int port, const int kq)
-    : server_fd(socket(AF_INET, SOCK_STREAM, 0)), kq(kq)
+    : kq(kq), server_fd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
     this->_port = port;
@@ -54,7 +54,6 @@ Socket::Socket(std::vector<struct kevent> &event_list, const int port, const int
         close(server_fd);
         error_exit("listen()");
     }
-
     EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     event_list.push_back(event);
     clientFds.push_back(server_fd);
@@ -80,7 +79,8 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
-    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    UData *uData = new UData(client_fd, false, true);
+    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
 
     struct linger lingerOption;
     lingerOption.l_onoff = 1;   // SO_LINGER 활성화
