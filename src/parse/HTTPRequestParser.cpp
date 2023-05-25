@@ -10,7 +10,11 @@ HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
  */
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
+    buffer_.clear();
+    // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
+    std::cout << data << std::endl;
+    state_ = METHOD;
 
     while (!buffer_.empty())
     {
@@ -25,16 +29,26 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
                 return NULL;
             break;
         case HTTP_VERSION:
-            if (!parseHttpVersion())
+            if (!parseHTTPVersion())
                 return NULL;
             break;
         case HEADER_NAME:
             if (!parseHeaderName())
+            {
+                std::cout << "here1" << std::endl;
+                // buffer_.erase(0, buffer_.length());
+                // std::cout << buffer_.empty() << std::endl;
                 return NULL;
+                // state_ = COMPLETE;
+            }
             break;
         case HEADER_VALUE:
             if (!parseHeaderValue())
-                return NULL;
+            {
+                // std::cout << "here2" << std::endl;
+                // state_ = COMPLETE;
+                // buffer_.erase(0, buffer_.length());
+            }
             break;
         case BODY:
             if (!parseBody())
@@ -51,6 +65,9 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
+        // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+        if (headers_.size() == 0)
+            return request;
         request->headers = headers_;
         request->body = body_;
         request->addr = addr_;
@@ -110,19 +127,37 @@ bool HTTPRequestParser::parsePath()
     return true;
 }
 
+size_t minPos(size_t p1, size_t p2, size_t p3)
+{
+    return (p1 < p2 && p1 < p3 ? p1 : (p2 < p3 && p2 < p1 ? p2 : p3));
+}
+
 /**
  * HTTP 요청 메세지에서 HTTP 버전 파싱
  *
  * @return HTTP 버전이 존재한다면 구조체에 저장 후 true 반환, 존재하지 않는다면 false 반환
  */
-bool HTTPRequestParser::parseHttpVersion()
+bool HTTPRequestParser::parseHTTPVersion()
 {
-    size_t pos = buffer_.find("\r\n");
-    if (pos == std::string::npos)
+    size_t pos1 = buffer_.find("\r");
+    size_t pos2 = buffer_.find("\n");
+    size_t pos3 = buffer_.find("\r\n");
+    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
+    size_t pos = minPos(pos1, pos2, pos3);
     http_version_ = buffer_.substr(0, pos);
     state_ = HEADER_NAME;
-    buffer_.erase(0, pos + 2);
+    // 지금까지 사용한 버퍼 지우기
+    buffer_.erase(0, pos);
+    // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
+    if (buffer_.find("\n") == 0)
+        buffer_.erase(0, 1);
+    else if (buffer_.find("\r") == 0 && buffer_.find("\n") == 1)
+        buffer_.erase(0, 2);
+    else if (buffer_.find("\r") == 0)
+        buffer_.erase(0, 1);
+    if (buffer_.empty())
+        state_ = COMPLETE;
     return true;
 }
 
@@ -134,8 +169,13 @@ bool HTTPRequestParser::parseHttpVersion()
 bool HTTPRequestParser::parseHeaderName()
 {
     size_t pos = buffer_.find(':');
+    // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
-        return false;
+    {
+        state_ = COMPLETE;
+        buffer_.clear();
+        return true;
+    }
     current_header_name_ = buffer_.substr(0, pos);
     buffer_.erase(0, pos + 1);
     state_ = HEADER_VALUE;
@@ -150,10 +190,14 @@ bool HTTPRequestParser::parseHeaderName()
  */
 bool HTTPRequestParser::parseHeaderValue()
 {
-    size_t pos = buffer_.find("\r\n");
-    if (pos == std::string::npos)
+    size_t pos1 = buffer_.find("\r");
+    size_t pos2 = buffer_.find("\n");
+    size_t pos3 = buffer_.find("\r\n");
+    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
+    size_t pos = minPos(pos1, pos2, pos3);
     std::string header_value = buffer_.substr(1, pos);
+    std::cout << "current_header_name_ : " << current_header_name_ << ", header_value : " << header_value << std::endl;
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos + 2);
     if (current_header_name_ == "Host")
