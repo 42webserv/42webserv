@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 00:14:34 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 00:47:32 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,10 +85,16 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
+	UData *uData = static_cast<UData *>(event.udata);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
+		if (uData->max == 0)
+		{
+			sockets[k]->disconnectClient(fd, clients, event);
+			return false;
+		}
 		if (result)
 		{
 			this->requestHandler(*result, fd);
@@ -96,7 +102,8 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
-		if (!checkHeaderIsKeepLive(result))
+		uData->max = uData->max - 1;
+		if (!checkHeaderIsKeepLive(result) || uData->max == 0)
 			sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
 	}
@@ -111,6 +118,17 @@ bool Worker::eventEOF(int k, struct kevent &event)
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	std::cout << "client want to disconnect" << std::endl;
+	sockets[k]->disconnectClient(fd, clients, event);
+	return true;
+}
+
+bool Worker::eventFilterTimer(int k, struct kevent &event)
+{
+	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
+	if (found == sockets[k]->clientFds.end())
+		return false;
+	std::cout << fd << " is time over" << std::endl;
+	deleteTimer(fd);
 	sockets[k]->disconnectClient(fd, clients, event);
 	return true;
 }
@@ -179,6 +197,11 @@ void Worker::run()
 				else if (event.filter == EVFILT_WRITE)
 				{
 					if (eventFilterWrite(k, events[i]) == false)
+						continue;
+				}
+				else if (event.filter == EVFILT_TIMER)
+				{
+					if (eventFilterTimer(k, event) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_SIGNAL)
@@ -452,7 +475,6 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				uData->timeout = std::stoi(timeout.c_str());
 				if (uData->timeout < 0)
 					return false;
-				std::cout << "timeout: " << uData->timeout << std::endl;
 			}
 			if (maxIdx != std::string::npos)
 			{
@@ -462,12 +484,26 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				uData->max = std::stoi(max.c_str());
 				if (uData->max < 0)
 					return false;
-				std::cout << "max: " << uData->max << std::endl;
 			}
 		}
 		return true;
 	}
 	return false;
+}
+
+void Worker::setTimer(int fd, int timeout)
+{
+	struct kevent timerEvent;
+	int timer_interval_ms = timeout * 1000;
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
+	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+}
+
+void Worker::deleteTimer(int fd)
+{
+	struct kevent timerEvent;
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
+	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 
 void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
@@ -485,7 +521,7 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		uData->keepLive = true;
 		if (checkKeepLiveOptions(request, event))
 		{
-			// Socket::setTimer(kq, client_fd);
+			setTimer(client_fd, uData->timeout);
 		}
 		Socket::enableKeepAlive(client_fd);
 	}

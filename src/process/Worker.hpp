@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 21:54:18 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 00:23:14 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ private:
 	bool eventFilterRead(int k, struct kevent &event);
 	bool eventFilterWrite(int k, struct kevent &event);
 	bool eventEOF(int k, struct kevent &event);
+	bool eventFilterTimer(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void errorResponse(int client_fd);
@@ -64,6 +65,8 @@ private:
 	int findSocketIndex(struct kevent &event);
 	bool checkHeaderIsKeepLive(const HTTPRequest *request);
 	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
+	void setTimer(int fd, int timeout);
+	void deleteTimer(int fd);
 
 public:
 	Worker(Master &master);
