@@ -10,7 +10,11 @@ HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
  */
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
+    buffer_.clear();
+    // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
+    // std::cout << data << std::endl;
+    state_ = METHOD;
 
     while (!buffer_.empty())
     {
@@ -30,13 +34,20 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             break;
         case HEADER_NAME:
             if (!parseHeaderName())
+            {
+                std::cout << "here1" << std::endl;
+                // buffer_.erase(0, buffer_.length());
+                // std::cout << buffer_.empty() << std::endl;
                 return NULL;
+                // state_ = COMPLETE;
+            }
             break;
         case HEADER_VALUE:
             if (!parseHeaderValue())
             {
-                state_ = COMPLETE;
-                buffer_.erase(0, buffer_.length());
+                // std::cout << "here2" << std::endl;
+                // state_ = COMPLETE;
+                // buffer_.erase(0, buffer_.length());
             }
             break;
         case BODY:
@@ -113,6 +124,11 @@ bool HTTPRequestParser::parsePath()
     return true;
 }
 
+size_t minPos(size_t p1, size_t p2, size_t p3)
+{
+    return (p1 < p2 && p1 < p3 ? p1 : (p2 < p3 && p2 < p1 ? p2 : p3));
+}
+
 /**
  * HTTP 요청 메세지에서 HTTP 버전 파싱
  *
@@ -120,10 +136,18 @@ bool HTTPRequestParser::parsePath()
  */
 bool HTTPRequestParser::parseHttpVersion()
 {
-    size_t pos = buffer_.find("\r\n");
-    if (pos == std::string::npos)
+    size_t pos1 = buffer_.find("\r\n");
+    size_t pos2 = buffer_.find("\r");
+    size_t pos3 = buffer_.find("\n");
+    std::cout << "HTTPV" << pos1 << ", " << pos2 << ", " << pos3 << std::endl;
+    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    {
+        std::cout << "here" << std::endl;
         return false;
+    }
+    size_t pos = minPos(pos1, pos2, pos3);
     http_version_ = buffer_.substr(0, pos);
+    std::cout << "http_version: " << http_version_ << std::endl;
     state_ = HEADER_NAME;
     buffer_.erase(0, pos + 2);
     return true;
@@ -155,8 +179,12 @@ bool HTTPRequestParser::parseHeaderValue()
 {
     size_t pos = buffer_.find("\r\n");
     if (pos == std::string::npos)
+    {
+        // std::cout << "here" << std::endl;
         return false;
+    }
     std::string header_value = buffer_.substr(1, pos);
+    std::cout << "current_header_name_ : " << current_header_name_ << ", header_value : " << header_value << std::endl;
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos + 2);
     if (current_header_name_ == "Host")
