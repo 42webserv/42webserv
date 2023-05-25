@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 22:27:49 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 23:03:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,20 +47,13 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             break;
         case HEADER_NAME:
             if (!parseHeaderName())
-            {
-                std::cout << "here1" << std::endl;
-                // buffer_.erase(0, buffer_.length());
-                // std::cout << buffer_.empty() << std::endl;
                 return NULL;
-                // state_ = COMPLETE;
-            }
             break;
         case HEADER_VALUE:
             if (!parseHeaderValue())
             {
-                // std::cout << "here2" << std::endl;
-                // state_ = COMPLETE;
-                // buffer_.erase(0, buffer_.length());
+                std::cout << "here1" << std::endl;
+                return NULL;
             }
             break;
         case BODY:
@@ -93,7 +86,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         }
         else
             request->port = -1;
-        // printResult(*request);
+        printResult(*request);
         reset();
         return request;
     }
@@ -206,8 +199,14 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
     size_t pos3 = buffer_.find("\r\n");
-    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    if (method_ != "POST" && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    {
+        // if (method_ == "POST")
+        // {
+
+        // }
         return false;
+    }
     size_t pos = minPos(pos1, pos2, pos3);
     std::string header_value = buffer_.substr(1, pos);
     std::cout << "current_header_name_ : " << current_header_name_ << ", header_value : " << header_value << std::endl;
@@ -230,9 +229,12 @@ bool HTTPRequestParser::parseHeaderValue()
     {
         buffer_.erase(0, 2);
         state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
+        body_ = "";
         if (state_ == BODY && buffer_.empty())
             state_ = COMPLETE;
     }
+    else if (buffer_.empty())
+        state_ = COMPLETE;
     else
     {
         state_ = HEADER_NAME;
