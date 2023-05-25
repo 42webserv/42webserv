@@ -65,6 +65,9 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
+        // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+        if (headers_.size() == 0)
+            return request;
         request->headers = headers_;
         request->body = body_;
         request->addr = addr_;
@@ -153,6 +156,8 @@ bool HTTPRequestParser::parseHTTPVersion()
         buffer_.erase(0, 2);
     else if (buffer_.find("\r") == 0)
         buffer_.erase(0, 1);
+    if (buffer_.empty())
+        state_ = COMPLETE;
     return true;
 }
 
@@ -164,6 +169,7 @@ bool HTTPRequestParser::parseHTTPVersion()
 bool HTTPRequestParser::parseHeaderName()
 {
     size_t pos = buffer_.find(':');
+    // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
     {
         state_ = COMPLETE;

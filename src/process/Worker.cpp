@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 18:41:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 17:16:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,9 @@ bool Worker::eventFilterWrite(int k)
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
+	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+	if (result->headers.size() == 0)
+		return false;
 	if (clients.find(fd) != clients.end())
 	{
 		if (result)
@@ -182,6 +185,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else if (response->method == "POST")
 	{
+		// error_exit("POST");
+		getResponse(response);
 	}
 	else // DELETE
 	{
