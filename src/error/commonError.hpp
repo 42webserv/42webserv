@@ -1,26 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   common_error.cpp                                   :+:      :+:    :+:   */
+/*   commonError.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/05/02 15:27:34 by yje               #+#    #+#             */
-/*   Updated: 2023/05/19 20:39:36 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/04/24 15:00:20 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/05/25 19:19:06 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "common_error.hpp"
+#ifndef COMMON_ERROR_HPP
+#define COMMON_ERROR_HPP
 
-void error_exit(const char *msg)
-{
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
+#include <string>
 
-void stderr_exit(const std::string msg)
-{
-    std::cerr << msg << '\n';
-    exit(EXIT_FAILURE);
-}
+void errorExit(const char *msg);
+void stderrExit(const std::string msg);
+
+#endif
