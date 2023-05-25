@@ -29,7 +29,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
                 return NULL;
             break;
         case HTTP_VERSION:
-            if (!parseHttpVersion())
+            if (!parseHTTPVersion())
                 return NULL;
             break;
         case HEADER_NAME:
@@ -134,11 +134,11 @@ size_t minPos(size_t p1, size_t p2, size_t p3)
  *
  * @return HTTP 버전이 존재한다면 구조체에 저장 후 true 반환, 존재하지 않는다면 false 반환
  */
-bool HTTPRequestParser::parseHttpVersion()
+bool HTTPRequestParser::parseHTTPVersion()
 {
-    size_t pos1 = buffer_.find("\r\n");
-    size_t pos2 = buffer_.find("\r");
-    size_t pos3 = buffer_.find("\n");
+    size_t pos1 = buffer_.find("\r");
+    size_t pos2 = buffer_.find("\n");
+    size_t pos3 = buffer_.find("\r\n");
     std::cout << "HTTPV" << pos1 << ", " << pos2 << ", " << pos3 << std::endl;
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
     {
@@ -149,7 +149,15 @@ bool HTTPRequestParser::parseHttpVersion()
     http_version_ = buffer_.substr(0, pos);
     std::cout << "http_version: " << http_version_ << std::endl;
     state_ = HEADER_NAME;
-    buffer_.erase(0, pos + 2);
+    // 지금까지 사용한 버퍼 지우기
+    buffer_.erase(0, pos);
+    // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
+    if (buffer_.find("\n") == 0)
+        buffer_.erase(0, 1);
+    else if (buffer_.find("\r") == 0 && buffer_.find("\n") == 1)
+        buffer_.erase(0, 2);
+    else if (buffer_.find("\r") == 0)
+        buffer_.erase(0, 1);
     return true;
 }
 
