@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/23 20:33:55 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/24 22:15:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -458,7 +458,8 @@ void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Di
 			std::vector<std::string> excepts = split(directives[i].value, ' ');
 			for (size_t i = 0; i < excepts.size(); i++)
 			{
-				if (excepts[i] != "GET" && excepts[i] != "POST" && excepts[i] != "DELETE")
+				// TODO : GET, POST, DELETE, PUT 외에 다른 메소드가 들어오면 에러 처리를 잡아주는 함수로 변경하기.
+				if (excepts[i] != "GET" && excepts[i] != "POST" && excepts[i] != "DELETE" && excepts[i] != "PUT")
 				{
 					std::cerr << "Error: limit_except value must be GET or POST or DELETE" << std::endl;
 					exit(1);

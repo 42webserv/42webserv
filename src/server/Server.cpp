@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/14 17:59:51 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:18:47 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
         {
             int port = strtod(serverBlock[i].value.c_str(), NULL);
             if (find(this->validPort.begin(), this->validPort.end(), port) != this->validPort.end())
-                error_exit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
+                errorExit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
             tmpServ.port.push_back(port);
             this->validPort.push_back(port);
         }
@@ -78,7 +78,7 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
     if (tmpServ.port.size() != 0)
         return;
     if (find(this->validPort.begin(), this->validPort.end(), 80) != this->validPort.end())
-        error_exit("Error : duplicate port number 80\n");
+        errorExit("Error : duplicate port number 80\n");
     tmpServ.port.push_back(80);
     this->validPort.push_back(80);
 }

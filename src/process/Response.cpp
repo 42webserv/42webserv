@@ -3,13 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/24 13:47:54 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:53:06 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "commonConfig.hpp"
 #include "Response.hpp"
 
 /*
@@ -90,6 +91,8 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     std::string extension = tokens.back();
     MimeTypesParser mime(config);
     response->contentType = mime.getMimeType(extension);
+    response->body = request.body;
+
     return (response);
 }
 
@@ -206,8 +209,8 @@ void Response::setUpReturnState(std::vector<Directive> &locationBlock, ResponseD
 std::string Response::getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer)
 {
     //.ico파일일 경우 임의로 이미지폴더로 이동
-    if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
-        return "./assets/images";
+    if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ICO_EXTENSION)
+        return "./assets/images"; // TODO image 경로 지정하는 방법 찾아보기
     return thisServer.root;
 }
 

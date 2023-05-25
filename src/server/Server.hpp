@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/14 17:40:58 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:23:03 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,9 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include "commonError.hpp"
 #include "Config.hpp"
 #include "Socket.hpp"
-#include "common_error.hpp"
 
 struct ServerInfo
 {

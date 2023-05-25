@@ -6,7 +6,7 @@
 #    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/21 19:58:52 by sunhwang         ###   ########.fr        #
+#    Updated: 2023/05/25 19:22:34 by sunhwang         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,10 +27,10 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= CheckConfigValid Config DefaultConfig ft_directive
-SRC_ERROR	= common_error
+SRC_CONFIG	= CheckConfigValid Config DefaultConfig Directive
+SRC_ERROR	= commonError
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
-SRC_PROCESS	= Master Worker Response
+SRC_PROCESS	= commonProcess Master Worker Response
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
 SRC_CGI		= CGI

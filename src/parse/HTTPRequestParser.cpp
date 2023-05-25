@@ -1,3 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/05/25 20:04:15 by sunhwang         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "commonConfig.hpp"
 #include "HTTPRequestParser.hpp"
 
 HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
@@ -13,7 +26,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     buffer_.clear();
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
-    std::cout << data << std::endl;
     state_ = METHOD;
 
     while (!buffer_.empty())
@@ -58,7 +70,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             return NULL;
         }
     }
-
     if (state_ == COMPLETE)
     {
         HTTPRequest *request = new HTTPRequest;
@@ -213,7 +224,7 @@ bool HTTPRequestParser::parseHeaderValue()
         if (pos != std::string::npos)
             addr_ = header_value.substr(0, pos);
     }
-    if (buffer_.substr(0, 2) == "\r\n")
+    if (buffer_.substr(0, 2) == CRLF)
     {
         buffer_.erase(0, 2);
         state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;

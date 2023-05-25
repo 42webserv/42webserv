@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 17:05:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:24:13 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <vector>
-#include "common_error.hpp"
+#include "commonError.hpp"
 #include "Signal.hpp"
 
 Signal::Signal(std::vector<struct kevent> &event_list)
@@ -39,15 +39,18 @@ Signal::~Signal()
 
 void Signal::handleEvent(const struct kevent &event, std::vector<Socket *> &sockets) const
 {
+	for (size_t i = 0; i < sockets.size(); i++)
+		delete sockets[i];
+	exit(EXIT_SUCCESS);
 	int sig = event.ident;
+	// TODO 디버깅으로 돌리면 종료되지 않음. 왜 그런지 확인 필요
 	for (size_t i = 0; i < MAX_SIGNAL; i++)
 	{
 		// TERM, INT: 빠른 종료
 		if (sig == SIGTERM || sig == SIGINT)
 		{
 			for (size_t i = 0; i < sockets.size(); i++)
-				delete (sockets[i]);
-			// close(socket.server_fd);
+				delete sockets[i];
 			exit(EXIT_SUCCESS);
 		}
 		// QUIT: 정상적인 종료
@@ -55,8 +58,7 @@ void Signal::handleEvent(const struct kevent &event, std::vector<Socket *> &sock
 		{
 			// for // 모든 애들 소멸하도록 고쳐야함
 			for (size_t i = 0; i < sockets.size(); i++)
-				delete (sockets[i]);
-			// close(socket.server_fd);
+				delete sockets[i];
 			exit(EXIT_SUCCESS);
 		}
 		// 미구현 목록
