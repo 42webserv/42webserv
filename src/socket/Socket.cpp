@@ -6,81 +6,82 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 21:15:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:23:41 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include "commonError.hpp"
 #include "Socket.hpp"
-#include "common_error.hpp"
 
-Socket::Socket(std::vector<struct kevent> &event_list, const int port) : server_fd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &eventList, const int port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
     this->_port = port;
 
     // Create an AF_INET stream socket to receive incoming connections on
-    if (server_fd < 0)
-        error_exit("socket()");
+    if (_serverFd < 0)
+        errorExit("socket()");
 
     int on = 1;
     // Allow socket descriptor to be reuseable
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0)
+    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0)
     {
-        close(server_fd);
-        error_exit("setsockopt()");
+        close(_serverFd);
+        errorExit("setsockopt()");
     }
 
     // Bind the socket
-    std::memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    // TODO port는 server.port에서 받아야 함.
-    server_addr.sin_port = htons(this->_port);
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    std::memset(&_serverAddr, 0, sizeof(_serverAddr));
+    _serverAddr.sin_family = AF_INET;
+    _serverAddr.sin_addr.s_addr = INADDR_ANY;
+    _serverAddr.sin_port = htons(this->_port);
+    if (bind(_serverFd, (struct sockaddr *)&_serverAddr, sizeof(_serverAddr)) < 0)
     {
-        close(server_fd);
-        error_exit("bind()");
+        close(_serverFd);
+        errorExit("bind()");
     }
 
     // Set the listen back log
-    if (listen(server_fd, 3) < 0)
+    if (listen(_serverFd, 3) < 0)
     {
-        close(server_fd);
-        error_exit("listen()");
+        close(_serverFd);
+        errorExit("listen()");
     }
 
-    EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-    event_list.push_back(event);
-    clientFds.push_back(server_fd);
+    EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+    eventList.push_back(event);
+    _clientFds.push_back(_serverFd);
     std::cout << "Server listening on port " << this->_port << std::endl;
 }
 
 Socket::~Socket()
 {
-    close(server_fd);
+    for (std::vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
+        close(*it);
+    close(_serverFd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list)
+int Socket::handleEvent(std::vector<struct kevent> &eventList)
 {
-    socklen_t addrlen = sizeof(server_addr);
+    socklen_t addrlen = sizeof(_serverAddr);
     struct sockaddr_in client_addr;
     struct kevent new_event;
 
     // Accept incoming connection
-    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
+    int client_fd = accept(_serverFd, (struct sockaddr *)&client_addr, &addrlen);
     if (client_fd < 0)
-        error_exit("accept()");
+        errorExit("accept()");
 
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    event_list.push_back(new_event);
-    clientFds.push_back(client_fd);
+    eventList.push_back(new_event);
+    _clientFds.push_back(client_fd);
     return client_fd;
 }
 
@@ -92,5 +93,5 @@ void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients
     // disconnect하기 전에 이벤트 삭제도 등록하기.
     close(client_fd);
     clients.erase(client_fd);
-    clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
+    _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), client_fd), _clientFds.end());
 }

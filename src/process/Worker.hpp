@@ -3,31 +3,33 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/24 13:57:22 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:23:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WORKER_HPP
 #define WORKER_HPP
 
+#include <dirent.h>
 #include <iostream>
 #include <sys/event.h>
-#include <unistd.h>
 #include <sys/stat.h>
-#include <dirent.h>
-#include "MimeTypesParser.hpp"
-#include "common_error.hpp"
+#include <unistd.h>
+#include "CGI.hpp"
+#include "commonError.hpp"
+#include "Config.hpp"
+#include "HTTPRequestParser.hpp"
 #include "Master.hpp"
+#include "MimeTypesParser.hpp"
+#include "Response.hpp"
+#include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
-#include "Config.hpp"
-#include "Server.hpp"
-#include "Response.hpp"
-#include "HTTPRequestParser.hpp"
-#include "CGI.hpp"
+
+#define BUFFER_SIZE 1024
 
 struct CGIData;
 struct ResponseData;

@@ -1,3 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/05/25 19:23:55 by sunhwang         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "commonConfig.hpp"
 #include "HTTPRequestParser.hpp"
 
 HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
@@ -11,7 +24,6 @@ HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     buffer_ += data;
-
     while (!buffer_.empty())
     {
         switch (state_)
@@ -44,7 +56,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             return NULL;
         }
     }
-
     if (state_ == COMPLETE)
     {
         HTTPRequest *request = new HTTPRequest;
@@ -117,7 +128,7 @@ bool HTTPRequestParser::parsePath()
  */
 bool HTTPRequestParser::parseHttpVersion()
 {
-    size_t pos = buffer_.find("\r\n");
+    size_t pos = buffer_.find(CRLF);
     if (pos == std::string::npos)
         return false;
     http_version_ = buffer_.substr(0, pos);
@@ -150,7 +161,7 @@ bool HTTPRequestParser::parseHeaderName()
  */
 bool HTTPRequestParser::parseHeaderValue()
 {
-    size_t pos = buffer_.find("\r\n");
+    size_t pos = buffer_.find(CRLF);
     if (pos == std::string::npos)
         return false;
     std::string header_value = buffer_.substr(1, pos);
@@ -162,7 +173,7 @@ bool HTTPRequestParser::parseHeaderValue()
         if (pos != std::string::npos)
             addr_ = header_value.substr(0, pos);
     }
-    if (buffer_.substr(0, 2) == "\r\n")
+    if (buffer_.substr(0, 2) == CRLF)
     {
         buffer_.erase(0, 2);
         state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
