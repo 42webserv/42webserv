@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 15:06:13 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 00:14:34 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,7 @@ void Worker::eventEVError(int k, struct kevent &event)
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
 		if (clients.find(fd) != clients.end())
-		{
-			std::cout << "socket 에러로 인한" << std::endl;
 			sockets[k]->disconnectClient(fd, clients, event);
-		}
 	}
 }
 
@@ -425,16 +422,50 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 	return false;
 }
 
-bool Worker::checkKeepLiveOptions(const HTTPRequest *request)
+bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
 {
+	UData *uData = static_cast<UData *>(event.udata);
 	std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
-
+	std::string timeout;
+	std::string max;
+	size_t timeoutIdx;
+	size_t maxIdx;
 	if (it != request->headers.end())
 	{
 		std::string value = it->second;
 		if (value.length() != 0 && value[value.length() - 1] == '\r')
 			value.erase(value.length() - 1);
-		std::cout << value << std::endl;
+		std::vector<std::string> options = Config::split(value, ',');
+		if (options.size() != 1 && options.size() != 2)
+			return false;
+		for (size_t i = 0; i < options.size(); i++)
+		{
+			timeoutIdx = options[i].find("timeout=");
+			maxIdx = options[i].find("max=");
+			if (timeoutIdx == std::string::npos && maxIdx == std::string::npos)
+				return false;
+			if (timeoutIdx != std::string::npos)
+			{
+				timeout = options[i].substr(timeoutIdx + 8, options[i].length() - 1);
+				if (timeout.find_first_not_of("0123456789") != std::string::npos)
+					return false;
+				uData->timeout = std::stoi(timeout.c_str());
+				if (uData->timeout < 0)
+					return false;
+				std::cout << "timeout: " << uData->timeout << std::endl;
+			}
+			if (maxIdx != std::string::npos)
+			{
+				max = options[i].substr(maxIdx + 4, options[i].length() - 1);
+				if (max.find_first_not_of("0123456789") != std::string::npos)
+					return false;
+				uData->max = std::stoi(max.c_str());
+				if (uData->max < 0)
+					return false;
+				std::cout << "max: " << uData->max << std::endl;
+			}
+		}
+		return true;
 	}
 	return false;
 }
@@ -452,8 +483,10 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		 * 2. 타이머 이벤트 등록
 		 */
 		uData->keepLive = true;
-		checkKeepLiveOptions(request);
-		// Socket::setTimer(kq, client_fd);
+		if (checkKeepLiveOptions(request, event))
+		{
+			// Socket::setTimer(kq, client_fd);
+		}
 		Socket::enableKeepAlive(client_fd);
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 15:05:52 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/25 21:54:18 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ private:
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
 	int findSocketIndex(struct kevent &event);
 	bool checkHeaderIsKeepLive(const HTTPRequest *request);
-	bool checkKeepLiveOptions(const HTTPRequest *request);
+	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
 
 public:
 	Worker(Master &master);
