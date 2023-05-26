@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 13:52:53 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 14:02:54 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,20 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	UData *uData = static_cast<UData *>(event.udata);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
+		// Tester를 위한 코드
+		// 사용방법 : 터미널 두 개를 켠 뒤 하나는 웹서브 실행, 다른 하나는 ./tester http://localhost:442 입력
+		if (!result)
+		{
+
+			result = new HTTPRequest;
+			size_t pos = clients[fd].find(' ');
+			result->method = clients[fd].substr(0, pos);
+			result->path = "/";
+			result->http_version = "HTTP/1.1";
+			result->body = ""; // POST면 body가 포함되어야 함
+			result->port = 442;
+			result->strPort = "442";
+		}
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
 		if (uData->max == 0)
