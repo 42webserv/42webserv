@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 23:03:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/26 13:06:43 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     buffer_.clear();
+    headers_.clear();
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
     state_ = METHOD;
@@ -71,21 +72,26 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
+        if (request->method == "HEAD")
+            return request;
         // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
         if (headers_.size() == 0)
             return request;
         request->headers = headers_;
-        request->body = body_;
-        request->addr = addr_;
         std::map<std::string, std::string>::iterator it = request->headers.find("Host");
         if (it != headers_.end())
         {
             size_t pos = it->second.find(":");
             request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+            if (request->port == 0)
+                request->port = -1;
+            std::cout << "request->port : " << request->port << std::endl;
             request->strPort = it->second.substr(pos + 1, it->second.length());
         }
         else
             request->port = -1;
+        request->body = body_;
+        request->addr = addr_;
         printResult(*request);
         reset();
         return request;
@@ -199,12 +205,9 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
     size_t pos3 = buffer_.find("\r\n");
-    if (method_ != "POST" && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    if ((method_ != "POST" && method_ != "HEAD") && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
     {
-        // if (method_ == "POST")
-        // {
-
-        // }
+        std::cout << "HEAD : " << method_ << std::endl;
         return false;
     }
     size_t pos = minPos(pos1, pos2, pos3);

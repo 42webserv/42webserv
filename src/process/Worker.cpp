@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 21:54:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/26 13:14:52 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,9 @@ bool Worker::eventFilterWrite(int k)
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	if (result->headers.size() == 0)
+	// std::cout << static_cast<int>(result == NULL) << "\n";
+	// std::cout << "result->method : " << result->method << ", " << result->headers.size() << std::endl;
+	if (result->method != "HEAD" && result->headers.size() == 0)
 		return false;
 	if (clients.find(fd) != clients.end())
 	{
@@ -171,7 +173,13 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
+	if (request.method == "HEAD")
+	{
+		ftSend(client_fd, generateHeader("", "text/html", 204));
+		return ftSend(client_fd, "");
+	}
 	Response responseClass(request.port, this->server);
+	std::cout << "bbbb" << std::endl;
 	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
@@ -198,7 +206,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 				return;
 			}
 			std::ifstream resource_file(response->resourcePath);
-			std::string response_header = generateHeader(resource_content, "text/html");
+			std::string response_header = generateHeader(resource_content, "text/html", 200);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
 			resource_file.close();
@@ -227,6 +235,10 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
 		postResponse(response);
 	}
+	else if (response->method == "HEAD")
+	{
+		std::cout << "requestHander HEAD here" << std::endl;
+	}
 	else if (response->method == "DELETE")
 	{
 		std::string resourcePath = response->resourcePath;
@@ -245,7 +257,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			// 삭제에 성공한 경우
 			std::string response_content = "Resource deleted successfully";
 			std::ifstream resource_file(response->resourcePath);
-			std::string response_header = generateHeader(response_content, "text/html");
+			std::string response_header = generateHeader(response_content, "text/html", 200);
 			ftSend(response, response_header);
 			ftSend(response, response_content);
 			resource_file.close();
@@ -316,7 +328,7 @@ void Worker::getResponse(ResponseData *response)
 
 	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
 								 std::istreambuf_iterator<char>());
-	std::string response_header = generateHeader(resource_content, response->contentType);
+	std::string response_header = generateHeader(resource_content, response->contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
 	resource_file.close();
@@ -353,7 +365,7 @@ void Worker::postResponse(ResponseData *response) // request body 추가하기
 		return errorResponse(response->clientFd);
 
 	std::string resource_content((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
-	std::string response_header = tempPostHeader(resource_content, response->contentType);
+	std::string response_header = generateHeader(resource_content, response->contentType, 201);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
 	inFile.close();
@@ -382,29 +394,17 @@ void Worker::errorResponse(int client_fd)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode)
 {
 	HTTPRequestParser parser;
 	std::ostringstream oss;
 
-	oss << "HTTP/1.1 200 OK\r\n";
+	oss << "HTTP/1.1 " << statusCode << " OK\r\n";
 	oss << "Content-Length: " << content.length() << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
 	oss << "Connection: close\r\n\r\n";
 	return oss.str();
 }
-
-std::string Worker::tempPostHeader(const std::string &content, const std::string &contentType)
-{
-	HTTPRequestParser parser;
-	std::ostringstream oss;
-
-	oss << "HTTP/1.1 201 Created\r\n";
-	oss << "Content-Length: " << content.length() << CRLF;
-	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
-	oss << "Connection: close\r\n\r\n";
-	return oss.str();
-} // 코파일럿 미쳤네요 201로 알아서 다 작성해줬어요
 
 /**
  * response의 헤더에 적어줄 내용을 만듬
@@ -445,7 +445,7 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType);
+	std::string response_header = generateHeader(tmp, contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
