@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/22 13:03:28 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 22:00:50 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ private:
     Directive _parseDirective(const std::string &line);
     void _setBlock(std::ifstream &infile, std::vector<Directive> &directive, std::string pre_name);
     std::string trim(const std::string &str);
-    std::vector<std::string> split(std::string input, char delimiter);
     std::map<std::string, std::string> _main;
     std::map<std::string, std::string> _http;
     std::map<std::string, std::string> _server;
@@ -87,6 +86,7 @@ public:
     void printDirectives(std::vector<Directive> directives, size_t tab);
     void getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName);
     const std::vector<Directive> &getDirectives() const;
+    static std::vector<std::string> split(std::string input, char delimiter);
 };
 
 #endif
