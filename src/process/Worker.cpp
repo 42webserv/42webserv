@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 14:08:12 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 17:25:17 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	if (found == sockets[k]->clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
-	UData *uData = static_cast<UData *>(event.udata);
+	responseUData = static_cast<UData *>(event.udata);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
 		// Tester를 위한 코드
@@ -104,7 +104,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		}
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
-		if (uData->max == 0)
+		if (responseUData->max == 0)
 		{
 			std::cout << "max is zero, disconnection!" << std::endl;
 			sockets[k]->disconnectClient(fd, clients, event);
@@ -117,10 +117,10 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
-		uData->max = uData->max - 1;
-		// if (uData->max > 0)
-		// 	std::cout << "max = " << uData->max << std::endl;
-		if (!checkHeaderIsKeepLive(result) || uData->max == 0)
+		responseUData->max = responseUData->max - 1;
+		// if (responseUData->max > 0)
+		// 	std::cout << "max = " << responseUData->max << std::endl;
+		if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
 			sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
 	}
@@ -398,7 +398,10 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "HTTP/1.1 200 OK\r\n";
 	oss << "Content-Length: " << content.length() << "\r\n";
 	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
-	oss << "Connection: keep-alive\r\n\r\n";
+	if (responseUData->keepLive)
+		oss << "Connection: keep-alive\r\n\r\n";
+	else
+		oss << "Connection: close\r\n\r\n";
 	return oss.str();
 }
 

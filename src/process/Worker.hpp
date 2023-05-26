@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 00:23:14 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 17:23:03 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ private:
 	Config config;
 	Server server;
 	HTTPRequestParser parser;
+	UData *responseUData;
 
 	void eventEVError(int k, struct kevent &event);
 	bool eventFilterRead(int k, struct kevent &event);
