@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 00:47:32 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 13:52:53 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 			registerKeepAlive(result, event, fd);
 		if (uData->max == 0)
 		{
+			std::cout << "max is zero, disconnection!" << std::endl;
 			sockets[k]->disconnectClient(fd, clients, event);
 			return false;
 		}
@@ -103,6 +104,8 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		else
 			std::cout << "Failed to parse request" << std::endl;
 		uData->max = uData->max - 1;
+		// if (uData->max > 0)
+		// 	std::cout << "max = " << uData->max << std::endl;
 		if (!checkHeaderIsKeepLive(result) || uData->max == 0)
 			sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
@@ -448,7 +451,8 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
 {
 	UData *uData = static_cast<UData *>(event.udata);
-	std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
+	// std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 익스텐션에서는 아래로 써야함.
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive");
 	std::string timeout;
 	std::string max;
 	size_t timeoutIdx;
@@ -521,7 +525,8 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		uData->keepLive = true;
 		if (checkKeepLiveOptions(request, event))
 		{
-			setTimer(client_fd, uData->timeout);
+			if (uData->timeout > 0)
+				setTimer(client_fd, uData->timeout);
 		}
 		Socket::enableKeepAlive(client_fd);
 	}
