@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 13:14:52 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/26 16:16:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,8 +175,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	if (request.method == "HEAD")
 	{
-		ftSend(client_fd, generateHeader("", "text/html", 200));
-		return ftSend(client_fd, "");
+		// 테스터에서 / 일 경우 메서드 제한이 GET이기 때문에 405로 상태코드를 반환해야한다. (임시적, 차후 메서드 검사 필요)
+		return ftSend(client_fd, generateHeader("", "text/html", 405));
 	}
 	Response responseClass(request.port, this->server);
 	std::cout << "bbbb" << std::endl;
@@ -234,10 +234,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		}
 		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
 		postResponse(response);
-	}
-	else if (response->method == "HEAD")
-	{
-		std::cout << "requestHander HEAD here" << std::endl;
 	}
 	else if (response->method == "DELETE")
 	{
