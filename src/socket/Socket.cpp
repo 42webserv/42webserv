@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 13:59:50 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 14:12:12 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,12 +98,8 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
     return client_fd;
 }
 
-// TODO 이게 server랑 물려있는 client란 걸 어떻게 알까?
-// 굳이 이 클래스의 맴버 변수를 쓰는 것도 아닌데 이 함수에 있을 필요가 있을지 모르겠네.
 void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event)
 {
-    // TODO keep-alive면 안지운다. timeout도 해보기.
-    // disconnect하기 전에 이벤트 삭제도 등록하기.
     EV_SET(&event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
     kevent(kq, &event, 1, NULL, 0, NULL);
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);

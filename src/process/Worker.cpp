@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 14:02:54 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 14:08:12 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -531,11 +531,6 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 	UData *uData = static_cast<UData *>(event.udata);
 	if (uData->keepLive == false)
 	{
-		/*
-		 * 해야할 것들
-		 * 1. uData->keepLive = true;
-		 * 2. 타이머 이벤트 등록
-		 */
 		uData->keepLive = true;
 		if (checkKeepLiveOptions(request, event))
 		{
