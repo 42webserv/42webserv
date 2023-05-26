@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 17:25:17 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/26 18:47:43 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,24 +150,6 @@ bool Worker::eventFilterTimer(int k, struct kevent &event)
 	return true;
 }
 
-int Worker::findSocketIndex(struct kevent &event) // 안필요할 것 같은데 일단 남겨둠.
-{
-	int k;
-
-	k = 0;
-	for (size_t j = 0; j < sockets.size(); j++)
-	{
-		if (sockets[j]->findClientFd(event.ident) == true)
-		{
-			k = j;
-			return (k);
-		}
-		k = j;
-	}
-	std::cout << "fd is not exist" << std::endl;
-	return (-1);
-}
-
 void Worker::run()
 {
 	struct kevent events[10];
@@ -190,12 +172,6 @@ void Worker::run()
 		{
 			for (int i = 0; i < nevents; i++)
 			{
-				// std::cout << "filter : " << event.filter << std::endl;
-				// if ((k = findSocketIndex(events[i]) == -1))
-				// {
-				// 	std::cout << k << " : not exist" << std::endl;
-				// 	continue;
-				// }
 				event = events[i];
 				fd = event.ident;
 
