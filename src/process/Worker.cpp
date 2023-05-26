@@ -175,7 +175,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	if (request.method == "HEAD")
 	{
-		ftSend(client_fd, generateHeader("", "text/html", 204));
+		ftSend(client_fd, generateHeader("", "text/html", 200));
 		return ftSend(client_fd, "");
 	}
 	Response responseClass(request.port, this->server);

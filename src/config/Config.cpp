@@ -401,7 +401,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Di
 		if (directives[i].name == "root")
 		{
 			_checkEmpty(directives[i].value, "root", true);
-			_isDirectoryExists(directives[i].value, "root");
+			// _isDirectoryExists(directives[i].value, "root");
 		}
 		if (directives[i].name == "error_page")
 		{
@@ -424,7 +424,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Di
 				}
 			}
 
-			_isFileExists(directives, errorPage[errorPage.size() - 1], "error_page", preDirective);
+			// _isFileExists(directives, errorPage[errorPage.size() - 1], "error_page", preDirective);
 		}
 		if (directives[i].name == "client_max_body_size")
 		{
@@ -450,7 +450,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Di
 		if (directives[i].name == "index")
 		{
 			_checkEmpty(directives[i].value, "index", true);
-			_isFileExists(directives, directives[i].value, "index", preDirective);
+			// _isFileExists(directives, directives[i].value, "index", preDirective);
 		}
 		if (directives[i].name == "limit_except")
 		{
