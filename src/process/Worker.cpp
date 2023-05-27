@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 16:16:50 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 20:55:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,11 +103,17 @@ bool Worker::eventFilterWrite(int k)
 	if (found == sockets[k]->_clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
+	if (!result)
+		return false;
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	// std::cout << static_cast<int>(result == NULL) << "\n";
-	// std::cout << "result->method : " << result->method << ", " << result->headers.size() << std::endl;
 	if (result->method != "HEAD" && result->headers.size() == 0)
 		return false;
+	if (result->port == -1)
+	{
+		std::cout << "here? " << std::endl;
+		result->port = strtod(listen[0].value.c_str(), NULL);
+		// std::cout << listen[0].value
+	}
 	if (clients.find(fd) != clients.end())
 	{
 		if (result)
@@ -128,6 +134,10 @@ void Worker::run()
 	struct kevent event;
 	int nevents;
 
+	std::vector<Directive> listen;
+	config.getAllDirectives(listen, config.getDirectives(), "listen");
+	std::cout << "listen : " << listen[0].value << std::endl;
+
 	while (true)
 	{
 		// std::cout << "here" << std::endl;
@@ -138,7 +148,6 @@ void Worker::run()
 			break;
 		}
 		event_list.clear();
-
 		for (size_t k = 0; k < sockets.size(); k++)
 		{
 			for (int i = 0; i < nevents; i++)
@@ -176,7 +185,10 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	if (request.method == "HEAD")
 	{
 		// 테스터에서 / 일 경우 메서드 제한이 GET이기 때문에 405로 상태코드를 반환해야한다. (임시적, 차후 메서드 검사 필요)
-		return ftSend(client_fd, generateHeader("", "text/html", 405));
+		std::cout << "here" << std::endl;
+		ftSend(client_fd, generateHeader("", "text/html", 405));
+		sleep(1);
+		return;
 	}
 	Response responseClass(request.port, this->server);
 	std::cout << "bbbb" << std::endl;
