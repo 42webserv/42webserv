@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 22:32:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 22:57:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.server[i].port.size(); j++)
 		{
-			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
+			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j], kq));
 		}
 	}
 }
@@ -32,7 +32,7 @@ Worker::~Worker()
 		delete (sockets[i]);
 }
 
-void Worker::eventEVError(int k)
+void Worker::eventEVError(int k, struct kevent &event)
 {
 	// 서버 소켓 에러
 	if (fd == sockets[k]->_serverFd)
@@ -41,11 +41,11 @@ void Worker::eventEVError(int k)
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
 		if (clients.find(fd) != clients.end())
-			sockets[k]->disconnectClient(fd, clients);
+			sockets[k]->disconnectClient(fd, clients, event);
 	}
 }
 
-bool Worker::eventFilterRead(int k)
+bool Worker::eventFilterRead(int k, struct kevent &event)
 {
 	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
 	if (found == sockets[k]->_clientFds.end())
@@ -67,9 +67,18 @@ bool Worker::eventFilterRead(int k)
 		if (n < 1)
 		{
 			// HTML 요청 메세지 보기
-			struct kevent new_event;
-			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-			event_list.push_back(new_event);
+			// struct kevent new_event;
+			// EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			// event_list.push_back(new_event);
+			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
+			UData *uData = static_cast<UData *>(event.udata);
+			if (uData->writeEventExist == false)
+			{
+				struct kevent new_event;
+				uData->writeEventExist = true;
+				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
+				event_list.push_back(new_event);
+			}
 		}
 
 		// char buf[BUFFER_SIZE + 1];
@@ -97,7 +106,7 @@ bool Worker::eventFilterRead(int k)
 	return true;
 }
 
-bool Worker::eventFilterWrite(int k)
+bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
 	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
 	if (found == sockets[k]->_clientFds.end())
@@ -109,23 +118,74 @@ bool Worker::eventFilterWrite(int k)
 	if (result->method != "HEAD" && result->headers.size() == 0)
 		return false;
 	if (result->port == -1)
-	{
-		std::cout << "here? " << std::endl;
 		result->port = strtod(listen[0].value.c_str(), NULL);
-		// std::cout << listen[0].value
-	}
-	if (clients.find(fd) != clients.end())
+	UData *uData = static_cast<UData *>(event.udata);
+	if (clients.find(fd) != clients.end() && result != NULL)
 	{
+		if (checkHeaderIsKeepLive(result))
+			registerKeepAlive(result, event, fd);
+		if (uData->max == 0)
+		{
+			std::cout << "max is zero, disconnection!" << std::endl;
+			sockets[k]->disconnectClient(fd, clients, event);
+			return false;
+		}
 		if (result)
+		{
 			this->requestHandler(*result, fd);
+			std::cout << fd << " : 응답 완료" << std::endl;
+		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
-		sockets[k]->disconnectClient(fd, clients);
+		uData->max = uData->max - 1;
+		// if (uData->max > 0)
+		// 	std::cout << "max = " << uData->max << std::endl;
+		if (!checkHeaderIsKeepLive(result) || uData->max == 0)
+			sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
 	}
 	if (result)
 		delete result;
 	return true;
+}
+
+bool Worker::eventEOF(int k, struct kevent &event)
+{
+	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
+	if (found == sockets[k]->_clientFds.end())
+		return false;
+	std::cout << "client want to disconnect" << std::endl;
+	sockets[k]->disconnectClient(fd, clients, event);
+	return true;
+}
+
+bool Worker::eventFilterTimer(int k, struct kevent &event)
+{
+	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
+	if (found == sockets[k]->_clientFds.end())
+		return false;
+	std::cout << fd << " is time over" << std::endl;
+	deleteTimer(fd);
+	sockets[k]->disconnectClient(fd, clients, event);
+	return true;
+}
+
+int Worker::findSocketIndex(struct kevent &event) // 안필요할 것 같은데 일단 남겨둠.
+{
+	int k;
+
+	k = 0;
+	for (size_t j = 0; j < sockets.size(); j++)
+	{
+		if (sockets[j]->findClientFd(event.ident) == true)
+		{
+			k = j;
+			return (k);
+		}
+		k = j;
+	}
+	std::cout << "fd is not exist" << std::endl;
+	return (-1);
 }
 
 void Worker::run()
@@ -134,10 +194,10 @@ void Worker::run()
 	struct kevent event;
 	int nevents;
 
-	std::vector<Directive> listen;
 	config.getAllDirectives(listen, config.getDirectives(), "listen");
-	std::cout << "listen : " << listen[0].value << std::endl;
 
+	int sockets_size;
+	// int k;
 	while (true)
 	{
 		// std::cout << "here" << std::endl;
@@ -147,24 +207,41 @@ void Worker::run()
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
 			break;
 		}
-		event_list.clear();
-		for (size_t k = 0; k < sockets.size(); k++)
+		event_list.clear(); // 이벤트가 발생하면 event_list를 비워줌 왜>.?????
+		sockets_size = sockets.size();
+		for (int k = 0; k < sockets_size; k++)
 		{
 			for (int i = 0; i < nevents; i++)
 			{
+				// std::cout << "filter : " << event.filter << std::endl;
+				// if ((k = findSocketIndex(events[i]) == -1))
+				// {
+				// 	std::cout << k << " : not exist" << std::endl;
+				// 	continue;
+				// }
 				event = events[i];
 				fd = event.ident;
 
 				if (event.flags & EV_ERROR)
-					eventEVError(k);
-				if (event.filter == EVFILT_READ)
+					eventEVError(k, event);
+				if (event.flags & EV_EOF)
 				{
-					if (eventFilterRead(k) == false)
+					if (eventEOF(k, event) == false)
+						continue;
+				}
+				else if (event.filter == EVFILT_READ)
+				{
+					if (eventFilterRead(k, event) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
-					if (eventFilterWrite(k) == false)
+					if (eventFilterWrite(k, events[i]) == false)
+						continue;
+				}
+				else if (event.filter == EVFILT_TIMER)
+				{
+					if (eventFilterTimer(k, event) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_SIGNAL)
@@ -411,7 +488,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "HTTP/1.1 " << statusCode << " OK\r\n";
 	oss << "Content-Length: " << content.length() << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
-	oss << "Connection: close\r\n\r\n";
+	oss << "Connection: keep-alive\r\n\r\n";
 	return oss.str();
 }
 
@@ -457,4 +534,99 @@ void Worker::broad(ResponseData *response)
 	std::string response_header = generateHeader(tmp, contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
+}
+
+bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
+{
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("Connection");
+	if (it != request->headers.end())
+	{
+		std::string value = it->second;
+		if (value.length() != 0 && value[value.length() - 1] == '\r')
+			value.erase(value.length() - 1);
+		if (value == "keep-alive")
+			return true;
+		else
+			return false;
+	}
+	return false;
+}
+
+bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
+{
+	UData *uData = static_cast<UData *>(event.udata);
+	// std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 익스텐션에서는 아래로 써야함.
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive");
+	std::string timeout;
+	std::string max;
+	size_t timeoutIdx;
+	size_t maxIdx;
+	if (it != request->headers.end())
+	{
+		std::string value = it->second;
+		if (value.length() != 0 && value[value.length() - 1] == '\r')
+			value.erase(value.length() - 1);
+		std::vector<std::string> options = Config::split(value, ',');
+		if (options.size() != 1 && options.size() != 2)
+			return false;
+		for (size_t i = 0; i < options.size(); i++)
+		{
+			timeoutIdx = options[i].find("timeout=");
+			maxIdx = options[i].find("max=");
+			if (timeoutIdx == std::string::npos && maxIdx == std::string::npos)
+				return false;
+			if (timeoutIdx != std::string::npos)
+			{
+				timeout = options[i].substr(timeoutIdx + 8, options[i].length() - 1);
+				if (timeout.find_first_not_of("0123456789") != std::string::npos)
+					return false;
+				uData->timeout = std::stoi(timeout.c_str());
+				if (uData->timeout < 0)
+					return false;
+			}
+			if (maxIdx != std::string::npos)
+			{
+				max = options[i].substr(maxIdx + 4, options[i].length() - 1);
+				if (max.find_first_not_of("0123456789") != std::string::npos)
+					return false;
+				uData->max = std::stoi(max.c_str());
+				if (uData->max < 0)
+					return false;
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+void Worker::setTimer(int fd, int timeout)
+{
+	struct kevent timerEvent;
+	int timer_interval_ms = timeout * 1000;
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
+	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+}
+
+void Worker::deleteTimer(int fd)
+{
+	struct kevent timerEvent;
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
+	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+}
+
+void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
+{
+	if (event.udata == NULL)
+		return;
+	UData *uData = static_cast<UData *>(event.udata);
+	if (uData->keepLive == false)
+	{
+		uData->keepLive = true;
+		if (checkKeepLiveOptions(request, event))
+		{
+			if (uData->timeout > 0)
+				setTimer(client_fd, uData->timeout);
+		}
+		Socket::enableKeepAlive(client_fd);
+	}
 }

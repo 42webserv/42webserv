@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 20:20:32 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 22:46:55 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,11 @@ private:
 	HTTPRequestParser parser;
 	std::vector<Directive> listen;
 
-	void eventEVError(int k);
-	bool eventFilterRead(int k);
-	bool eventFilterWrite(int k);
+	void eventEVError(int k, struct kevent &event);
+	bool eventFilterRead(int k, struct kevent &event);
+	bool eventFilterWrite(int k, struct kevent &event);
+	bool eventEOF(int k, struct kevent &event);
+	bool eventFilterTimer(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void postResponse(ResponseData *response);
@@ -63,6 +65,12 @@ private:
 	std::string getCGILocation(ResponseData *response);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 	void broad(ResponseData *response);
+	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
+	int findSocketIndex(struct kevent &event);
+	bool checkHeaderIsKeepLive(const HTTPRequest *request);
+	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
+	void setTimer(int fd, int timeout);
+	void deleteTimer(int fd);
 
 public:
 	Worker(Master &master);

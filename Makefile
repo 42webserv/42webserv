@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/25 19:22:34 by sunhwang         ###   ########.fr        #
+#    Updated: 2023/05/27 22:44:02 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -53,7 +53,8 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 			$(addprefix $(DIR_SERVER)/,		$(SRC_SERVER)))
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
-# CXXFLAGS	= -std=c++98 -g3
+# CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3 -fsanitize=address
+# CXXFLAGS	= -std=c++98 -g3 -fsanitize=address
 
 
 SRCS = $(addsuffix .cpp, $(DIR_SRC)/main $(SRCS_LIST))
