@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 20:55:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 22:32:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,6 +274,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else
 		stderrExit("Unknown method");
+	delete response;
 }
 
 /**
