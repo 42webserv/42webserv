@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 12:51:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 20:20:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ private:
 	Config config;
 	Server server;
 	HTTPRequestParser parser;
+	std::vector<Directive> listen;
 
 	void eventEVError(int k);
 	bool eventFilterRead(int k);

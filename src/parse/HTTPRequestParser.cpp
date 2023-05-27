@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 13:06:43 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 22:05:38 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,15 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         case HEADER_VALUE:
             if (!parseHeaderValue())
             {
-                std::cout << "here1" << std::endl;
+                std::cout << "here" << std::endl;
                 return NULL;
+                HTTPRequest *request = new HTTPRequest;
+                request->method = method_;
+                request->path = path_;
+                request->http_version = http_version_;
+                request->port = -1;
+                // request->headers.insert(std::make_pair("Host", ));
+                return request;
             }
             break;
         case BODY:
@@ -131,6 +138,10 @@ bool HTTPRequestParser::parsePath()
     if (pos == std::string::npos)
         return false;
     path_ = buffer_.substr(0, pos);
+
+    // 만약 path_가 "/aaaa/bbbb/"이라면, 마지막 "/"를 제거해주기 위함.
+    if (path_ != "/" && path_.substr(path_.length() - 1) == "/")
+        path_ = buffer_.substr(0, pos - 1);
     state_ = HTTP_VERSION;
     buffer_.erase(0, pos + 1);
     pos = path_.find("?");

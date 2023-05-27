@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/25 22:46:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 19:22:12 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,17 +228,17 @@ int Response::matchLocation(const HTTPRequest &request, ServerInfo &thisServer)
         if (thisServer.location[i].value == request.path)
             return static_cast<int>(i);
     }
-    size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
-    while (pos != std::string::npos)
-    {
-        std::string tmp = request.path.substr(0, pos);
-        for (size_t i = 0; i < thisServer.location.size(); ++i)
-        {
-            if (thisServer.location[i].value == tmp)
-                return static_cast<int>(i);
-        }
-        tmp = tmp.erase(pos);
-        pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
-    }
+    // size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+    // while (pos != std::string::npos)
+    // {
+    //     std::string tmp = request.path.substr(0, pos);
+    //     for (size_t i = 0; i < thisServer.location.size(); ++i)
+    //     {
+    //         if (thisServer.location[i].value == tmp)
+    //             return static_cast<int>(i);
+    //     }
+    //     tmp = tmp.erase(pos);
+    //     pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
+    // }
     return -1;
 }
