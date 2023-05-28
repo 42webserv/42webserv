@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 18:47:43 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 15:57:29 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,22 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		}
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
+
+		// Cookie check
+		if (result->headers.find("Cookie") != result->headers.end())
+		{
+			std::string cookie = result->headers["Cookie"];
+			if (cookie.find("sessionid="))
+			{
+				std::string cookieSessionId = cookie.substr(10, 42);
+				if (responseUData->sessionID == cookieSessionId)
+				{
+					responseUData->sesssionValid = true;
+				}
+				else
+					responseUData->sesssionValid = false;
+			}
+		}
 		if (responseUData->max == 0)
 		{
 			std::cout << "max is zero, disconnection!" << std::endl;
@@ -214,6 +230,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	Response responseClass(request.port, this->server);
 	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
+	if (response->path == "/session") // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+		responseUData->sessionID = generateSessionID(32);
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
@@ -374,10 +392,17 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "HTTP/1.1 200 OK\r\n";
 	oss << "Content-Length: " << content.length() << "\r\n";
 	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
+	if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
+	{
+		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
+			<< "; Expires=" << getExpiryDate(3600) << "\r\n";
+		responseUData->alreadySessionSend = true;
+	}
 	if (responseUData->keepLive)
 		oss << "Connection: keep-alive\r\n\r\n";
 	else
 		oss << "Connection: close\r\n\r\n";
+
 	return oss.str();
 }
 
@@ -518,4 +543,31 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		}
 		Socket::enableKeepAlive(client_fd);
 	}
+}
+
+std::string Worker::getExpiryDate(int secondsToAdd)
+{
+	std::time_t now = std::time(0);
+	std::tm *expiration = std::localtime(&now);
+	expiration->tm_sec += secondsToAdd;
+	std::mktime(expiration);
+	char buffer[80];
+	std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
+	return std::string(buffer);
+}
+
+std::string Worker::generateSessionID(int length)
+{
+	const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	std::string sessionID;
+
+	std::srand(std::time(0)); // 난수 생성기 초기화
+
+	for (int i = 0; i < length; i++)
+	{
+		int index = std::rand() % charset.length();
+		sessionID += charset[index];
+	}
+
+	return sessionID;
 }

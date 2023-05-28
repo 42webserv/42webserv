@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 17:23:03 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 15:31:01 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,8 @@ private:
 	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
 	void setTimer(int fd, int timeout);
 	void deleteTimer(int fd);
+	std::string generateSessionID(int length);
+	std::string getExpiryDate(int secondsToAdd);
 
 public:
 	Worker(Master &master);

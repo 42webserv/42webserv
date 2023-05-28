@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 00:13:33 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 15:21:56 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,9 @@ struct UData
         this->max = -1;
         this->timeout = -1;
         this->writeEventExist = false;
+        std::string sessionID = "";
+        this->alreadySessionSend = false;
+        this->sesssionValid = false;
     };
     int fd;
     int max;
@@ -47,6 +50,9 @@ struct UData
     bool keepLive;
     bool isClient;
     bool writeEventExist;
+    std::string sessionID;
+    bool alreadySessionSend;
+    bool sesssionValid;
 };
 
 class Socket
