@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 20:55:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/28 22:26:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,11 @@
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
 	// Create sockets
-	for (size_t i = 0; i < server.server.size(); i++)
+	for (size_t i = 0; i < server.servers.size(); i++)
 	{
-		for (size_t j = 0; j < server.server[i].port.size(); j++)
+		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
 		{
-			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j]));
+			sockets.push_back(new Socket(master.getEvents(), server.servers[i].ports[j]));
 		}
 	}
 }
@@ -134,9 +134,8 @@ void Worker::run()
 	struct kevent event;
 	int nevents;
 
-	std::vector<Directive> listen;
-	config.getAllDirectives(listen, config.getDirectives(), "listen");
-	std::cout << "listen : " << listen[0].value << std::endl;
+	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
+	std::cout << "listen : " << this->listen[0].value << std::endl;
 
 	while (true)
 	{
@@ -182,18 +181,10 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-	if (request.method == "HEAD")
-	{
-		// 테스터에서 / 일 경우 메서드 제한이 GET이기 때문에 405로 상태코드를 반환해야한다. (임시적, 차후 메서드 검사 필요)
-		std::cout << "here" << std::endl;
-		ftSend(client_fd, generateHeader("", "text/html", 405));
-		sleep(1);
-		return;
-	}
-	Response responseClass(request.port, this->server);
 	std::cout << "bbbb" << std::endl;
-	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
-	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
+	Response res;
+	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
+	if (response == NULL || std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
@@ -228,6 +219,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else if (response->method == "POST")
 	{
+		// TODO 이건 뭘지 확인하기.
 		if (response->contentLength == 0)
 		{
 			std::cout << "here" << std::endl;
@@ -246,6 +238,46 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		}
 		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
 		postResponse(response);
+	}
+	else if (response->method == "HEAD")
+	{
+		// HEAD 메소드는 GET 메소드와 동일하지만, body가 없습니다.
+		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
+		getResponse(response);
+	}
+	else if (response->method == "PUT")
+	{
+		// temp
+		std::string resourcePath = response->root + response->path;
+		std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
+		// 리소스 생성 로직을
+		std::ofstream resource_file(resourcePath);
+		if (resource_file.is_open())
+		{
+			// 리소스 생성에 성공한 경우
+			std::string response_content = "Resource created successfully";
+			std::string response_header = generateHeader(response_content, "text/html", 201);
+			ftSend(response, response_header);
+			ftSend(response, response_content);
+			resource_file.close();
+		}
+		else
+		{
+			// 리소스 생성에 실패한 경우
+			std::string response_content = "Failed to create the resource";
+			std::string response_header = generateErrorHeader(500, "text/html");
+			ftSend(response, response_header);
+			ftSend(response, response_content);
+		}
+	}
+	else if (response->method == "OPTIONS")
+	{
+		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
+		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
+		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
+		std::string response_header = generateHeader(response_content, "text/html", 200);
+		ftSend(response, response_header);
+		ftSend(response, response_content);
 	}
 	else if (response->method == "DELETE")
 	{
@@ -284,13 +316,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
  */
 std::string Worker::getCGILocation(ResponseData *response)
 {
-	for (size_t i = 0; i < response->location.size(); ++i)
-	{
-		if (response->location[i].value == "/result ")
-		{
-			return response->root + "/" + response->index;
-		}
-	}
+	if (response->location->value == "/result ")
+		return response->root + "/" + response->index;
 	return "";
 }
 
@@ -334,8 +361,7 @@ void Worker::getResponse(ResponseData *response)
 	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
 		return errorResponse(response->clientFd);
 
-	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
-								 std::istreambuf_iterator<char>());
+	std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
 	std::string response_header = generateHeader(resource_content, response->contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
@@ -372,10 +398,11 @@ void Worker::postResponse(ResponseData *response) // request body 추가하기
 	if (!inFile.is_open())						  // 혹시 open이 안될수있으니 한번더 체크
 		return errorResponse(response->clientFd);
 
-	std::string resource_content((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
-	std::string response_header = generateHeader(resource_content, response->contentType, 201);
+	// POST는 생성된 내용을 반환하지 않아도 됨.
+	std::string body = "";
+	std::string response_header = generateHeader(body, response->contentType, 201);
 	ftSend(response, response_header);
-	ftSend(response, resource_content);
+	// ftSend(response, resource_content);
 	inFile.close();
 }
 
@@ -388,8 +415,7 @@ void Worker::errorResponse(int client_fd)
 {
 	std::string error_path = "./assets/html/404.html";
 	std::ifstream error_file(error_path);
-	std::string error_content((std::istreambuf_iterator<char>(error_file)),
-							  std::istreambuf_iterator<char>());
+	std::string error_content((std::istreambuf_iterator<char>(error_file)), std::istreambuf_iterator<char>());
 	std::string error_header = generateErrorHeader(404, error_content);
 	ftSend(client_fd, error_header);
 	ftSend(client_fd, error_content);
@@ -407,10 +433,10 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	HTTPRequestParser parser;
 	std::ostringstream oss;
 
-	oss << "HTTP/1.1 " << statusCode << " OK\r\n";
+	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
 	oss << "Content-Length: " << content.length() << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
-	oss << "Connection: close\r\n\r\n";
+	oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
@@ -425,10 +451,11 @@ std::string Worker::generateErrorHeader(int status_code, const std::string &mess
 {
 	std::ostringstream oss;
 	// oss << "HTTP/1.1 " << status_code << " " << message << CRLF;
-	oss << "HTTP/1.1 " << status_code << " OK\r\n";
+	oss << "HTTP/1.1 " << status_code << " OK" << CRLF;
 	oss << "Content-Length: " << message.length() << CRLF;
-	oss << "Content-Type: text/html\r\n";
-	oss << "Connection: close\r\n\r\n";
+	oss << "Content-Type: text/html" << CRLF;
+	;
+	oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
