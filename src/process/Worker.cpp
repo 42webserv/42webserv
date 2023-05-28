@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 17:27:09 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 18:04:37 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,31 +77,6 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 		}
 	}
 	return true;
-}
-
-void Worker::cookieCheck(HTTPRequest *result)
-{
-	if (result->headers.find("Cookie") != result->headers.end() && responseUData->alreadySessionSend == true)
-	{
-		std::string cookie = result->headers["Cookie"];
-		if (cookie.find("sessionid="))
-		{
-			std::string cookieSessionId = cookie.substr(10, 42);
-			if (responseUData->sessionID == cookieSessionId)
-			{
-				responseUData->sesssionValid = true;
-			}
-			else
-				responseUData->sesssionValid = false;
-		}
-		responseUData->sesssionValid = isCookieValid(responseUData->expireTime);
-		if (responseUData->sesssionValid)
-			std::cout << "session is valid" << std::endl;
-		else
-			std::cout << "session is invalid" << std::endl;
-	}
-	else
-		responseUData->sesssionValid = false;
 }
 
 bool Worker::eventFilterWrite(int k, struct kevent &event)
@@ -567,6 +542,31 @@ std::string Worker::getExpiryDate(int secondsToAdd)
 	return std::string(buffer);
 }
 
+void Worker::cookieCheck(HTTPRequest *result)
+{
+	if (result->headers.find("Cookie") != result->headers.end() && responseUData->alreadySessionSend == true)
+	{
+		std::string cookie = result->headers["Cookie"];
+		if (cookie.find("sessionid="))
+		{
+			std::string cookieSessionId = cookie.substr(10, 42);
+			if (responseUData->sessionID == cookieSessionId)
+			{
+				responseUData->sesssionValid = true;
+			}
+			else
+				responseUData->sesssionValid = false;
+		}
+		responseUData->sesssionValid = isCookieValid(responseUData->expireTime);
+		if (responseUData->sesssionValid)
+			std::cout << "session is valid" << std::endl;
+		else
+			std::cout << "session is invalid" << std::endl;
+	}
+	else
+		responseUData->sesssionValid = false;
+}
+
 bool Worker::isCookieValid(const std::string &expireTime)
 {
 	std::tm expirationTime = {};
@@ -576,6 +576,7 @@ bool Worker::isCookieValid(const std::string &expireTime)
 	std::time_t expiration = std::mktime(&expirationTime);
 	if (currentTime >= expiration)
 		return false;
+	return true;
 }
 
 std::string Worker::generateSessionID(int length)
