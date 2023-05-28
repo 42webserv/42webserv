@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 15:21:56 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 16:33:52 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ struct UData
         std::string sessionID = "";
         this->alreadySessionSend = false;
         this->sesssionValid = false;
+        this->expireTime = "";
     };
     int fd;
     int max;
@@ -53,6 +54,7 @@ struct UData
     std::string sessionID;
     bool alreadySessionSend;
     bool sesssionValid;
+    std::string expireTime;
 };
 
 class Socket

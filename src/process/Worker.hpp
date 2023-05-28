@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 15:31:01 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 17:22:22 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,8 @@ private:
 	void deleteTimer(int fd);
 	std::string generateSessionID(int length);
 	std::string getExpiryDate(int secondsToAdd);
+	bool isCookieValid(const std::string &expireTime);
+	void cookieCheck(HTTPRequest *result);
 
 public:
 	Worker(Master &master);

@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 15:57:29 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/28 17:27:09 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,31 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 	return true;
 }
 
+void Worker::cookieCheck(HTTPRequest *result)
+{
+	if (result->headers.find("Cookie") != result->headers.end() && responseUData->alreadySessionSend == true)
+	{
+		std::string cookie = result->headers["Cookie"];
+		if (cookie.find("sessionid="))
+		{
+			std::string cookieSessionId = cookie.substr(10, 42);
+			if (responseUData->sessionID == cookieSessionId)
+			{
+				responseUData->sesssionValid = true;
+			}
+			else
+				responseUData->sesssionValid = false;
+		}
+		responseUData->sesssionValid = isCookieValid(responseUData->expireTime);
+		if (responseUData->sesssionValid)
+			std::cout << "session is valid" << std::endl;
+		else
+			std::cout << "session is invalid" << std::endl;
+	}
+	else
+		responseUData->sesssionValid = false;
+}
+
 bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
 	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
@@ -92,7 +117,6 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		// 사용방법 : 터미널 두 개를 켠 뒤 하나는 웹서브 실행, 다른 하나는 ./tester http://localhost:442 입력
 		if (!result)
 		{
-
 			result = new HTTPRequest;
 			size_t pos = clients[fd].find(' ');
 			result->method = clients[fd].substr(0, pos);
@@ -104,22 +128,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		}
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
-
-		// Cookie check
-		if (result->headers.find("Cookie") != result->headers.end())
-		{
-			std::string cookie = result->headers["Cookie"];
-			if (cookie.find("sessionid="))
-			{
-				std::string cookieSessionId = cookie.substr(10, 42);
-				if (responseUData->sessionID == cookieSessionId)
-				{
-					responseUData->sesssionValid = true;
-				}
-				else
-					responseUData->sesssionValid = false;
-			}
-		}
+		cookieCheck(result);
 		if (responseUData->max == 0)
 		{
 			std::cout << "max is zero, disconnection!" << std::endl;
@@ -394,9 +403,11 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
 	if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
 	{
+		std::string expireTime = getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << getExpiryDate(3600) << "\r\n";
+			<< "; Expires=" << expireTime << "\r\n";
 		responseUData->alreadySessionSend = true;
+		responseUData->expireTime = expireTime;
 	}
 	if (responseUData->keepLive)
 		oss << "Connection: keep-alive\r\n\r\n";
@@ -556,18 +567,26 @@ std::string Worker::getExpiryDate(int secondsToAdd)
 	return std::string(buffer);
 }
 
+bool Worker::isCookieValid(const std::string &expireTime)
+{
+	std::tm expirationTime = {};
+	if (strptime(expireTime.c_str(), "%a, %d %b %Y %H:%M:%S", &expirationTime) == 0)
+		return false;
+	std::time_t currentTime = std::time(0);
+	std::time_t expiration = std::mktime(&expirationTime);
+	if (currentTime >= expiration)
+		return false;
+}
+
 std::string Worker::generateSessionID(int length)
 {
 	const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	std::string sessionID;
-
-	std::srand(std::time(0)); // 난수 생성기 초기화
-
+	std::srand(std::time(0));
 	for (int i = 0; i < length; i++)
 	{
 		int index = std::rand() % charset.length();
 		sessionID += charset[index];
 	}
-
 	return sessionID;
 }
