@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 22:05:38 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/28 20:57:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ bool HTTPRequestParser::parseHTTPVersion()
 {
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
-    size_t pos3 = buffer_.find("\r\n");
+    size_t pos3 = buffer_.find(CRLF);
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
     size_t pos = minPos(pos1, pos2, pos3);
@@ -215,7 +215,7 @@ bool HTTPRequestParser::parseHeaderValue()
 {
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
-    size_t pos3 = buffer_.find("\r\n");
+    size_t pos3 = buffer_.find(CRLF);
     if ((method_ != "POST" && method_ != "HEAD") && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
     {
         std::cout << "HEAD : " << method_ << std::endl;
@@ -242,8 +242,8 @@ bool HTTPRequestParser::parseHeaderValue()
     if (buffer_.substr(0, 2) == CRLF)
     {
         buffer_.erase(0, 2);
-        state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
         body_ = "";
+        state_ = (method_ == "BODY") ? BODY : COMPLETE;
         if (state_ == BODY && buffer_.empty())
             state_ = COMPLETE;
     }
