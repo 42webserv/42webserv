@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/23 20:33:18 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/25 19:23:12 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@
  */
 
 #include <utility>
+#include "commonError.hpp"
 #include "DefaultConfig.hpp"
 #include "Directive.hpp"
-#include "common_error.hpp"
 
 #define ERROR_DIRECTIVE_NAME "Error: Invalid name to "
 #define ERROR_DIRECTIVE_SIZE "Error: Invalid size to "
@@ -108,7 +108,7 @@ void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
 		}
 	}
 	else
-		stderr_exit(ERROR_DIRECTIVE_SIZE + name);
+		stderrExit(ERROR_DIRECTIVE_SIZE + name);
 
 	Directive &dir = dirs.front();
 	addMainDirectives(dir, name);

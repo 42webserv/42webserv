@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/24 13:35:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 21:53:41 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,8 @@ struct ResponseData
     std::string path; // path중 locationName 부분을 지운 나머지 경로
     // CGIData *cgi;
     bool autoindex;
+    std::string body;
+    size_t contentLength;
 };
 
 class Response

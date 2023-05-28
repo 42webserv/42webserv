@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 17:18:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/25 15:33:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ private:
 
     bool parseMethod();
     bool parsePath();
-    bool parseHttpVersion();
+    bool parseHTTPVersion();
     bool parseHeaderName();
     bool parseHeaderValue();
     bool parseBody();

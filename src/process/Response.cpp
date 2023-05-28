@@ -6,10 +6,11 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/24 13:47:54 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/27 19:22:12 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "commonConfig.hpp"
 #include "Response.hpp"
 
 /*
@@ -90,6 +91,8 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     std::string extension = tokens.back();
     MimeTypesParser mime(config);
     response->contentType = mime.getMimeType(extension);
+    response->body = request.body;
+    response->contentLength = response->body.length();
     return (response);
 }
 
@@ -206,8 +209,8 @@ void Response::setUpReturnState(std::vector<Directive> &locationBlock, ResponseD
 std::string Response::getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer)
 {
     //.ico파일일 경우 임의로 이미지폴더로 이동
-    if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ".ico")
-        return "./assets/images";
+    if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ICO_EXTENSION)
+        return "./assets/images"; // TODO image 경로 지정하는 방법 찾아보기
     return thisServer.root;
 }
 
@@ -225,17 +228,17 @@ int Response::matchLocation(const HTTPRequest &request, ServerInfo &thisServer)
         if (thisServer.location[i].value == request.path)
             return static_cast<int>(i);
     }
-    size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
-    while (pos != std::string::npos)
-    {
-        std::string tmp = request.path.substr(0, pos);
-        for (size_t i = 0; i < thisServer.location.size(); ++i)
-        {
-            if (thisServer.location[i].value == tmp)
-                return static_cast<int>(i);
-        }
-        tmp = tmp.erase(pos);
-        pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
-    }
+    // size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+    // while (pos != std::string::npos)
+    // {
+    //     std::string tmp = request.path.substr(0, pos);
+    //     for (size_t i = 0; i < thisServer.location.size(); ++i)
+    //     {
+    //         if (thisServer.location[i].value == tmp)
+    //             return static_cast<int>(i);
+    //     }
+    //     tmp = tmp.erase(pos);
+    //     pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
+    // }
     return -1;
 }

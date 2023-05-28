@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 00:13:33 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/27 22:52:17 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,16 +52,16 @@ struct UData
 class Socket
 {
 private:
-    struct sockaddr_in server_addr;
+    struct sockaddr_in _serverAddr;
     const int kq;
 
 public:
     int _port;
-    const int server_fd;
-    std::vector<int> clientFds;
-    Socket(std::vector<struct kevent> &event_list, const int port, const int kq);
+    const int _serverFd;
+    std::vector<int> _clientFds;
+    Socket(std::vector<struct kevent> &eventList, const int port, const int kq);
     ~Socket();
-    int handleEvent(std::vector<struct kevent> &event_list);
+    int handleEvent(std::vector<struct kevent> &eventList);
     void disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event);
     static int enableKeepAlive(int socketFd);
     bool findClientFd(int client_fd);
