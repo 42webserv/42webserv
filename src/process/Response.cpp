@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/28 22:34:27 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/28 23:03:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,9 @@ Response::~Response() {}
  * @param port 위치 찾고싶은 포트번호
  * @return 서버 위치
  */
-int Response::getSuitableServer(int port, Server &server)
+int Response::getSuitableServer(int port, Server &serverManager)
 {
-    std::vector<ServerInfo> &servers = server.servers;
+    std::vector<ServerInfo> &servers = serverManager.servers;
 
     for (std::vector<ServerInfo>::iterator it = servers.begin(); it != servers.end(); it++)
     {
@@ -66,6 +66,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->path = request.path;
     response->method = request.method;
     response->clientFd = client_fd;
+    response->root = getRootDirectory(request, server);
     response->location = findLocation(request, server.locations);
     if (response->location != NULL)
     {
@@ -75,7 +76,6 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
         setUpLimitExcept(response->location->block, response);
         setUpReturnState(response->location->block, response);
     }
-    response->root = getRootDirectory(request, server);
     if (response->limitExcept.size() == 0)
         response->limitExcept = server.limitExcepts;
     response->resourcePath = response->root + "/" + response->index;
@@ -104,7 +104,10 @@ void Response::setUpRoot(std::vector<Directive> &locationBlock, ResponseData *re
     for (size_t i = 0; i < locationBlock.size(); i++)
     {
         if (locationBlock[i].name == "root")
+        {
             response->root = locationBlock[i].value;
+            break;
+        }
     }
 }
 
@@ -119,7 +122,10 @@ void Response::setUpIndex(std::vector<Directive> &locationBlock, ResponseData *r
     for (size_t i = 0; i < locationBlock.size(); i++)
     {
         if (locationBlock[i].name == "index")
+        {
             response->index = locationBlock[i].value;
+            break;
+        }
     }
 }
 
@@ -137,7 +143,7 @@ void Response::setUpAutoindex(std::vector<Directive> &locationBlock, ResponseDat
         if (locationBlock[i].name == "autoindex")
         {
             locationBlock[i].value == "on" ? response->autoindex = true : response->autoindex = false;
-            return;
+            break;
         }
     }
 }
@@ -167,6 +173,7 @@ void Response::setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseD
             }
             std::string tmp = locationBlock[i].value.substr(start);
             response->limitExcept.push_back(tmp);
+            break;
         }
     }
 }
@@ -192,6 +199,7 @@ void Response::setUpReturnState(std::vector<Directive> &locationBlock, ResponseD
                 start++;
             tmp = locationBlock[i].value.substr(start);
             response->redirect = tmp;
+            break;
         }
     }
 }
@@ -203,12 +211,12 @@ void Response::setUpReturnState(std::vector<Directive> &locationBlock, ResponseD
  * @param thisServer 현재 해당하는 서버
  * @return 경로 문자열
  */
-std::string Response::getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer)
+std::string Response::getRootDirectory(const HTTPRequest &request, const ServerInfo &server)
 {
     //.ico파일일 경우 임의로 이미지폴더로 이동
     if (request.path.length() >= 4 && request.path.substr(request.path.length() - 4) == ICO_EXTENSION)
         return "./assets/images"; // TODO image 경로 지정하는 방법 찾아보기
-    return thisServer.root;
+    return server.root;
 }
 
 // int Response::matchLocation(const HTTPRequest &request, ServerInfo &server)
@@ -255,7 +263,7 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
         location.value.erase(location.value.find_last_not_of(' ') + 1);
         if (location.value == request.path)
             return &location;
-        if (location.value != "/")
+        if (location.value != "/" && request.method == "PUT")
         {
             size_t pos = request.path.find(location.value);
             if (pos != std::string::npos)

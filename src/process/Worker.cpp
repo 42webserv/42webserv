@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 22:26:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/28 23:35:22 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,7 +184,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	std::cout << "bbbb" << std::endl;
 	Response res;
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
-	if (response == NULL || std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
+	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
@@ -248,17 +248,22 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	else if (response->method == "PUT")
 	{
 		// temp
-		std::string resourcePath = response->root + response->path;
+		std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
+		resourcePath += response->path.substr(response->path.find_last_of('/'));
 		std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
-		// 리소스 생성 로직을
-		std::ofstream resource_file(resourcePath);
-		if (resource_file.is_open())
+
+		std::ofstream outFile(resourcePath, std::ios::out | std::ios::trunc);
+		if (outFile.is_open())
 		{
+			outFile << response->body;
+			outFile.close();
 			// 리소스 생성에 성공한 경우
-			std::string response_content = "Resource created successfully";
-			std::string response_header = generateHeader(response_content, "text/html", 201);
+			std::ifstream resource_file(resourcePath);
+			if (!resource_file.is_open())
+				return errorResponse(response->clientFd);
+			std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
+			std::string response_header = generateHeader(resource_content, "text/html", 201);
 			ftSend(response, response_header);
-			ftSend(response, response_content);
 			resource_file.close();
 		}
 		else

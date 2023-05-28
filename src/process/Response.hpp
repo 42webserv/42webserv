@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/28 22:33:05 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/28 22:55:18 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ struct ResponseData
 class Response
 {
 private:
-    int getSuitableServer(int port, Server &server);
-    std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &info);
+    int getSuitableServer(int port, Server &serverManager);
+    std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &server);
     void setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response);
