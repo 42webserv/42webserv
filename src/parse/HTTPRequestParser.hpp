@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 17:18:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:01:09 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cstring>
 
 struct HTTPRequest
 {
@@ -64,7 +65,7 @@ private:
 
     bool parseMethod();
     bool parsePath();
-    bool parseHttpVersion();
+    bool parseHTTPVersion();
     bool parseHeaderName();
     bool parseHeaderValue();
     bool parseBody();

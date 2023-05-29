@@ -6,20 +6,22 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 15:39:08 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 16:24:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "commonConfig.hpp"
+#include "commonProcess.hpp"
 #include "Worker.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
 	// Create sockets
-	for (size_t i = 0; i < server.server.size(); i++)
+	for (size_t i = 0; i < server.servers.size(); i++)
 	{
-		for (size_t j = 0; j < server.server[i].port.size(); j++)
+		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
 		{
-			sockets.push_back(new Socket(master.getEvents(), server.server[i].port[j], kq));
+			sockets.push_back(new Socket(master.getEvents(), server.servers[i].ports[j], kq));
 		}
 	}
 }
@@ -33,8 +35,8 @@ Worker::~Worker()
 void Worker::eventEVError(int k, struct kevent &event)
 {
 	// 서버 소켓 에러
-	if (fd == sockets[k]->server_fd)
-		error_exit("Server socket error");
+	if (fd == sockets[k]->_serverFd)
+		errorExit("Server socket error");
 	else
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
@@ -45,10 +47,10 @@ void Worker::eventEVError(int k, struct kevent &event)
 
 bool Worker::eventFilterRead(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-	if (found == sockets[k]->clientFds.end())
+	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
+	if (found == sockets[k]->_clientFds.end())
 		return false;
-	if (fd == sockets[k]->server_fd)
+	if (fd == sockets[k]->_serverFd)
 	{
 		int client_fd = sockets[k]->handleEvent(event_list);
 		clients[client_fd].clear();
@@ -65,6 +67,9 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 		if (n < 1)
 		{
 			// HTML 요청 메세지 보기
+			// struct kevent new_event;
+			// EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+			// event_list.push_back(new_event);
 			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 			UData *uData = static_cast<UData *>(event.udata);
 			if (uData->writeEventExist == false)
@@ -75,32 +80,50 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 				event_list.push_back(new_event);
 			}
 		}
+
+		// char buf[BUFFER_SIZE + 1];
+		// ssize_t n;
+		// struct kevent new_event;
+
+		// while (true)
+		// {
+		// 	n = recv(fd, buf, BUFFER_SIZE, 0);
+		// 	if (n < BUFFER_SIZE)
+		// 	{
+		// 		buf[n] = '\0';
+		// 		clients[fd] += buf;
+		// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		// 		event_list.push_back(new_event);
+		// 		std::cout << "read: " << clients[fd] << std::endl;
+		// 		break;
+		// 	}
+		// 	else
+		// 	{
+		// 		// buf[BUFFER_SIZE] = '\0';
+		// 		clients[fd] += buf;
+		// 	}
 	}
 	return true;
 }
 
 bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-	if (found == sockets[k]->clientFds.end())
+	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
+	if (found == sockets[k]->_clientFds.end())
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
-	responseUData = static_cast<UData *>(event.udata);
+	if (!result)
+	{
+		return false;
+	}
+	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+	if (result->method != "HEAD" && result->headers.size() == 0)
+		return false;
+	if (result->port == -1)
+		result->port = strtod(listen[0].value.c_str(), NULL);
+	UData *uData = static_cast<UData *>(event.udata);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
-		// Tester를 위한 코드
-		// 사용방법 : 터미널 두 개를 켠 뒤 하나는 웹서브 실행, 다른 하나는 ./tester http://localhost:442 입력
-		if (!result)
-		{
-			result = new HTTPRequest;
-			size_t pos = clients[fd].find(' ');
-			result->method = clients[fd].substr(0, pos);
-			result->path = "/";
-			result->http_version = "HTTP/1.1";
-			result->body = ""; // POST면 body가 포함되어야 함
-			result->port = 442;
-			result->strPort = "442";
-		}
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
 		cookieCheck(result);
@@ -114,6 +137,10 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		{
 			this->requestHandler(*result, fd);
 			std::cout << fd << " : 응답 완료" << std::endl;
+			struct kevent eventToDelete;
+			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
+			uData->writeEventExist = false;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
@@ -126,13 +153,14 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	}
 	if (result)
 		delete result;
+
 	return true;
 }
 
 bool Worker::eventEOF(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-	if (found == sockets[k]->clientFds.end())
+	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
+	if (found == sockets[k]->_clientFds.end())
 		return false;
 	std::cout << "client want to disconnect" << std::endl;
 	sockets[k]->disconnectClient(fd, clients, event);
@@ -141,8 +169,8 @@ bool Worker::eventEOF(int k, struct kevent &event)
 
 bool Worker::eventFilterTimer(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->clientFds.begin(), sockets[k]->clientFds.end(), fd);
-	if (found == sockets[k]->clientFds.end())
+	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
+	if (found == sockets[k]->_clientFds.end())
 		return false;
 	std::cout << fd << " is time over" << std::endl;
 	deleteTimer(fd);
@@ -155,6 +183,10 @@ void Worker::run()
 	struct kevent events[10];
 	struct kevent event;
 	int nevents;
+
+	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
+	// std::cout << "listen : " << this->listen[0].value << std::endl;
+
 	int sockets_size;
 	// int k;
 	while (true)
@@ -212,8 +244,8 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-	Response responseClass(request.port, this->server);
-	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
+	Response res;
+	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
 	if (response->path == "/session" && responseUData->sessionID == "" &&
 		responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
@@ -226,8 +258,8 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// method not allowed
 		std::string response_content = "Method not allowed";
 		std::string response_header = generateErrorHeader(405, response_content);
-		write(response->clientFd, response_header.c_str(), response_header.length());
-		write(response->clientFd, response_content.c_str(), response_content.length());
+		ftSend(response, response_header);
+		ftSend(response, response_content);
 		delete response;
 		return;
 	}
@@ -240,13 +272,14 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
 			if ((response->resourcePath = getCGILocation(response)) == "")
 			{
+				std::cout << "getLocation" << std::endl;
 				// error_page
 				return;
 			}
 			std::ifstream resource_file(response->resourcePath);
-			std::string response_header = generateHeader(resource_content, "text/html");
-			write(response->clientFd, response_header.c_str(), response_header.length());
-			write(response->clientFd, resource_content.c_str(), resource_content.length());
+			std::string response_header = generateHeader(resource_content, "text/html", 200);
+			ftSend(response, response_header);
+			ftSend(response, resource_content);
 			resource_file.close();
 			return;
 		}
@@ -254,8 +287,75 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else if (response->method == "POST")
 	{
+		// TODO 이건 뭘지 확인하기.
+		if (response->contentLength == 0)
+		{
+			std::cout << "here" << std::endl;
+			delete response;
+			return;
+		}
+		if (isCGIRequest(response))
+		{
+			// cgi post method 실행
+			std::cout << "YOUPI.BLA" << std::endl;
+		}
+		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
+		if (request.body.length() == 0)
+		{
+			getResponse(response);
+			return;
+		}
+		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
+		postResponse(response);
 	}
-	else // DELETE
+	else if (response->method == "HEAD")
+	{
+		// HEAD 메소드는 GET 메소드와 동일하지만, body가 없습니다.
+		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
+		getResponse(response);
+	}
+	else if (response->method == "PUT")
+	{
+		// std::cout << "PUT" << std::endl;
+		// temp
+		std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
+		resourcePath += response->path.substr(response->path.find_last_of('/'));
+		// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
+
+		std::ofstream outFile(resourcePath, std::ios::out | std::ios::trunc);
+		if (outFile.is_open())
+		{
+			outFile << response->body;
+			outFile.close();
+			// 리소스 생성에 성공한 경우
+			std::ifstream resource_file(resourcePath);
+			if (!resource_file.is_open())
+				return errorResponse(response->clientFd);
+			std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
+			std::string resource_header = generateHeader(resource_content, "text/html", 201);
+			ftSend(response, resource_header);
+			ftSend(response, resource_content);
+			resource_file.close();
+		}
+		else
+		{
+			// 리소스 생성에 실패한 경우
+			std::string response_content = "Failed to create the resource";
+			std::string response_header = generateErrorHeader(500, "text/html");
+			ftSend(response, response_header);
+			ftSend(response, response_content);
+		}
+	}
+	else if (response->method == "OPTIONS")
+	{
+		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
+		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
+		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
+		std::string response_header = generateHeader(response_content, "text/html", 200);
+		ftSend(response, response_header);
+		ftSend(response, response_content);
+	}
+	else if (response->method == "DELETE")
 	{
 		std::string resourcePath = response->resourcePath;
 		std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
@@ -265,21 +365,24 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			// 삭제에 실패한 경우
 			std::string response_content = "Failed to delete the resource";
 			std::string response_header = generateErrorHeader(500, "text/html");
-			write(response->clientFd, response_header.c_str(), response_header.length());
-			write(response->clientFd, response_content.c_str(), response_content.length());
+			ftSend(response, response_header);
+			ftSend(response, response_content);
 		}
 		else
 		{
 			// 삭제에 성공한 경우
 			std::string response_content = "Resource deleted successfully";
 			std::ifstream resource_file(response->resourcePath);
-			std::string response_header = generateHeader(response_content, "text/html");
-			write(response->clientFd, response_header.c_str(), response_header.length());
-			write(response->clientFd, response_content.c_str(), response_content.length());
+			std::string response_header = generateHeader(response_content, "text/html", 200);
+			ftSend(response, response_header);
+			ftSend(response, response_content);
 			resource_file.close();
 			return;
 		}
 	}
+	else
+		stderrExit("Unknown method");
+	delete response;
 }
 
 /**
@@ -290,11 +393,20 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
  */
 std::string Worker::getCGILocation(ResponseData *response)
 {
-	for (size_t i = 0; i < response->location.size(); ++i)
+	for (size_t i = 0; i < response->server.locations.size(); ++i)
 	{
-		if (response->location[i].value == "/result ")
+		if (response->server.locations[i].value == "/result ")
 		{
-			return response->root + "/" + response->index;
+			std::string root = "";
+			std::string index = "";
+			for (size_t j = 0; j < response->server.locations[i].block.size(); j++)
+			{
+				if (response->server.locations[i].block[j].name == "root")
+					root = response->server.locations[i].block[j].value;
+				if (response->server.locations[i].block[j].name == "index")
+					index = response->server.locations[i].block[j].value;
+			}
+			return root + "/" + index;
 		}
 	}
 	return "";
@@ -307,6 +419,8 @@ bool Worker::isCGIRequest(ResponseData *response)
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
 	size_t pos = response->path.find("cgi-bin");
+	if (pos == std::string::npos && response->method == "POST")
+		pos = response->path.find(".bla");
 	return (pos != std::string::npos);
 }
 
@@ -340,12 +454,49 @@ void Worker::getResponse(ResponseData *response)
 	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
 		return errorResponse(response->clientFd);
 
-	std::string resource_content((std::istreambuf_iterator<char>(resource_file)),
-								 std::istreambuf_iterator<char>());
-	std::string response_header = generateHeader(resource_content, response->contentType);
-	write(response->clientFd, response_header.c_str(), response_header.length());
-	write(response->clientFd, resource_content.c_str(), resource_content.length());
+	std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
+	std::string response_header = generateHeader(resource_content, response->contentType, 200);
+	ftSend(response, response_header);
+	ftSend(response, resource_content);
 	resource_file.close();
+}
+
+void Worker::postResponse(ResponseData *response) // request body 추가하기
+{
+	// request 사용?
+	struct stat st;
+	// if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
+	// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+	stat(response->resourcePath.c_str(), &st);
+	if (!S_ISREG(st.st_mode)) // root + index을 검사해 파일이 아닐시 if로 분기
+	{
+		response->resourcePath = response->root + response->path; // root + path로 다시 검사
+		std::memset(&st, 0, sizeof(st));
+		// if (!stat(response->resourcePath.c_str(), &st))
+		// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
+		stat(response->resourcePath.c_str(), &st);
+		if (!S_ISREG(st.st_mode))
+		{
+			if (response->autoindex)
+				return broad(response);
+			else
+				return errorResponse(response->clientFd);
+		}
+	}
+	std::ofstream outFile(response->resourcePath, std::ios::out | std::ios::trunc);
+	outFile << response->body;
+	outFile.close();
+
+	std::ifstream inFile(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
+	if (!inFile.is_open())						  // 혹시 open이 안될수있으니 한번더 체크
+		return errorResponse(response->clientFd);
+
+	// POST는 생성된 내용을 반환하지 않아도 됨.
+	std::string body = "";
+	std::string response_header = generateHeader(body, response->contentType, 201);
+	ftSend(response, response_header);
+	// ftSend(response, resource_content);
+	inFile.close();
 }
 
 /**
@@ -357,11 +508,10 @@ void Worker::errorResponse(int client_fd)
 {
 	std::string error_path = "./assets/html/404.html";
 	std::ifstream error_file(error_path);
-	std::string error_content((std::istreambuf_iterator<char>(error_file)),
-							  std::istreambuf_iterator<char>());
+	std::string error_content((std::istreambuf_iterator<char>(error_file)), std::istreambuf_iterator<char>());
 	std::string error_header = generateErrorHeader(404, error_content);
-	write(client_fd, error_header.c_str(), error_header.length());
-	write(client_fd, error_content.c_str(), error_content.length());
+	ftSend(client_fd, error_header);
+	ftSend(client_fd, error_content);
 }
 
 /**
@@ -371,21 +521,21 @@ void Worker::errorResponse(int client_fd)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode)
 {
 	HTTPRequestParser parser;
 	std::ostringstream oss;
 
-	oss << "HTTP/1.1 200 OK\r\n";
-	oss << "Content-Length: " << content.length() << "\r\n";
-	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
+	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
+	oss << "Content-Length: " << content.length() << CRLF;
+	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
 	if (responseUData->alreadySessionSend == true &&
 		responseUData->sessionID != "" &&
 		responseUData->wantToDeleteSessionInCookie == true)
 	{
 		std::string expireTime = getExpiryDate(-3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << expireTime << "\r\n";
+			<< "; Expires=" << expireTime << CRLF;
 		responseUData->alreadySessionSend = false;
 		responseUData->expireTime = "";
 		responseUData->wantToDeleteSessionInCookie = false;
@@ -395,15 +545,14 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	{
 		std::string expireTime = getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << expireTime << "\r\n";
+			<< "; Expires=" << expireTime << CRLF;
 		responseUData->alreadySessionSend = true;
 		responseUData->expireTime = expireTime;
 	}
 	if (responseUData->keepLive)
-		oss << "Connection: keep-alive\r\n\r\n";
+		oss << "Connection: keep-alive" << CRLF2;
 	else
-		oss << "Connection: close\r\n\r\n";
-
+		oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
@@ -417,11 +566,12 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 std::string Worker::generateErrorHeader(int status_code, const std::string &message)
 {
 	std::ostringstream oss;
-	// oss << "HTTP/1.1 " << status_code << " " << message << "\r\n";
-	oss << "HTTP/1.1 " << status_code << " OK\r\n";
-	oss << "Content-Length: " << message.length() << "\r\n";
-	oss << "Content-Type: text/html\r\n";
-	oss << "Connection: close\r\n\r\n";
+	// oss << "HTTP/1.1 " << status_code << " " << message << CRLF;
+	oss << "HTTP/1.1 " << status_code << " OK" << CRLF;
+	oss << "Content-Length: " << message.length() << CRLF;
+	oss << "Content-Type: text/html" << CRLF;
+	;
+	oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
@@ -446,9 +596,9 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType);
-	write(response->clientFd, response_header.c_str(), response_header.length());
-	write(response->clientFd, tmp.c_str(), tmp.length()); // 완성된 html 을 body로 보냄
+	std::string response_header = generateHeader(tmp, contentType, 200);
+	ftSend(response, response_header);
+	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
 
 bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)

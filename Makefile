@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/24 16:21:10 by seokchoi         ###   ########.fr        #
+#    Updated: 2023/05/29 13:03:21 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,14 +27,14 @@ SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARS
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
-SRC_CONFIG	= CheckConfigValid Config DefaultConfig ft_directive
-SRC_ERROR	= common_error
+SRC_CONFIG	= CheckConfigValid Config DefaultConfig Directive
+SRC_ERROR	= commonError
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
-SRC_PROCESS	= Master Worker Response
+SRC_PROCESS	= commonProcess Master Worker Response
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
 SRC_CGI		= CGI
-SRC_SERVER	= Server
+SRC_SERVER	= Server ServerInfo
 
 ifeq (,$(findstring bonus,$(MAKECMDGOALS)))
 # SRC_WINDOW	+= draw_rt

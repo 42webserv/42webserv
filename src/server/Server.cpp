@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/14 17:59:51 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/28 21:33:41 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ Server::Server() {}
  */
 Server::Server(const Server &ref)
 {
-    this->server = ref.server;
+    this->servers = ref.servers;
 }
 
 /*
@@ -32,7 +32,7 @@ Server &Server::operator=(const Server &ref)
 {
     if (this != &ref)
     {
-        this->server = ref.server;
+        this->servers = ref.servers;
     }
     return *this;
 }
@@ -60,47 +60,47 @@ void Server::setServer(Config &config)
  * server 블록 내부에서 listen 지시자를 찾아 포트번호 벡터에 저장. 중복된 포트번호가 존재한다면 에러 반환
  *
  * @param tmpServ 현재 서버 정보를 저장할 구조체
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "listen")
+        if (serverBlocks[i].name == "listen")
         {
-            int port = strtod(serverBlock[i].value.c_str(), NULL);
-            if (find(this->validPort.begin(), this->validPort.end(), port) != this->validPort.end())
-                error_exit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
-            tmpServ.port.push_back(port);
-            this->validPort.push_back(port);
+            int port = strtod(serverBlocks[i].value.c_str(), NULL);
+            if (find(this->validPorts.begin(), this->validPorts.end(), port) != this->validPorts.end())
+                errorExit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
+            tmpServ.ports.push_back(port);
+            this->validPorts.push_back(port);
         }
     }
-    if (tmpServ.port.size() != 0)
+    if (tmpServ.ports.size() != 0)
         return;
-    if (find(this->validPort.begin(), this->validPort.end(), 80) != this->validPort.end())
-        error_exit("Error : duplicate port number 80\n");
-    tmpServ.port.push_back(80);
-    this->validPort.push_back(80);
+    if (find(this->validPorts.begin(), this->validPorts.end(), 80) != this->validPorts.end())
+        errorExit("Error : duplicate port number 80\n");
+    tmpServ.ports.push_back(80);
+    this->validPorts.push_back(80);
 }
 
 /**
  * server 블록 내부에서 listen 지시자를 찾아 포트번호 벡터에 저장. 중복된 포트번호가 존재한다면 에러 반환
  *
  * @param tmpServ 현재 서버 정보를 저장할 구조체
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "limit_except")
+        if (serverBlocks[i].name == "limit_except")
         {
             std::vector<std::string> tokens;
-            std::istringstream iss(serverBlock[i].value);
+            std::istringstream iss(serverBlocks[i].value);
             std::string token;
 
             while (iss >> token)
-                tmpServ.limitExcept.push_back(token);
+                tmpServ.limitExcepts.push_back(token);
         }
     }
 }
@@ -108,15 +108,15 @@ void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serve
 /**
  * server 블록 내부에서 server_name을 찾아 값을 반환
  *
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  * @return 서버 이름
  */
-std::string Server::findServerName(std::vector<Directive> &serverBlock)
+std::string Server::findServerName(std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "server_name")
-            return serverBlock[i].value;
+        if (serverBlocks[i].name == "server_name")
+            return serverBlocks[i].value;
     }
     return "nobody";
 }
@@ -124,15 +124,15 @@ std::string Server::findServerName(std::vector<Directive> &serverBlock)
 /**
  * server 블록 내부에서 client_max_body_size 지시자를 찾아 값을 반환
  *
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  * @return 정수 값
  */
-size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlock)
+size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "client_max_body_size")
-            return static_cast<size_t>(strtod(serverBlock[i].value.c_str(), NULL));
+        if (serverBlocks[i].name == "client_max_body_size")
+            return static_cast<size_t>(strtod(serverBlocks[i].value.c_str(), NULL));
     }
     return -1;
 }
@@ -140,15 +140,15 @@ size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlock)
 /**
  * server 블록 내부에서 root 지시자를 찾아 값을 반환
  *
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  * @return root 경로
  */
-std::string Server::findRoot(std::vector<Directive> &serverBlock)
+std::string Server::findRoot(std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "root")
-            return serverBlock[i].value;
+        if (serverBlocks[i].name == "root")
+            return serverBlocks[i].value;
     }
     return "";
 }
@@ -157,15 +157,15 @@ std::string Server::findRoot(std::vector<Directive> &serverBlock)
  * server 블록 내부에서 location 지시자를 찾아 location vector 세팅
  *
  * @param tmpServ 현재 서버 정보를 저장할 구조체
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+void Server::setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "index")
+        if (serverBlocks[i].name == "index")
         {
-            tmpServ.index = serverBlock[i].value;
+            tmpServ.index = serverBlocks[i].value;
             return;
         }
     }
@@ -177,16 +177,16 @@ void Server::setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &serverBlock
  * server 블록 내부에서 error_page 지시자를 찾아 에러페이지 세팅
  *
  * @param tmpServ 현재 서버 정보를 저장할 구조체
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "error_page")
+        if (serverBlocks[i].name == "error_page")
         {
             std::vector<std::string> tokens;
-            std::istringstream iss(serverBlock[i].value);
+            std::istringstream iss(serverBlocks[i].value);
             std::string token;
 
             while (iss >> token)
@@ -205,36 +205,36 @@ void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverB
  * server 블록 내부에서 location 지시자를 찾아 location vector 세팅
  *
  * @param tmpServ 현재 서버 정보를 저장할 구조체
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlock)
+void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlock[i].name == "location")
-            tmpServ.location.push_back(serverBlock[i]);
+        if (serverBlocks[i].name == "location")
+            tmpServ.locations.push_back(serverBlocks[i]);
     }
 }
 
 /**
  * Server 클래스 멤버 변수들을 세팅해주기 위한 메서드
  *
- * @param serverBlock 파싱된 서버 블록
+ * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpServer(std::vector<Directive> &serverBlock)
+void Server::setUpServer(std::vector<Directive> &serverBlocks)
 {
-    for (size_t i = 0; i < serverBlock.size(); i++)
+    for (size_t i = 0; i < serverBlocks.size(); i++)
     {
         ServerInfo tmpServ;
-        setUpListen(tmpServ, serverBlock[i].block);
-        tmpServ.serverName = findServerName(serverBlock[i].block);
-        tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlock[i].block);
-        tmpServ.root = findRoot(serverBlock[i].block);
-        setUpIndex(tmpServ, serverBlock[i].block);
-        setUpErrorPage(tmpServ, serverBlock[i].block);
-        setUpLimitExcept(tmpServ, serverBlock[i].block);
-        setUpLocation(tmpServ, serverBlock[i].block);
-        this->server.push_back(tmpServ);
+        setUpListen(tmpServ, serverBlocks[i].block);
+        tmpServ.serverName = findServerName(serverBlocks[i].block);
+        tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlocks[i].block);
+        tmpServ.root = findRoot(serverBlocks[i].block);
+        setUpIndex(tmpServ, serverBlocks[i].block);
+        setUpErrorPage(tmpServ, serverBlocks[i].block);
+        setUpLimitExcept(tmpServ, serverBlocks[i].block);
+        setUpLocation(tmpServ, serverBlocks[i].block);
+        this->servers.push_back(tmpServ);
     }
 }
 
@@ -244,23 +244,23 @@ void Server::setUpServer(std::vector<Directive> &serverBlock)
 void Server::printServer()
 {
     std::cout << "============Server===========" << std::endl;
-    for (size_t i = 0; i < this->server.size(); i++)
+    for (size_t i = 0; i < this->servers.size(); i++)
     {
         std::cout << "Server[" << i + 1 << "]" << std::endl;
         std::cout << "PORT: ";
-        for (size_t j = 0; j < this->server[i].port.size(); j++)
-            std::cout << this->server[i].port[j] << " ";
+        for (size_t j = 0; j < this->servers[i].ports.size(); j++)
+            std::cout << this->servers[i].ports[j] << " ";
         std::cout << std::endl;
-        std::cout << "Server_name: " << this->server[i].serverName << std::endl;
-        std::cout << "Index: " << this->server[i].index << std::endl;
-        std::cout << "Client_max_body_size: " << this->server[i].clientMaxBodySize << std::endl;
-        std::cout << "Root: " << this->server[i].root << std::endl;
-        for (size_t j = 0; j < this->server[i].location.size(); j++)
+        std::cout << "Server_name: " << this->servers[i].serverName << std::endl;
+        std::cout << "Index: " << this->servers[i].index << std::endl;
+        std::cout << "Client_max_body_size: " << this->servers[i].clientMaxBodySize << std::endl;
+        std::cout << "Root: " << this->servers[i].root << std::endl;
+        for (size_t j = 0; j < this->servers[i].locations.size(); j++)
         {
-            std::cout << "location : " << this->server[i].location[j].value << std::endl;
+            std::cout << "location : " << this->servers[i].locations[j].value << std::endl;
         }
         std::cout << "-------------------------------\n";
-        for (std::map<int, std::string>::iterator iter = this->server[i].errorPage.begin(); iter != this->server[i].errorPage.end(); iter++)
+        for (std::map<int, std::string>::iterator iter = this->servers[i].errorPage.begin(); iter != this->servers[i].errorPage.end(); iter++)
             std::cout << "errorPage : " << iter->first << ", " << iter->second << std::endl;
         std::cout << "===============================\n\n";
     }

@@ -3,78 +3,104 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/05/29 14:08:26 by seokchoi         ###   ########.fr       */
+=======
+/*   Updated: 2023/05/29 15:31:17 by chanwjeo         ###   ########.fr       */
+>>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <fcntl.h>
 #include <iostream>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include "commonError.hpp"
 #include "Socket.hpp"
-#include "common_error.hpp"
 #include "Server.hpp"
 
-Socket::Socket(std::vector<struct kevent> &event_list, const int port, const int kq)
-    : kq(kq), server_fd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int kq)
+    : kq(kq), _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
     this->_port = port;
+    int opt;
 
     // Create an AF_INET stream socket to receive incoming connections on
-    if (server_fd < 0)
-        error_exit("socket()");
+    if (_serverFd < 0)
+        errorExit("socket()");
 
-    int on = 1;
+    opt = 1;
     // Allow socket descriptor to be reuseable
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0)
+    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
     {
-        close(server_fd);
-        error_exit("setsockopt()");
+        close(_serverFd);
+        errorExit("setsockopt()");
+    }
+
+    struct linger linger;
+    linger.l_onoff = 1;
+    linger.l_linger = 10;
+    // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
+    if (setsockopt(_serverFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
+    {
+        close(_serverFd);
+        errorExit("setsockopt()");
+    }
+
+    opt = 1;
+    // Nagle 알고리즘 사용하지 않게 하기
+    if (setsockopt(_serverFd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) < 0)
+    {
+        perror("setsockopt");
+        exit(1);
     }
 
     // Bind the socket
-    std::memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    // TODO port는 server.port에서 받아야 함.
-    server_addr.sin_port = htons(this->_port);
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    std::memset(&_serverAddr, 0, sizeof(_serverAddr));
+    _serverAddr.sin_family = AF_INET;
+    _serverAddr.sin_addr.s_addr = INADDR_ANY;
+    _serverAddr.sin_port = htons(this->_port);
+    if (bind(_serverFd, (struct sockaddr *)&_serverAddr, sizeof(_serverAddr)) < 0)
     {
-        close(server_fd);
-        error_exit("bind()");
+        close(_serverFd);
+        errorExit("bind()");
     }
 
     // Set the listen back log
-    if (listen(server_fd, 3) < 0)
+    if (listen(_serverFd, 3) < 0)
     {
-        close(server_fd);
-        error_exit("listen()");
+        close(_serverFd);
+        errorExit("listen()");
     }
-    EV_SET(&event, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-    event_list.push_back(event);
-    clientFds.push_back(server_fd);
+
+    EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+    eventList.push_back(event);
+    _clientFds.push_back(_serverFd);
     std::cout << "Server listening on port " << this->_port << std::endl;
 }
 
 Socket::~Socket()
 {
-    close(server_fd);
+    for (std::vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
+        close(*it);
+    close(_serverFd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &event_list)
+int Socket::handleEvent(std::vector<struct kevent> &eventList)
 {
-    socklen_t addrlen = sizeof(server_addr);
+    socklen_t addrlen = sizeof(_serverAddr);
     struct sockaddr_in client_addr;
     struct kevent new_event;
 
     // Accept incoming connection
-    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
+    int client_fd = accept(_serverFd, (struct sockaddr *)&client_addr, &addrlen);
     if (client_fd < 0)
-        error_exit("accept()");
+        errorExit("accept()");
 
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
@@ -93,25 +119,25 @@ int Socket::handleEvent(std::vector<struct kevent> &event_list)
         perror("setsockopt SO_LINGER");
     }
 
-    event_list.push_back(new_event);
-    clientFds.push_back(client_fd);
+    eventList.push_back(new_event);
+    _clientFds.push_back(client_fd);
     return client_fd;
 }
 
 void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event)
 {
+    if (event.udata)
+        delete static_cast<UData *>(event.udata);
+    event.udata = NULL;
     EV_SET(&event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
     kevent(kq, &event, 1, NULL, 0, NULL);
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
     kevent(kq, &event, 1, NULL, 0, NULL);
-    if (event.udata)
-        delete static_cast<UData *>(event.udata);
-    event.udata = NULL;
     std::cout << "close client_fd: " << client_fd << std::endl;
     // shutdown(client_fd, SHUT_RDWR);
     close(client_fd);
     clients.erase(client_fd);
-    clientFds.erase(std::remove(clientFds.begin(), clientFds.end(), client_fd), clientFds.end());
+    _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), client_fd), _clientFds.end());
 }
 
 int Socket::enableKeepAlive(int socketFd)
@@ -138,7 +164,7 @@ bool Socket::findClientFd(int client_fd)
 {
     std::vector<int>::iterator it;
 
-    for (it = clientFds.begin(); it != clientFds.end(); ++it)
+    for (it = _clientFds.begin(); it != _clientFds.end(); ++it)
     {
         if (*it == client_fd)
             return true;
