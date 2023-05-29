@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 22:57:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:54:45 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,10 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		{
 			this->requestHandler(*result, fd);
 			std::cout << fd << " : 응답 완료" << std::endl;
+			struct kevent eventToDelete;
+			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
+			uData->writeEventExist = false;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
@@ -146,6 +150,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	}
 	if (result)
 		delete result;
+
 	return true;
 }
 
@@ -268,7 +273,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		return;
 	}
 	Response responseClass(request.port, this->server);
-	std::cout << "bbbb" << std::endl;
 	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{

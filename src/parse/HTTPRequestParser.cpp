@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 22:05:38 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:53:35 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
     state_ = METHOD;
-    std::cout << "data: [" << data << "]" << std::endl;
+    // std::cout << "data: [" << data << "]" << std::endl;
 
     while (!buffer_.empty())
     {
@@ -99,7 +99,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             request->port = -1;
         request->body = body_;
         request->addr = addr_;
-        printResult(*request);
         reset();
         return request;
     }
@@ -223,7 +222,6 @@ bool HTTPRequestParser::parseHeaderValue()
     }
     size_t pos = minPos(pos1, pos2, pos3);
     std::string header_value = buffer_.substr(1, pos);
-    std::cout << "current_header_name_ : " << current_header_name_ << ", header_value : " << header_value << std::endl;
     headers_.insert(std::make_pair(current_header_name_, header_value));
     buffer_.erase(0, pos);
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
