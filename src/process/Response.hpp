@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/25 21:53:41 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/28 22:55:18 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ struct ResponseData
     std::vector<std::string> limitExcept;
     std::string returnState;
     std::string redirect;
-    std::vector<Directive> location;
+    Directive *location;
     std::string locationName;
     std::string path; // path중 locationName 부분을 지운 나머지 경로
     // CGIData *cgi;
@@ -55,23 +55,20 @@ struct ResponseData
 class Response
 {
 private:
-    /* data */
-    ServerInfo thisServer;
-
-    int matchLocation(const HTTPRequest &request, ServerInfo &thisServer);
-    int getSuitableServer(int port, Server &server);
-    std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &thisServer);
+    int getSuitableServer(int port, Server &serverManager);
+    std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &server);
     void setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseData *response);
     void setUpReturnState(std::vector<Directive> &locationBlock, ResponseData *response);
+    Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
 
 public:
     /*
      * A default constructor
      */
-    Response(int port, Server &server);
+    Response();
 
     /*
      * A destructor
@@ -81,7 +78,7 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
-    ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, Config &config);
+    ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, Config &config, Server &serverManger);
 };
 
 /*
