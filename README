@@ -14,4 +14,7 @@ netstat -an | grep TIME_WAIT
 
 siege 테스트 : 10개의 유저가 100번 요청
 >> brew install siege
+>> sudo sysctl -w net.inet.tcp.msl=100
 >> siege -c 10 -r 100 http://localhost:442/
+끝나고 다시 원래대로 돌아가기
+>> sudo sysctl -w net.inet.tcp.msl=15000
