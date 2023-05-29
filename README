@@ -11,3 +11,7 @@ lsof -i:8080 | awk 'FNR == 2 {print $2}' | xargs kill -9
 
 TIME_WAIT 상태 찾기
 netstat -an | grep TIME_WAIT
+
+siege 테스트 : 10개의 유저가 100번 요청
+>> brew install siege
+>> siege -c 10 -r 100 http://localhost:442/
