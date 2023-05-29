@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 16:19:32 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 19:30:01 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ private:
 	void requestHandler(const HTTPRequest &request, int client_fd);
 	void getResponse(ResponseData *response);
 	void postResponse(ResponseData *response);
+	void putResponse(ResponseData *response);
+	void deleteResponse(ResponseData *response);
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode);
 	std::string generateErrorHeader(int status_code, const std::string &message);
@@ -77,6 +79,7 @@ private:
 	bool isCookieValid(const std::string &expireTime);
 	void cookieCheck(HTTPRequest *result);
 	void redirection(ResponseData *response);
+	bool invalidResponse(ResponseData *response);
 
 public:
 	Worker(Master &master);
