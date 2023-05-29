@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 20:20:27 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/29 20:43:31 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,9 +186,7 @@ bool HTTPRequestParser::parseHeaderName()
     // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
     {
-        std::cout << "com2" << std::endl;
-        // return false;
-        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
+        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
         buffer_.clear();
         return true;
     }
