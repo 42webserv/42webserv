@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 13:01:33 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:31:17 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,13 +122,13 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
 
 void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event)
 {
+    if (event.udata)
+        delete static_cast<UData *>(event.udata);
+    event.udata = NULL;
     EV_SET(&event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
     kevent(kq, &event, 1, NULL, 0, NULL);
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
     kevent(kq, &event, 1, NULL, 0, NULL);
-    if (event.udata)
-        delete static_cast<UData *>(event.udata);
-    event.udata = NULL;
     std::cout << "close client_fd: " << client_fd << std::endl;
     // shutdown(client_fd, SHUT_RDWR);
     close(client_fd);

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 15:19:55 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:37:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,6 +135,11 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
+			std::cout << fd << " : 응답 완료" << std::endl;
+			struct kevent eventToDelete;
+			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
+			uData->writeEventExist = false;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
@@ -147,6 +152,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	}
 	if (result)
 		delete result;
+
 	return true;
 }
 
