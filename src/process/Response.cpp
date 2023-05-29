@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 18:48:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 19:40:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "commonConfig.hpp"
+#include "commonProcess.hpp"
 #include "Response.hpp"
 
 /*
@@ -260,9 +261,7 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
                     {
                         std::cout << "root : " << location.block[i].value << std::endl;
                         root = location.block[i].value;
-                        struct stat st;
-                        stat((root + file).c_str(), &st);
-                        if (S_ISDIR(st.st_mode))
+                        if (isDirectory(root + file))
                         {
                             location.block[i].value = root + file;
                             return &location;
