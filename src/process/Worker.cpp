@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 13:41:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:49:07 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -345,6 +345,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			std::string response_header = generateHeader(resource_content, "text/html", 201);
 			ftSend(response, response_header);
 			resource_file.close();
+			std::cout << "PUT2" << std::endl;
 		}
 		else
 		{
@@ -414,6 +415,8 @@ bool Worker::isCGIRequest(ResponseData *response)
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
 	size_t pos = response->path.find("cgi-bin");
+	if (pos == std::string::npos && response->method == "POST")
+		pos = response->path.find(".bla");
 	return (pos != std::string::npos);
 }
 

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 14:07:13 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:43:39 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,6 +190,7 @@ bool HTTPRequestParser::parseHeaderName()
     if (pos == std::string::npos)
     {
         std::cout << "com2" << std::endl;
+        // return false;
         state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
         buffer_.clear();
         return true;
