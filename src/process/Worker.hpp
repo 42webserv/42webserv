@@ -76,6 +76,7 @@ private:
 	std::string getExpiryDate(int secondsToAdd);
 	bool isCookieValid(const std::string &expireTime);
 	void cookieCheck(HTTPRequest *result);
+	void redirection(ResponseData *response);
 
 public:
 	Worker(Master &master);
