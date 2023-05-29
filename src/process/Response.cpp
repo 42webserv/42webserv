@@ -290,18 +290,31 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
                     {
                         std::cout << "root : " << location.block[i].value << std::endl;
                         root = location.block[i].value;
+                        struct stat st;
+                    stat((root + file).c_str(), &st);
+                    if (S_ISDIR(st.st_mode))
+                    {
+                        location.block[i].value = root + file;
+                        return &location;
+                    }
+                    else
+                    {
+                        for (size_t j = 0; j < location.block.size(); j++)
+                        {
+                            if (location.block[j].name == "index")
+                            {
+                                location.block[j].value = file;
+                                return &location;
+                            }
+                        }
+                        Directive index;
+                        index.name = "index";
+                        index.value = file;
+                        location.block.push_back(index);
+                        return &location;
+                    }
                     }
                 }
-                std::cout << "file : " << file << std::endl;
-                std::cout << "path : " << root + file << std::endl;
-                // TODO: file의 맨 처음 "/" 없애주기
-                // TODO:
-                // root/bbbb/cccc/dddd/eeee가 파일일 경우,
-                // /aaaa location의 index를 bbbb/cccc/dddd/eeee로 변경
-                // root/bbbb/cccc/dddd/eeee가 존재하지 않을 경우,
-                // /aaaa location의 index를 bbbb/cccc/dddd/eeee로 변경
-                // root/bbbb/cccc/dddd/eeee가 디렉토리일 경우,
-                // /aaaa location의 root를 root/bbbb/cccc/dddd/eeee로 변경
                 return &location;
             }
         }
