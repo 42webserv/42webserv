@@ -3,14 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/05/29 14:08:26 by seokchoi         ###   ########.fr       */
-=======
-/*   Updated: 2023/05/29 15:31:17 by chanwjeo         ###   ########.fr       */
->>>>>>> develop
+/*   Updated: 2023/05/29 16:24:31 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

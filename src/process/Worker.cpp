@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 16:24:28 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 17:16:21 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		return false;
 	if (result->port == -1)
 		result->port = strtod(listen[0].value.c_str(), NULL);
-	UData *uData = static_cast<UData *>(event.udata);
+	responseUData = static_cast<UData *>(event.udata);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
 		if (checkHeaderIsKeepLive(result))
@@ -140,13 +140,11 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 			struct kevent eventToDelete;
 			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
-			uData->writeEventExist = false;
+			responseUData->writeEventExist = false;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
 		responseUData->max = responseUData->max - 1;
-		// if (responseUData->max > 0)
-		// 	std::cout << "max = " << responseUData->max << std::endl;
 		if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
 			sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
@@ -290,7 +288,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// TODO 이건 뭘지 확인하기.
 		if (response->contentLength == 0)
 		{
-			std::cout << "here" << std::endl;
 			delete response;
 			return;
 		}
