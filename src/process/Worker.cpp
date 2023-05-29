@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 14:49:07 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:55:30 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -326,11 +326,11 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else if (response->method == "PUT")
 	{
-		std::cout << "PUT" << std::endl;
+		// std::cout << "PUT" << std::endl;
 		// temp
 		std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
 		resourcePath += response->path.substr(response->path.find_last_of('/'));
-		std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
+		// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
 
 		std::ofstream outFile(resourcePath, std::ios::out | std::ios::trunc);
 		if (outFile.is_open())
@@ -342,10 +342,10 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			if (!resource_file.is_open())
 				return errorResponse(response->clientFd);
 			std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
-			std::string response_header = generateHeader(resource_content, "text/html", 201);
-			ftSend(response, response_header);
+			std::string resource_header = generateHeader(resource_content, "text/html", 201);
+			ftSend(response, resource_header);
+			ftSend(response, resource_content);
 			resource_file.close();
-			std::cout << "PUT2" << std::endl;
 		}
 		else
 		{
