@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 13:02:57 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 13:41:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
 		{
-			sockets.push_back(new Socket(master.getEvents(), server.servers[i].ports[j]));
+			sockets.push_back(new Socket(master.getEvents(), server.servers[i].ports[j], kq));
 		}
 	}
 }
@@ -113,7 +113,9 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
 	if (!result)
+	{
 		return false;
+	}
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
 	if (result->method != "HEAD" && result->headers.size() == 0)
 		return false;
@@ -133,7 +135,6 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
-			std::cout << fd << " : 응답 완료" << std::endl;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
@@ -260,7 +261,6 @@ void Worker::run()
  */
 void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
-	std::cout << "bbbb" << std::endl;
 	Response res;
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
@@ -326,6 +326,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	}
 	else if (response->method == "PUT")
 	{
+		std::cout << "PUT" << std::endl;
 		// temp
 		std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
 		resourcePath += response->path.substr(response->path.find_last_of('/'));
