@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 18:04:37 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:39:08 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,8 +214,11 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	Response responseClass(request.port, this->server);
 	ResponseData *response = responseClass.getResponseData(request, client_fd, config);
-	if (response->path == "/session") // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+	if (response->path == "/session" && responseUData->sessionID == "" &&
+		responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
+	else if (response->path == "/session/delete")
+		responseUData->wantToDeleteSessionInCookie = true;
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
@@ -376,7 +379,19 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "HTTP/1.1 200 OK\r\n";
 	oss << "Content-Length: " << content.length() << "\r\n";
 	oss << "Content-Type: " << contentType << "\r\n"; // MIME type can be changed as needed
-	if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
+	if (responseUData->alreadySessionSend == true &&
+		responseUData->sessionID != "" &&
+		responseUData->wantToDeleteSessionInCookie == true)
+	{
+		std::string expireTime = getExpiryDate(-3600);
+		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
+			<< "; Expires=" << expireTime << "\r\n";
+		responseUData->alreadySessionSend = false;
+		responseUData->expireTime = "";
+		responseUData->wantToDeleteSessionInCookie = false;
+		responseUData->sessionID = "";
+	}
+	else if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
 	{
 		std::string expireTime = getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
@@ -544,16 +559,14 @@ std::string Worker::getExpiryDate(int secondsToAdd)
 
 void Worker::cookieCheck(HTTPRequest *result)
 {
-	if (result->headers.find("Cookie") != result->headers.end() && responseUData->alreadySessionSend == true)
+	if (result->headers.find("Cookie") != result->headers.end())
 	{
 		std::string cookie = result->headers["Cookie"];
 		if (cookie.find("sessionid="))
 		{
 			std::string cookieSessionId = cookie.substr(10, 42);
 			if (responseUData->sessionID == cookieSessionId)
-			{
 				responseUData->sesssionValid = true;
-			}
 			else
 				responseUData->sesssionValid = false;
 		}

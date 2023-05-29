@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/26 14:12:12 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:08:26 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,7 @@ void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients
 int Socket::enableKeepAlive(int socketFd)
 {
     int keepAlive = 1;
-    int keepAliveInterval = 5;
+    int keepAliveInterval = 30;
 
     // SO_KEEPALIVE 옵션 활성화
     if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive)) < 0)

@@ -8,3 +8,6 @@ kill -9 PID
 
 PID 찾고 프로세스 죽이기
 lsof -i:8080 | awk 'FNR == 2 {print $2}' | xargs kill -9
+
+TIME_WAIT 상태 찾기
+netstat -an | grep TIME_WAIT
