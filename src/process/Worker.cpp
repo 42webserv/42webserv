@@ -464,6 +464,10 @@ void Worker::getResponse(ResponseData *response)
 		{
 			if (response->autoindex)
 				return broad(response);
+			else if (!response->redirect.empty())
+			{
+				return redirection(response);
+			}
 			else
 				return errorResponse(response->clientFd);
 		}
@@ -689,4 +693,14 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		}
 		Socket::enableKeepAlive(client_fd);
 	}
+}
+
+void Worker::redirection(ResponseData *response)
+{
+	std::ostringstream oss;
+	oss << "HTTP/1.1 " << response->returnState << " ok\r\n";
+	oss << "Location: " << response->redirect << CRLF;
+	oss << "Connection: close\r\n\r\n";
+	ftSend(response->clientFd, oss.str());
+	return ;
 }
