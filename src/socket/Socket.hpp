@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 22:52:17 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 16:18:59 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,11 @@ struct UData
         this->max = -1;
         this->timeout = -1;
         this->writeEventExist = false;
+        std::string sessionID = "";
+        this->alreadySessionSend = false;
+        this->sesssionValid = false;
+        this->expireTime = "";
+        this->wantToDeleteSessionInCookie = false;
     };
     int fd;
     int max;
@@ -47,6 +52,11 @@ struct UData
     bool keepLive;
     bool isClient;
     bool writeEventExist;
+    std::string sessionID;
+    bool alreadySessionSend;
+    bool sesssionValid;
+    std::string expireTime;
+    bool wantToDeleteSessionInCookie;
 };
 
 class Socket

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/27 22:46:55 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 16:19:32 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ private:
 	Config config;
 	Server server;
 	HTTPRequestParser parser;
+	UData *responseUData;
 	std::vector<Directive> listen;
 
 	void eventEVError(int k, struct kevent &event);
@@ -71,6 +72,10 @@ private:
 	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
 	void setTimer(int fd, int timeout);
 	void deleteTimer(int fd);
+	std::string generateSessionID(int length);
+	std::string getExpiryDate(int secondsToAdd);
+	bool isCookieValid(const std::string &expireTime);
+	void cookieCheck(HTTPRequest *result);
 	void redirection(ResponseData *response);
 
 public:

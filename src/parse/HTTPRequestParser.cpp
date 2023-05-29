@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 15:36:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 16:28:04 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
-        std::cout << "hereherhe" << std::endl;
         if (request->method == "HEAD")
             return request;
         // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
@@ -90,7 +89,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             request->port = -1;
         request->body = body_;
         request->addr = addr_;
-        printResult(*request);
         return request;
     }
     return NULL;
@@ -234,12 +232,9 @@ bool HTTPRequestParser::parseHeaderValue()
     }
     if (buffer_.substr(0, 2) == CRLF)
     {
-        std::cout << "here" << std::endl;
         buffer_.erase(0, 2);
         body_ = "";
         state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
-        if (state_ == COMPLETE)
-            std::cout << "com3" << std::endl;
         // std::cout << "state_ :" << method_ << std::endl;
         // if (state_ == BODY && buffer_.empty())
         // {

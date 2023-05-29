@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 15:37:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 17:16:21 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,12 +121,13 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		return false;
 	if (result->port == -1)
 		result->port = strtod(listen[0].value.c_str(), NULL);
-	UData *uData = static_cast<UData *>(event.udata);
+	responseUData = static_cast<UData *>(event.udata);
 	if (clients.find(fd) != clients.end() && result != NULL)
 	{
 		if (checkHeaderIsKeepLive(result))
 			registerKeepAlive(result, event, fd);
-		if (uData->max == 0)
+		cookieCheck(result);
+		if (responseUData->max == 0)
 		{
 			std::cout << "max is zero, disconnection!" << std::endl;
 			sockets[k]->disconnectClient(fd, clients, event);
@@ -139,14 +140,12 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 			struct kevent eventToDelete;
 			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
-			uData->writeEventExist = false;
+			responseUData->writeEventExist = false;
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
-		uData->max = uData->max - 1;
-		// if (uData->max > 0)
-		// 	std::cout << "max = " << uData->max << std::endl;
-		if (!checkHeaderIsKeepLive(result) || uData->max == 0)
+		responseUData->max = responseUData->max - 1;
+		if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
 			sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
 	}
@@ -177,24 +176,6 @@ bool Worker::eventFilterTimer(int k, struct kevent &event)
 	return true;
 }
 
-int Worker::findSocketIndex(struct kevent &event) // 안필요할 것 같은데 일단 남겨둠.
-{
-	int k;
-
-	k = 0;
-	for (size_t j = 0; j < sockets.size(); j++)
-	{
-		if (sockets[j]->findClientFd(event.ident) == true)
-		{
-			k = j;
-			return (k);
-		}
-		k = j;
-	}
-	std::cout << "fd is not exist" << std::endl;
-	return (-1);
-}
-
 void Worker::run()
 {
 	struct kevent events[10];
@@ -221,12 +202,6 @@ void Worker::run()
 		{
 			for (int i = 0; i < nevents; i++)
 			{
-				// std::cout << "filter : " << event.filter << std::endl;
-				// if ((k = findSocketIndex(events[i]) == -1))
-				// {
-				// 	std::cout << k << " : not exist" << std::endl;
-				// 	continue;
-				// }
 				event = events[i];
 				fd = event.ident;
 
@@ -269,6 +244,11 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 {
 	Response res;
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
+	if (response->path == "/session" && responseUData->sessionID == "" &&
+		responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+		responseUData->sessionID = generateSessionID(32);
+	else if (response->path == "/session/delete")
+		responseUData->wantToDeleteSessionInCookie = true;
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
@@ -308,7 +288,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// TODO 이건 뭘지 확인하기.
 		if (response->contentLength == 0)
 		{
-			std::cout << "here" << std::endl;
 			delete response;
 			return;
 		}
@@ -551,7 +530,30 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
 	oss << "Content-Length: " << content.length() << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
-	oss << "Connection: keep-alive" << CRLF2;
+	if (responseUData->alreadySessionSend == true &&
+		responseUData->sessionID != "" &&
+		responseUData->wantToDeleteSessionInCookie == true)
+	{
+		std::string expireTime = getExpiryDate(-3600);
+		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
+			<< "; Expires=" << expireTime << CRLF;
+		responseUData->alreadySessionSend = false;
+		responseUData->expireTime = "";
+		responseUData->wantToDeleteSessionInCookie = false;
+		responseUData->sessionID = "";
+	}
+	else if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
+	{
+		std::string expireTime = getExpiryDate(3600);
+		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
+			<< "; Expires=" << expireTime << CRLF;
+		responseUData->alreadySessionSend = true;
+		responseUData->expireTime = expireTime;
+	}
+	if (responseUData->keepLive)
+		oss << "Connection: keep-alive" << CRLF2;
+	else
+		oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
@@ -695,6 +697,64 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 	}
 }
 
+std::string Worker::getExpiryDate(int secondsToAdd)
+{
+	std::time_t now = std::time(0);
+	std::tm *expiration = std::localtime(&now);
+	expiration->tm_sec += secondsToAdd;
+	std::mktime(expiration);
+	char buffer[80];
+	std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
+	return std::string(buffer);
+}
+
+void Worker::cookieCheck(HTTPRequest *result)
+{
+	if (result->headers.find("Cookie") != result->headers.end())
+	{
+		std::string cookie = result->headers["Cookie"];
+		if (cookie.find("sessionid="))
+		{
+			std::string cookieSessionId = cookie.substr(10, 42);
+			if (responseUData->sessionID == cookieSessionId)
+				responseUData->sesssionValid = true;
+			else
+				responseUData->sesssionValid = false;
+		}
+		responseUData->sesssionValid = isCookieValid(responseUData->expireTime);
+		if (responseUData->sesssionValid)
+			std::cout << "session is valid" << std::endl;
+		else
+			std::cout << "session is invalid" << std::endl;
+	}
+	else
+		responseUData->sesssionValid = false;
+}
+
+bool Worker::isCookieValid(const std::string &expireTime)
+{
+	std::tm expirationTime = {};
+	if (strptime(expireTime.c_str(), "%a, %d %b %Y %H:%M:%S", &expirationTime) == 0)
+		return false;
+	std::time_t currentTime = std::time(0);
+	std::time_t expiration = std::mktime(&expirationTime);
+	if (currentTime >= expiration)
+		return false;
+	return true;
+}
+
+std::string Worker::generateSessionID(int length)
+{
+	const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	std::string sessionID;
+	std::srand(std::time(0));
+	for (int i = 0; i < length; i++)
+	{
+		int index = std::rand() % charset.length();
+		sessionID += charset[index];
+	}
+	return sessionID;
+}
 void Worker::redirection(ResponseData *response)
 {
 	std::ostringstream oss;
