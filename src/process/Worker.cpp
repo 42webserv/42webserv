@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 14:55:30 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:19:55 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,6 +284,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
 			if ((response->resourcePath = getCGILocation(response)) == "")
 			{
+				std::cout << "getLocation" << std::endl;
 				// error_page
 				return;
 			}
@@ -308,6 +309,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		if (isCGIRequest(response))
 		{
 			// cgi post method 실행
+			std::cout << "YOUPI.BLA" << std::endl;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
 		if (request.body.length() == 0)
@@ -403,8 +405,22 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
  */
 std::string Worker::getCGILocation(ResponseData *response)
 {
-	if (response->location->value == "/result ")
-		return response->root + "/" + response->index;
+	for (size_t i = 0; i < response->server.locations.size(); ++i)
+	{
+		if (response->server.locations[i].value == "/result ")
+		{
+			std::string root = "";
+			std::string index = "";
+			for (size_t j = 0; j < response->server.locations[i].block.size(); j++)
+			{
+				if (response->server.locations[i].block[j].name == "root")
+					root = response->server.locations[i].block[j].value;
+				if (response->server.locations[i].block[j].name == "index")
+					index = response->server.locations[i].block[j].value;
+			}
+			return root + "/" + index;
+		}
+	}
 	return "";
 }
 

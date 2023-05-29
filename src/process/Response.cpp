@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/28 23:03:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:11:17 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
         index = 0;
     ServerInfo server = serverManger.servers[index];
     ResponseData *response = new ResponseData;
+    response->server = server;
     response->index = server.index;
     response->path = request.path;
     response->method = request.method;
