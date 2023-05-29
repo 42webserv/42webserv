@@ -45,7 +45,7 @@ struct ResponseData
     std::string redirect;
     Directive *location;
     std::string locationName;
-    std::string path; // path중 locationName 부분을 지운 나머지 경로
+    std::string path; // request의 path그대로 가져옴
     // CGIData *cgi;
     bool autoindex;
     std::string body;

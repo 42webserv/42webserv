@@ -429,27 +429,15 @@ bool Worker::isCGIRequest(ResponseData *response)
 void Worker::getResponse(ResponseData *response)
 {
 	struct stat st;
-	// if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
-	// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
 	stat(response->resourcePath.c_str(), &st);
-	if (!S_ISREG(st.st_mode)) // root + index을 검사해 파일이 아닐시 if로 분기
+	if (!S_ISREG(st.st_mode))
 	{
-		response->resourcePath = response->root + response->path; // root + path로 다시 검사
-		std::memset(&st, 0, sizeof(st));
-		// if (!stat(response->resourcePath.c_str(), &st))
-		// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
-		stat(response->resourcePath.c_str(), &st);
-		if (!S_ISREG(st.st_mode))
-		{
-			if (response->autoindex)
-				return broad(response);
-			else if (!response->redirect.empty())
-			{
-				return redirection(response);
-			}
-			else
-				return errorResponse(response->clientFd);
-		}
+		if (response->autoindex)
+			return broad(response);
+		else if (!response->redirect.empty())
+			return redirection(response);
+		else
+			return errorResponse(response->clientFd);
 	}
 	std::ifstream resource_file(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
 	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
@@ -466,23 +454,15 @@ void Worker::postResponse(ResponseData *response) // request body 추가하기
 {
 	// request 사용?
 	struct stat st;
-	// if (!stat(response->resourcePath.c_str(), &st)) // 파일인지 디렉토리인지 검사하기위해 stat함수 사용
-	// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
 	stat(response->resourcePath.c_str(), &st);
-	if (!S_ISREG(st.st_mode)) // root + index을 검사해 파일이 아닐시 if로 분기
+	if (!S_ISREG(st.st_mode))
 	{
-		response->resourcePath = response->root + response->path; // root + path로 다시 검사
-		std::memset(&st, 0, sizeof(st));
-		// if (!stat(response->resourcePath.c_str(), &st))
-		// 	std::cerr << "Failed to get information about " << response->resourcePath.c_str() << std::endl;
-		stat(response->resourcePath.c_str(), &st);
-		if (!S_ISREG(st.st_mode))
-		{
-			if (response->autoindex)
-				return broad(response);
-			else
-				return errorResponse(response->clientFd);
-		}
+		if (response->autoindex)
+			return broad(response);
+		else if (!response->redirect.empty())
+			return redirection(response);
+		else
+			return errorResponse(response->clientFd);
 	}
 	std::ofstream outFile(response->resourcePath, std::ios::out | std::ios::trunc);
 	outFile << response->body;
@@ -755,6 +735,7 @@ std::string Worker::generateSessionID(int length)
 	}
 	return sessionID;
 }
+
 void Worker::redirection(ResponseData *response)
 {
 	std::ostringstream oss;
