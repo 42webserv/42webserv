@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 15:11:17 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 16:52:29 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,18 +235,18 @@ std::string Response::getRootDirectory(const HTTPRequest &request, const ServerI
 //                 return static_cast<int>(i);
 //         }
 //     }
-// size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
-// while (pos != std::string::npos)
-// {
-//     std::string tmp = request.path.substr(0, pos);
-//     for (size_t i = 0; i < thisServer.location.size(); ++i)
+//     size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+//     while (pos != std::string::npos)
 //     {
-//         if (thisServer.location[i].value == tmp)
-//             return static_cast<int>(i);
+//         std::string tmp = request.path.substr(0, pos);
+//         for (size_t i = 0; i < thisServer.location.size(); ++i)
+//         {
+//             if (thisServer.location[i].value == tmp)
+//                 return static_cast<int>(i);
+//         }
+//         tmp = tmp.erase(pos);
+//         pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
 //     }
-//     tmp = tmp.erase(pos);
-//     pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
-// }
 //     return -1;
 // }
 
@@ -270,6 +270,35 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
             if (pos != std::string::npos)
                 return &location;
         }
+    }
+    size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
+    while (pos != std::string::npos)
+    {
+        std::string tmp = request.path.substr(0, pos);
+        for (std::vector<Directive>::iterator it = locations.begin(); it != locations.end(); it++)
+        {
+            Directive &location = *it;
+            location.value.erase(location.value.find_last_not_of(' ') + 1);
+            if (location.value == tmp)
+            {
+                std::string file = request.path.substr(pos, request.path.length());
+                std::cout << "location : " << tmp << std::endl;
+                std::string root;
+                for (size_t i = 0; i < location.block.size(); i++)
+                {
+                    if (location.block[i].name == "root")
+                    {
+                        std::cout << "root : " << location.block[i].value << std::endl;
+                        root = location.block[i].value;
+                    }
+                }
+                std::cout << "file : " << file << std::endl;
+                std::cout << "path : " << root + file << std::endl;
+                return &location;
+            }
+        }
+        tmp = tmp.erase(pos);
+        pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
     }
     return NULL;
 }
