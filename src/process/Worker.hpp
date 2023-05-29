@@ -71,6 +71,7 @@ private:
 	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
 	void setTimer(int fd, int timeout);
 	void deleteTimer(int fd);
+	void redirection(ResponseData *response);
 
 public:
 	Worker(Master &master);
