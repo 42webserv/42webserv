@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 16:52:29 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 17:42:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -294,6 +294,14 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
                 }
                 std::cout << "file : " << file << std::endl;
                 std::cout << "path : " << root + file << std::endl;
+                // TODO: file의 맨 처음 "/" 없애주기
+                // TODO:
+                // root/bbbb/cccc/dddd/eeee가 파일일 경우,
+                // /aaaa location의 index를 bbbb/cccc/dddd/eeee로 변경
+                // root/bbbb/cccc/dddd/eeee가 존재하지 않을 경우,
+                // /aaaa location의 index를 bbbb/cccc/dddd/eeee로 변경
+                // root/bbbb/cccc/dddd/eeee가 디렉토리일 경우,
+                // /aaaa location의 root를 root/bbbb/cccc/dddd/eeee로 변경
                 return &location;
             }
         }
