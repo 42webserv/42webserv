@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 15:19:59 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:31:17 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <fcntl.h>
 #include <iostream>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include "commonError.hpp"
@@ -23,17 +24,36 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
 {
     struct kevent event;
     this->_port = port;
+    int opt;
 
     // Create an AF_INET stream socket to receive incoming connections on
     if (_serverFd < 0)
         errorExit("socket()");
 
-    int on = 1;
+    opt = 1;
     // Allow socket descriptor to be reuseable
-    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0)
+    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
     {
         close(_serverFd);
         errorExit("setsockopt()");
+    }
+
+    struct linger linger;
+    linger.l_onoff = 1;
+    linger.l_linger = 10;
+    // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
+    if (setsockopt(_serverFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
+    {
+        close(_serverFd);
+        errorExit("setsockopt()");
+    }
+
+    opt = 1;
+    // Nagle 알고리즘 사용하지 않게 하기
+    if (setsockopt(_serverFd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) < 0)
+    {
+        perror("setsockopt");
+        exit(1);
     }
 
     // Bind the socket

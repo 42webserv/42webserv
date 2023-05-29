@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 14:53:35 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 15:36:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,17 +52,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             break;
         case HEADER_VALUE:
             if (!parseHeaderValue())
-            {
-                std::cout << "here" << std::endl;
                 return NULL;
-                HTTPRequest *request = new HTTPRequest;
-                request->method = method_;
-                request->path = path_;
-                request->http_version = http_version_;
-                request->port = -1;
-                // request->headers.insert(std::make_pair("Host", ));
-                return request;
-            }
             break;
         case BODY:
             if (!parseBody())
@@ -79,6 +69,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
+        std::cout << "hereherhe" << std::endl;
         if (request->method == "HEAD")
             return request;
         // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
@@ -99,10 +90,9 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             request->port = -1;
         request->body = body_;
         request->addr = addr_;
-        reset();
+        printResult(*request);
         return request;
     }
-
     return NULL;
 }
 
@@ -163,7 +153,7 @@ bool HTTPRequestParser::parseHTTPVersion()
 {
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
-    size_t pos3 = buffer_.find("\r\n");
+    size_t pos3 = buffer_.find(CRLF);
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
     size_t pos = minPos(pos1, pos2, pos3);
@@ -179,7 +169,10 @@ bool HTTPRequestParser::parseHTTPVersion()
     else if (buffer_.find("\r") == 0)
         buffer_.erase(0, 1);
     if (buffer_.empty())
+    {
+        std::cout << "com1" << std::endl;
         state_ = COMPLETE;
+    }
     return true;
 }
 
@@ -194,7 +187,9 @@ bool HTTPRequestParser::parseHeaderName()
     // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
     {
-        state_ = COMPLETE;
+        std::cout << "com2" << std::endl;
+        // return false;
+        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
         buffer_.clear();
         return true;
     }
@@ -214,10 +209,10 @@ bool HTTPRequestParser::parseHeaderValue()
 {
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
-    size_t pos3 = buffer_.find("\r\n");
+    size_t pos3 = buffer_.find(CRLF);
     if ((method_ != "POST" && method_ != "HEAD") && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
     {
-        std::cout << "HEAD : " << method_ << std::endl;
+        // std::cout << "HEAD : " << method_ << std::endl;
         return false;
     }
     size_t pos = minPos(pos1, pos2, pos3);
@@ -239,19 +234,34 @@ bool HTTPRequestParser::parseHeaderValue()
     }
     if (buffer_.substr(0, 2) == CRLF)
     {
+        std::cout << "here" << std::endl;
         buffer_.erase(0, 2);
-        state_ = (method_ == "GET" || method_ == "HEAD" || method_ == "DELETE" || method_ == "CONNECT" || method_ == "TRACE" || method_ == "OPTIONS") ? COMPLETE : BODY;
         body_ = "";
-        if (state_ == BODY && buffer_.empty())
-            state_ = COMPLETE;
+        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
+        if (state_ == COMPLETE)
+            std::cout << "com3" << std::endl;
+        // std::cout << "state_ :" << method_ << std::endl;
+        // if (state_ == BODY && buffer_.empty())
+        // {
+        //     std::cout << "com4" << std::endl;
+        //     state_ = COMPLETE;
+        // }
     }
     else if (buffer_.empty())
-        state_ = COMPLETE;
-    else
     {
-        state_ = HEADER_NAME;
+        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
     }
+    else
+        state_ = HEADER_NAME;
     return true;
+}
+
+std::string sizeToString(size_t value)
+{
+    char buffer[20];                                     // Choose an appropriate size for the buffer
+    std::memset(buffer, 0, sizeof(buffer));              // Clear the buffer
+    std::snprintf(buffer, sizeof(buffer), "%zu", value); // Use snprintf to format the value as a string
+    return buffer;
 }
 
 /**
@@ -261,7 +271,7 @@ bool HTTPRequestParser::parseHeaderValue()
  */
 bool HTTPRequestParser::parseBody()
 {
-    if (method_ == "POST")
+    if (method_ == "POST" || method_ == "PUT")
     {
         std::map<std::string, std::string>::iterator it =
             headers_.find("content-length");
@@ -273,7 +283,15 @@ bool HTTPRequestParser::parseBody()
             body_ = buffer_.substr(0, content_length);
             buffer_.erase(0, content_length);
         }
+        else
+        {
+            headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
+            body_ = buffer_.substr(0, buffer_.size());
+            buffer_.clear();
+        }
     }
+    if (body_ == "")
+        return false;
     state_ = COMPLETE;
     return true;
 }
