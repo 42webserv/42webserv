@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 19:24:13 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/29 19:53:21 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,9 +39,6 @@ Signal::~Signal()
 
 void Signal::handleEvent(const struct kevent &event, std::vector<Socket *> &sockets) const
 {
-	for (size_t i = 0; i < sockets.size(); i++)
-		delete sockets[i];
-	exit(EXIT_SUCCESS);
 	int sig = event.ident;
 	// TODO 디버깅으로 돌리면 종료되지 않음. 왜 그런지 확인 필요
 	for (size_t i = 0; i < MAX_SIGNAL; i++)
