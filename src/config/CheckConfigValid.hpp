@@ -24,9 +24,9 @@ private:
 	static std::stack<std::string> _block_stack;
 	static void ParseStream(std::istream &input_stream);
 	static std::string Trim(const std::string &str);
+	CheckConfigValid();
 
 public:
-	CheckConfigValid();
 	~CheckConfigValid();
 	static bool Parse(const std::string &file_path);
 };

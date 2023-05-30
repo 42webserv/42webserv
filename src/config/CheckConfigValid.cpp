@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/29 21:02:55 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/04/30 18:42:16 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 13:31:33 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,19 +45,13 @@ void CheckConfigValid::ParseStream(std::istream &input_stream)
 	{
 		line = Trim(line);
 		if (line.empty())
-		{
 			continue;
-		}
 		if (line.front() == '#')
-		{
 			continue;
-		}
 		if (line.front() == '}')
 		{
 			if (_block_stack.empty())
-			{
 				throw std::runtime_error("Unexpected '}'");
-			}
 			_block_stack.pop();
 			continue;
 		}
@@ -65,32 +59,24 @@ void CheckConfigValid::ParseStream(std::istream &input_stream)
 		if (found == std::string::npos)
 		{
 			if (_block_stack.empty())
-			{
 				throw std::runtime_error("Unexpected directive: " + line);
-			}
 		}
 		else
 		{
 			if (found != line.size() - 1)
-			{
 				throw std::runtime_error("Unexpected character after '{'");
-			}
 			std::string block_name = line.substr(0, found);
 			block_name = Trim(block_name);
 			if (block_name.empty())
-			{
 				throw std::runtime_error("Empty block name");
-			}
 			_block_stack.push(block_name);
 		}
 	}
 	if (!_block_stack.empty())
-	{
 		throw std::runtime_error("Missing '}'");
-	}
 }
 
-std::string CheckConfigValid::Trim(const std::string &str) // 양쪽 끝의 공백 제거
+std::string CheckConfigValid::Trim(const std::string &str)
 {
 	std::size_t first = str.find_first_not_of(' ');
 	if (first == std::string::npos)
