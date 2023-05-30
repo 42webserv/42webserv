@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/24 22:15:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/29 20:20:51 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <stack>
 #include <sys/stat.h>
 #include "CheckConfigValid.hpp"
+#include "commonProcess.hpp"
 #include "Config.hpp"
 #include "DefaultConfig.hpp"
 
@@ -310,11 +311,8 @@ std::vector<std::string> Config::split(std::string input, char delimiter)
 
 bool Config::_isDirectoryExists(const std::string &directoryPath, std::string directiveName)
 {
-	struct stat dirStat;
-	if (stat(directoryPath.c_str(), &dirStat) == 0 && S_ISDIR(dirStat.st_mode))
-	{
+	if (isDirectory(directoryPath))
 		return true;
-	}
 	std::cerr << "Error: " << directiveName << " value must be directory " << std::endl;
 	exit(1);
 	return false;
@@ -342,11 +340,8 @@ bool Config::_isFileExists(const std::vector<Directive> directives, const std::s
 	if (filePath[0] != '/' && root != "")
 		root += "/";
 	root += filePath;
-	struct stat fileStat;
-	if (stat(root.c_str(), &fileStat) == 0 && S_ISREG(fileStat.st_mode))
-	{
+	if (isFile(root))
 		return true;
-	}
 	std::cerr << "Error: " << directiveName << " value must be file " << std::endl;
 	exit(1);
 	return false;
@@ -354,12 +349,12 @@ bool Config::_isFileExists(const std::vector<Directive> directives, const std::s
 
 void Config::_checkEmpty(std::string &value, std::string directiveName, bool exist)
 {
-	if (value == "" && exist)
+	if (value.empty() && exist)
 	{
 		std::cerr << "Error: " << directiveName << " value must be not empty" << std::endl;
 		exit(1);
 	}
-	if (value != "" && !exist)
+	if (!value.empty() && !exist)
 	{
 		std::cerr << "Error: " << directiveName << " value must be empty" << std::endl;
 		exit(1);
@@ -459,7 +454,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives, std::vector<Di
 			for (size_t i = 0; i < excepts.size(); i++)
 			{
 				// TODO : GET, POST, DELETE, PUT 외에 다른 메소드가 들어오면 에러 처리를 잡아주는 함수로 변경하기.
-				if (excepts[i] != "GET" && excepts[i] != "POST" && excepts[i] != "DELETE" && excepts[i] != "PUT")
+				if (excepts[i] != GET && excepts[i] != POST && excepts[i] != DELETE && excepts[i] != PUT)
 				{
 					std::cerr << "Error: limit_except value must be GET or POST or DELETE" << std::endl;
 					exit(1);

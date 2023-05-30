@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 17:16:21 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 13:32:08 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@ Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), even
 	{
 		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
 		{
-			sockets.push_back(new Socket(master.getEvents(), server.servers[i].ports[j], kq));
+			Socket *socket = new Socket(master.getEvents(), server.servers[i].ports[j], kq);
+			sockets.push_back(socket);
 		}
 	}
 }
@@ -47,8 +48,7 @@ void Worker::eventEVError(int k, struct kevent &event)
 
 bool Worker::eventFilterRead(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	if (fd == sockets[k]->_serverFd)
 	{
@@ -59,7 +59,7 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 	{
 		char buf[1024];
 		int n = 1;
-		while (0 < (n = read(fd, buf, sizeof(buf))))
+		while (0 < (n = recv(fd, buf, sizeof(buf), 0)))
 		{
 			buf[n] = '\0';
 			clients[fd] += buf;
@@ -108,16 +108,13 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 
 bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
 	if (!result)
-	{
 		return false;
-	}
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	if (result->method != "HEAD" && result->headers.size() == 0)
+	if (result->method != HEAD && result->headers.size() == 0)
 		return false;
 	if (result->port == -1)
 		result->port = strtod(listen[0].value.c_str(), NULL);
@@ -157,8 +154,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 
 bool Worker::eventEOF(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	std::cout << "client want to disconnect" << std::endl;
 	sockets[k]->disconnectClient(fd, clients, event);
@@ -167,8 +163,7 @@ bool Worker::eventEOF(int k, struct kevent &event)
 
 bool Worker::eventFilterTimer(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	std::cout << fd << " is time over" << std::endl;
 	deleteTimer(fd);
@@ -240,12 +235,11 @@ void Worker::run()
  * @param request request 를 파싱완료한 구조체
  * @param client_fd 서버의 fd
  */
-void Worker::requestHandler(const HTTPRequest &request, int client_fd)
+void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 {
 	Response res;
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
-	if (response->path == "/session" && responseUData->sessionID == "" &&
-		responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
 	else if (response->path == "/session/delete")
 		responseUData->wantToDeleteSessionInCookie = true;
@@ -253,7 +247,6 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
-		// method not allowed
 		std::string response_content = "Method not allowed";
 		std::string response_header = generateErrorHeader(405, response_content);
 		ftSend(response, response_header);
@@ -262,13 +255,14 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		return;
 	}
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (response->method == "GET")
+	if (response->method == GET)
 	{
 		if (isCGIRequest(response))
 		{
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
-			if ((response->resourcePath = getCGILocation(response)) == "")
+			response->resourcePath = getCGILocation(response);
+			if (response->resourcePath.empty())
 			{
 				std::cout << "getLocation" << std::endl;
 				// error_page
@@ -283,7 +277,7 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		}
 		getResponse(response);
 	}
-	else if (response->method == "POST")
+	else if (response->method == POST)
 	{
 		// TODO 이건 뭘지 확인하기.
 		if (response->contentLength == 0)
@@ -319,45 +313,17 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
 		postResponse(response);
 	}
-	else if (response->method == "HEAD")
+	else if (response->method == HEAD)
 	{
 		// HEAD 메소드는 GET 메소드와 동일하지만, body가 없습니다.
 		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
 		getResponse(response);
 	}
-	else if (response->method == "PUT")
+	else if (response->method == PUT)
 	{
-		// std::cout << "PUT" << std::endl;
-		// temp
-		std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
-		resourcePath += response->path.substr(response->path.find_last_of('/'));
-		// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
-
-		std::ofstream outFile(resourcePath, std::ios::out | std::ios::trunc);
-		if (outFile.is_open())
-		{
-			outFile << response->body;
-			outFile.close();
-			// 리소스 생성에 성공한 경우
-			std::ifstream resource_file(resourcePath);
-			if (!resource_file.is_open())
-				return errorResponse(response->clientFd);
-			std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
-			std::string resource_header = generateHeader(resource_content, "text/html", 201);
-			ftSend(response, resource_header);
-			ftSend(response, resource_content);
-			resource_file.close();
-		}
-		else
-		{
-			// 리소스 생성에 실패한 경우
-			std::string response_content = "Failed to create the resource";
-			std::string response_header = generateErrorHeader(500, "text/html");
-			ftSend(response, response_header);
-			ftSend(response, response_content);
-		}
+		putResponse(response);
 	}
-	else if (response->method == "OPTIONS")
+	else if (response->method == OPTIONS)
 	{
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
@@ -366,30 +332,9 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
-	else if (response->method == "DELETE")
+	else if (response->method == DELETE)
 	{
-		std::string resourcePath = response->resourcePath;
-		std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
-		// 리소스 삭제 로직을
-		if (remove(resourcePath.c_str()) != 0)
-		{
-			// 삭제에 실패한 경우
-			std::string response_content = "Failed to delete the resource";
-			std::string response_header = generateErrorHeader(500, "text/html");
-			ftSend(response, response_header);
-			ftSend(response, response_content);
-		}
-		else
-		{
-			// 삭제에 성공한 경우
-			std::string response_content = "Resource deleted successfully";
-			std::ifstream resource_file(response->resourcePath);
-			std::string response_header = generateHeader(response_content, "text/html", 200);
-			ftSend(response, response_header);
-			ftSend(response, response_content);
-			resource_file.close();
-			return;
-		}
+		deleteResponse(response);
 	}
 	else
 		stderrExit("Unknown method");
@@ -404,18 +349,21 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
  */
 std::string Worker::getCGILocation(ResponseData *response)
 {
-	for (size_t i = 0; i < response->server.locations.size(); ++i)
+	std::vector<Directive> &locations = response->server.locations;
+	for (size_t i = 0; i < locations.size(); ++i)
 	{
-		if (response->server.locations[i].value == "/result ")
+		Directive &location = locations[i];
+		if (location.value == "/result ")
 		{
 			std::string root = "";
 			std::string index = "";
-			for (size_t j = 0; j < response->server.locations[i].block.size(); j++)
+			for (size_t j = 0; j < location.block.size(); j++)
 			{
-				if (response->server.locations[i].block[j].name == "root")
-					root = response->server.locations[i].block[j].value;
-				if (response->server.locations[i].block[j].name == "index")
-					index = response->server.locations[i].block[j].value;
+				Directive &block = location.block[j];
+				if (block.name == "root")
+					root = block.value;
+				if (block.name == "index")
+					index = block.value;
 			}
 			return root + "/" + index;
 		}
@@ -430,7 +378,7 @@ bool Worker::isCGIRequest(ResponseData *response)
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
 	size_t pos = response->path.find("cgi-bin");
-	if (pos == std::string::npos && response->method == "POST")
+	if (pos == std::string::npos && response->method == POST)
 		pos = response->path.find(".bla");
 	return (pos != std::string::npos);
 }
@@ -442,56 +390,76 @@ bool Worker::isCGIRequest(ResponseData *response)
  */
 void Worker::getResponse(ResponseData *response)
 {
-	struct stat st;
-	stat(response->resourcePath.c_str(), &st);
-	if (!S_ISREG(st.st_mode))
-	{
-		if (response->autoindex)
-			return broad(response);
-		else if (!response->redirect.empty())
-			return redirection(response);
-		else
-			return errorResponse(response->clientFd);
-	}
-	std::ifstream resource_file(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
-	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
-		return errorResponse(response->clientFd);
+	if (invalidResponse(response))
+		return;
 
-	std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
+	std::string resource_content = readFile(response->resourcePath);
+	if (resource_content.empty())
+		return errorResponse(response->clientFd);
 	std::string response_header = generateHeader(resource_content, response->contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
-	resource_file.close();
 }
 
-void Worker::postResponse(ResponseData *response) // request body 추가하기
+void Worker::postResponse(ResponseData *response)
 {
-	// request 사용?
-	struct stat st;
-	stat(response->resourcePath.c_str(), &st);
-	if (!S_ISREG(st.st_mode))
-	{
-		if (response->autoindex)
-			return broad(response);
-		else if (!response->redirect.empty())
-			return redirection(response);
-		else
-			return errorResponse(response->clientFd);
-	}
-	std::ofstream outFile(response->resourcePath, std::ios::out | std::ios::trunc);
-	outFile << response->body;
-	outFile.close();
+	if (invalidResponse(response))
+		return;
 
-	std::ifstream inFile(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
-	if (!inFile.is_open())						  // 혹시 open이 안될수있으니 한번더 체크
-		return errorResponse(response->clientFd);
-
-	// POST는 생성된 내용을 반환하지 않아도 됨.
-	std::string body = "";
+	writeFile(response->resourcePath, response->body);
+	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
 	std::string response_header = generateHeader(body, response->contentType, 201);
 	ftSend(response, response_header);
-	// ftSend(response, resource_content);
-	inFile.close();
+}
+
+void Worker::putResponse(ResponseData *response)
+{
+	// TODO 이거 경로 제대로 되게 해야 함. 임시임
+	std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
+	resourcePath += response->path.substr(response->path.find_last_of('/'));
+	// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
+
+	if (writeFile(resourcePath, response->body))
+	{
+		// 리소스 생성에 성공한 경우
+		std::string resource_content = readFile(resourcePath);
+		if (resource_content.empty())
+			return errorResponse(response->clientFd);
+		std::string resource_header = generateHeader(resource_content, "text/html", 201);
+		ftSend(response, resource_header);
+		ftSend(response, resource_content);
+	}
+	else
+	{
+		// 리소스 생성에 실패한 경우
+		std::string response_content = "Failed to create the resource";
+		std::string response_header = generateErrorHeader(500, "text/html");
+		ftSend(response, response_header);
+		ftSend(response, response_content);
+	}
+}
+
+void Worker::deleteResponse(ResponseData *response)
+{
+	std::string resourcePath = response->resourcePath;
+	std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
+
+	if (remove(resourcePath.c_str()) != 0)
+	{
+		// 삭제에 실패한 경우
+		std::string response_content = "Failed to delete the resource";
+		std::string response_header = generateErrorHeader(500, "text/html");
+		ftSend(response, response_header);
+		ftSend(response, response_content);
+	}
+	else
+	{
+		// 삭제에 성공한 경우
+		std::string response_content = "Resource deleted successfully";
+		std::string response_header = generateHeader(response_content, "text/html", 200);
+		ftSend(response, response_header);
+		ftSend(response, response_content);
+	}
 }
 
 /**
@@ -501,9 +469,8 @@ void Worker::postResponse(ResponseData *response) // request body 추가하기
  */
 void Worker::errorResponse(int client_fd)
 {
-	std::string error_path = "./assets/html/404.html";
-	std::ifstream error_file(error_path);
-	std::string error_content((std::istreambuf_iterator<char>(error_file)), std::istreambuf_iterator<char>());
+	const std::string error_path = "./assets/html/404.html";
+	std::string error_content = readFile(error_path);
 	std::string error_header = generateErrorHeader(404, error_content);
 	ftSend(client_fd, error_header);
 	ftSend(client_fd, error_content);
@@ -753,9 +720,33 @@ std::string Worker::generateSessionID(int length)
 void Worker::redirection(ResponseData *response)
 {
 	std::ostringstream oss;
-	oss << "HTTP/1.1 " << response->returnState << " ok\r\n";
+	oss << "HTTP/1.1 " << response->returnState << " ok" << CRLF;
 	oss << "Location: " << response->redirect << CRLF;
-	oss << "Connection: close\r\n\r\n";
+	oss << "Connection: close" << CRLF2;
 	ftSend(response->clientFd, oss.str());
 	return;
+}
+
+bool Worker::invalidResponse(ResponseData *response)
+{
+	if (!isFile(response->resourcePath))
+	{
+		if (response->autoindex)
+			broad(response);
+		else if (!response->redirect.empty())
+			redirection(response);
+		else
+			errorResponse(response->clientFd);
+		return true;
+	}
+	return false;
+}
+
+bool Worker::hasClientFd(const int &k)
+{
+	Socket *socket = sockets[k];
+	std::vector<int>::iterator it = std::find(socket->_clientFds.begin(), socket->_clientFds.end(), fd);
+	if (it == socket->_clientFds.end())
+		return false;
+	return true;
 }

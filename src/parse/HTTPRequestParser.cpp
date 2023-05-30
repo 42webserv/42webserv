@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 16:28:04 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/29 20:43:31 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "commonConfig.hpp"
+#include "commonProcess.hpp"
 #include "HTTPRequestParser.hpp"
 
 HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
@@ -105,12 +106,12 @@ bool HTTPRequestParser::parseMethod()
     if (pos == std::string::npos)
         return false;
     std::string method_str = buffer_.substr(0, pos);
-    if (method_str == "GET" || method_str == "HEAD" || method_str == "POST" || method_str == "PUT" || method_str == "PATCH" || method_str == "DELETE" || method_str == "CONNECT" || method_str == "TRACE" || method_str == "OPTIONS")
+    if (isMethod(method_str))
         method_ = method_str;
     else
         return false;
-    state_ = PATH;
     buffer_.erase(0, pos + 1);
+    state_ = PATH;
     return true;
 }
 
@@ -129,11 +130,11 @@ bool HTTPRequestParser::parsePath()
     // 만약 path_가 "/aaaa/bbbb/"이라면, 마지막 "/"를 제거해주기 위함.
     if (path_ != "/" && path_.substr(path_.length() - 1) == "/")
         path_ = buffer_.substr(0, pos - 1);
-    state_ = HTTP_VERSION;
     buffer_.erase(0, pos + 1);
     pos = path_.find("?");
     if (pos != std::string::npos)
         query_ = path_.substr(pos);
+    state_ = HTTP_VERSION;
     return true;
 }
 
@@ -156,7 +157,6 @@ bool HTTPRequestParser::parseHTTPVersion()
         return false;
     size_t pos = minPos(pos1, pos2, pos3);
     http_version_ = buffer_.substr(0, pos);
-    state_ = HEADER_NAME;
     // 지금까지 사용한 버퍼 지우기
     buffer_.erase(0, pos);
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
@@ -166,6 +166,7 @@ bool HTTPRequestParser::parseHTTPVersion()
         buffer_.erase(0, 2);
     else if (buffer_.find("\r") == 0)
         buffer_.erase(0, 1);
+    state_ = HEADER_NAME;
     if (buffer_.empty())
     {
         std::cout << "com1" << std::endl;
@@ -185,9 +186,7 @@ bool HTTPRequestParser::parseHeaderName()
     // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
     {
-        std::cout << "com2" << std::endl;
-        // return false;
-        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
+        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
         buffer_.clear();
         return true;
     }
@@ -208,7 +207,7 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos1 = buffer_.find("\r");
     size_t pos2 = buffer_.find("\n");
     size_t pos3 = buffer_.find(CRLF);
-    if ((method_ != "POST" && method_ != "HEAD") && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    if ((method_ != POST && method_ != HEAD) && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
     {
         // std::cout << "HEAD : " << method_ << std::endl;
         return false;
@@ -234,7 +233,7 @@ bool HTTPRequestParser::parseHeaderValue()
     {
         buffer_.erase(0, 2);
         body_ = "";
-        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
+        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
         // std::cout << "state_ :" << method_ << std::endl;
         // if (state_ == BODY && buffer_.empty())
         // {
@@ -243,9 +242,7 @@ bool HTTPRequestParser::parseHeaderValue()
         // }
     }
     else if (buffer_.empty())
-    {
-        state_ = (method_ == "POST" || method_ == "PUT") ? BODY : COMPLETE;
-    }
+        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
     else
         state_ = HEADER_NAME;
     return true;
@@ -266,26 +263,27 @@ std::string sizeToString(size_t value)
  */
 bool HTTPRequestParser::parseBody()
 {
-    if (method_ == "POST" || method_ == "PUT")
+    if (method_ != POST && method_ != PUT)
     {
-        std::map<std::string, std::string>::iterator it =
-            headers_.find("content-length");
-        if (it != headers_.end())
-        {
-            int content_length = atoi(it->second.c_str());
-            if (buffer_.size() < static_cast<size_t>(content_length))
-                return false;
-            body_ = buffer_.substr(0, content_length);
-            buffer_.erase(0, content_length);
-        }
-        else
-        {
-            headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
-            body_ = buffer_.substr(0, buffer_.size());
-            buffer_.clear();
-        }
+        state_ = COMPLETE;
+        return true;
     }
-    if (body_ == "")
+    std::map<std::string, std::string>::iterator it = headers_.find("content-length");
+    if (it != headers_.end())
+    {
+        int content_length = atoi(it->second.c_str());
+        if (buffer_.size() < static_cast<size_t>(content_length))
+            return false;
+        body_ = buffer_.substr(0, content_length);
+        buffer_.erase(0, content_length);
+    }
+    else
+    {
+        headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
+        body_ = buffer_.substr(0, buffer_.size());
+        buffer_.clear();
+    }
+    if (body_.empty())
         return false;
     state_ = COMPLETE;
     return true;
