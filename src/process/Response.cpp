@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 19:40:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 13:39:15 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,13 +72,13 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->location = findLocation(request, server.locations);
     if (response->location != NULL)
     {
-        setUpRoot(response->location->block, response);
-        setUpIndex(response->location->block, response);
-        setUpAutoindex(response->location->block, response);
-        setUpLimitExcept(response->location->block, response);
-        setUpReturnState(response->location->block, response);
+        setUpRoot(response);
+        setUpIndex(response);
+        setUpAutoindex(response);
+        setUpLimitExcept(response);
+        setUpReturnState(response);
     }
-    if (response->limitExcept.size() == 0)
+    if (response->limitExcept.size() < 1)
         response->limitExcept = server.limitExcepts;
     response->resourcePath = response->root + "/" + response->index;
     // 경로에서 확장자 찾아준 뒤, Content-Type 찾기
@@ -98,16 +98,17 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
 /**
  * location 블록 내부에서 root 지시자를 찾아 responseData->root 세팅
  *
- * @param locationBlock 파싱된 location 블록
  * @param response 반환될 responseData 구조체
  */
-void Response::setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response)
+void Response::setUpRoot(ResponseData *response)
 {
-    for (size_t i = 0; i < locationBlock.size(); i++)
+    std::vector<Directive> &block = response->location->block;
+    for (size_t i = 0; i < block.size(); i++)
     {
-        if (locationBlock[i].name == "root")
+        Directive &dir = block[i];
+        if (dir.name == "root")
         {
-            response->root = locationBlock[i].value;
+            response->root = dir.value;
             break;
         }
     }
@@ -116,16 +117,18 @@ void Response::setUpRoot(std::vector<Directive> &locationBlock, ResponseData *re
 /**
  * location 블록 내부에서 index 지시자를 찾아 responseData->index 세팅
  *
- * @param locationBlock 파싱된 location 블록
  * @param response 반환될 responseData 구조체
  */
-void Response::setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response)
+void Response::setUpIndex(ResponseData *response)
 {
-    for (size_t i = 0; i < locationBlock.size(); i++)
+    std::vector<Directive> &block = response->location->block;
+
+    for (size_t i = 0; i < block.size(); i++)
     {
-        if (locationBlock[i].name == "index")
+        Directive &dir = block[i];
+        if (dir.name == "index")
         {
-            response->index = locationBlock[i].value;
+            response->index = dir.value;
             break;
         }
     }
@@ -134,17 +137,19 @@ void Response::setUpIndex(std::vector<Directive> &locationBlock, ResponseData *r
 /**
  * location 블록 내부에서 autoindex 지시자를 찾아 responseData->autoindex 세팅
  *
- * @param locationBlock 파싱된 location 블록
  * @param response 반환될 responseData 구조체
  */
-void Response::setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response)
+void Response::setUpAutoindex(ResponseData *response)
 {
+    std::vector<Directive> &block = response->location->block;
+
     response->autoindex = false;
-    for (size_t i = 0; i < locationBlock.size(); i++)
+    for (size_t i = 0; i < block.size(); i++)
     {
-        if (locationBlock[i].name == "autoindex")
+        Directive &dir = block[i];
+        if (dir.name == "autoindex")
         {
-            locationBlock[i].value == "on" ? response->autoindex = true : response->autoindex = false;
+            response->autoindex = (dir.value == "on") ? true : false;
             break;
         }
     }
@@ -153,27 +158,29 @@ void Response::setUpAutoindex(std::vector<Directive> &locationBlock, ResponseDat
 /**
  * location 블록 내부에서 limit_except 지시자를 찾아 responseData->limitExcept 세팅
  *
- * @param locationBlock 파싱된 location 블록
  * @param response 반환될 responseData 구조체
  */
-void Response::setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseData *response)
+void Response::setUpLimitExcept(ResponseData *response)
 {
-    for (size_t i = 0; i < locationBlock.size(); i++)
+    std::vector<Directive> &block = response->location->block;
+
+    for (size_t i = 0; i < block.size(); i++)
     {
-        if (locationBlock[i].name == "limit_except")
+        Directive &dir = block[i];
+        if (dir.name == "limit_except")
         {
-            size_t pos = locationBlock[i].value.find(' ');
+            size_t pos = dir.value.find(' ');
             size_t start = 0;
             while (pos != std::string::npos)
             {
-                std::string tmp = locationBlock[i].value.substr(start, pos - start);
+                std::string tmp = dir.value.substr(start, pos - start);
                 response->limitExcept.push_back(tmp);
                 start = pos;
-                while (locationBlock[i].value[start] != '\0' && locationBlock[i].value[start] == ' ')
+                while (dir.value[start] != '\0' && dir.value[start] == ' ')
                     start++;
-                pos = locationBlock[i].value.find(' ', start);
+                pos = dir.value.find(' ', start);
             }
-            std::string tmp = locationBlock[i].value.substr(start);
+            std::string tmp = dir.value.substr(start);
             response->limitExcept.push_back(tmp);
             break;
         }
@@ -183,23 +190,25 @@ void Response::setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseD
 /**
  * location 블록 내부에서 return 지시자를 찾아 responseData->returnState, redirect 세팅
  *
- * @param locationBlock 파싱된 location 블록
  * @param response 반환될 responseData 구조체
  */
-void Response::setUpReturnState(std::vector<Directive> &locationBlock, ResponseData *response)
+void Response::setUpReturnState(ResponseData *response)
 {
-    for (size_t i = 0; i < locationBlock.size(); i++)
+    std::vector<Directive> &block = response->location->block;
+
+    for (size_t i = 0; i < block.size(); i++)
     {
-        if (locationBlock[i].name == "return")
+        Directive &dir = block[i];
+        if (dir.name == "return")
         {
-            size_t pos = locationBlock[i].value.find(' ');
+            size_t pos = dir.value.find(' ');
             size_t start = 0;
-            std::string tmp = locationBlock[i].value.substr(start, pos - start);
+            std::string tmp = dir.value.substr(start, pos - start);
             response->returnState = tmp;
             start = pos;
-            while (locationBlock[i].value[start] != '\0' && locationBlock[i].value[start] == ' ')
+            while (dir.value[start] != '\0' && dir.value[start] == ' ')
                 start++;
-            tmp = locationBlock[i].value.substr(start);
+            tmp = dir.value.substr(start);
             response->redirect = tmp;
             break;
         }
@@ -235,7 +244,7 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
         location.value.erase(location.value.find_last_not_of(' ') + 1);
         if (location.value == request.path)
             return &location;
-        if (location.value != "/" && request.method == "PUT")
+        if (location.value != "/" && request.method == PUT)
         {
             size_t pos = request.path.find(location.value);
             if (pos != std::string::npos)
