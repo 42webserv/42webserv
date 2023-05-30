@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 16:32:07 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/30 16:45:22 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,12 +245,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		responseUData->wantToDeleteSessionInCookie = true;
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
-		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
-		// std::string response_content = "Method not allowed";
-		// std::string response_header = generateErrorHeader(405, response_content);
-		// ftSend(response, response_header);
-		// ftSend(response, response_content);
+		std::cout << "Method not allowed" << std::endl;
 		errorResponse(response, 405);
 		delete response;
 		return;
@@ -404,7 +400,6 @@ void Worker::putResponse(ResponseData *response)
 	// TODO 이거 경로 제대로 되게 해야 함. 임시임
 	std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
 	resourcePath += response->path.substr(response->path.find_last_of('/'));
-	// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
 
 	if (writeFile(resourcePath, response->body))
 	{
@@ -419,10 +414,7 @@ void Worker::putResponse(ResponseData *response)
 	else
 	{
 		// 리소스 생성에 실패한 경우
-		// std::string response_content = "Failed to create the resource";
-		// std::string response_header = generateErrorHeader(500, "text/html");
-		// ftSend(response, response_header);
-		// ftSend(response, response_content);
+		std::cout << "Failed to create the resource" << std::endl;
 		errorResponse(response, 500);
 	}
 }
@@ -430,15 +422,11 @@ void Worker::putResponse(ResponseData *response)
 void Worker::deleteResponse(ResponseData *response)
 {
 	std::string resourcePath = response->resourcePath;
-	std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
 
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
-		// std::string response_content = "Failed to delete the resource";
-		// std::string response_header = generateErrorHeader(500, "text/html");
-		// ftSend(response, response_header);
-		// ftSend(response, response_content);
+		std::cout << "Failed to delete the resource" << std::endl;
 		errorResponse(response, 500);
 	}
 	else
@@ -481,8 +469,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 		if (errorContent == "")
 			errorContent = errorPageGenerator(errorCode);
 	}
-	std::string errorHeader = generateErrorHeader(errorCode, errorContent);
-	ftSend(response->clientFd, errorHeader);
+	ftSend(response->clientFd, generateErrorHeader(errorCode, errorContent));
 	ftSend(response->clientFd, errorContent);
 }
 
@@ -538,7 +525,6 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 std::string Worker::generateErrorHeader(int status_code, const std::string &message)
 {
 	std::ostringstream oss;
-	// oss << "HTTP/1.1 " << status_code << " " << message << CRLF;
 	oss << "HTTP/1.1 " << status_code << " OK" << CRLF;
 	oss << "Content-Length: " << message.length() << CRLF;
 	oss << "Content-Type: text/html" << CRLF;
