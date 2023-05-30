@@ -295,6 +295,20 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
 		{
 			// cgi post method 실행
 			std::cout << "YOUPI.BLA" << std::endl;
+			CGI cgi(request);
+			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
+			if ((response->resourcePath = getCGILocation(response)) == "")
+			{
+				std::cout << "getLocation" << std::endl;
+				// error_page
+				return;
+			}
+			std::ifstream resource_file(response->resourcePath);
+			std::string response_header = generateHeader(resource_content, "text/html", 200);
+			ftSend(response, response_header);
+			ftSend(response, resource_content);
+			resource_file.close();
+			return;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
 		if (request.body.length() == 0)
@@ -743,5 +757,5 @@ void Worker::redirection(ResponseData *response)
 	oss << "Location: " << response->redirect << CRLF;
 	oss << "Connection: close\r\n\r\n";
 	ftSend(response->clientFd, oss.str());
-	return ;
+	return;
 }
