@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 22:13:32 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 16:22:35 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,8 @@ private:
 	void postResponse(ResponseData *response);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
-	void errorResponse(int client_fd);
+	std::string errorPageGenerator(int errorCode);
+	void errorResponse(ResponseData *response, int errorCode);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData *response);
