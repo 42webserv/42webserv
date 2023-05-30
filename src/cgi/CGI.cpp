@@ -175,13 +175,13 @@ std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &reques
 			throw std::runtime_error("Error waiting for child process");
 		lseek(fileFD[1], 0, SEEK_SET);
 		// read output from the file descriptor and print it to console
-
 		int bytes = 1;
+		body = "";
 		while (bytes > 0)
 		{
 			memset(buffer, 0, 100001);
 			bytes = read(fileFD[1], buffer, 100000);
-			// body += buffer;
+			body += buffer;
 		}
 	}
 
