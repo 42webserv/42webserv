@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 23:48:47 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/31 02:10:34 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,9 +139,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 			std::cout << "Failed to parse request" << std::endl;
 		responseUData->max = responseUData->max - 1;
 		// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
-		// {
-		// 	sockets[k]->disconnectClient(fd, clients, event);
-		// }
+		// sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
 	}
 	if (result)
