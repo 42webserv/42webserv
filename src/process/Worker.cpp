@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 00:14:09 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/31 02:13:03 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,8 +138,8 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		else
 			std::cout << "Failed to parse request" << std::endl;
 		responseUData->max = responseUData->max - 1;
-		if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
-			sockets[k]->disconnectClient(fd, clients, event);
+		// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
+		// sockets[k]->disconnectClient(fd, clients, event);
 		clients[fd].clear();
 	}
 	if (result)
@@ -582,10 +582,10 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 			value.erase(value.length() - 1);
 		if (value == "keep-alive")
 			return true;
-		else if (value == "close")
+		else
 			return false;
 	}
-	return true;
+	return false;
 }
 
 bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
