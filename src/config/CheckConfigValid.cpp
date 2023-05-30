@@ -3,14 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CheckConfigValid.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/29 21:02:55 by seokchoi          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/05/30 13:31:33 by seokchoi         ###   ########.fr       */
-=======
-/*   Updated: 2023/05/29 22:11:17 by sunhwang         ###   ########.fr       */
->>>>>>> develop
+/*   Updated: 2023/05/30 15:36:49 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,17 +63,9 @@ void CheckConfigValid::ParseStream(std::istream &input_stream)
 		}
 		else
 		{
-<<<<<<< HEAD
-			if (found != line.size() - 1)
-				throw std::runtime_error("Unexpected character after '{'");
-			std::string block_name = line.substr(0, found);
-=======
 			if (pos != line.size() - 1)
-			{
 				throw std::runtime_error("Unexpected character after '{'");
-			}
 			std::string block_name = line.substr(0, pos);
->>>>>>> develop
 			block_name = Trim(block_name);
 			if (block_name.empty())
 				throw std::runtime_error("Empty block name");
