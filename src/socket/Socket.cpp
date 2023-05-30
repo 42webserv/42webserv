@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 16:24:31 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 19:52:00 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,33 +28,24 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
 
     // Create an AF_INET stream socket to receive incoming connections on
     if (_serverFd < 0)
-        errorExit("socket()");
+        stderrExit("socket() error");
 
     opt = 1;
     // Allow socket descriptor to be reuseable
     if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-    {
-        close(_serverFd);
-        errorExit("setsockopt()");
-    }
+        stderrExit("setsockopt() error");
 
     struct linger linger;
     linger.l_onoff = 1;
     linger.l_linger = 10;
     // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
     if (setsockopt(_serverFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
-    {
-        close(_serverFd);
-        errorExit("setsockopt()");
-    }
+        stderrExit("setsockopt() error");
 
     opt = 1;
     // Nagle 알고리즘 사용하지 않게 하기
     if (setsockopt(_serverFd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) < 0)
-    {
-        perror("setsockopt");
-        exit(1);
-    }
+        stderrExit("setsockopt() error");
 
     // Bind the socket
     std::memset(&_serverAddr, 0, sizeof(_serverAddr));
@@ -62,18 +53,14 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
     _serverAddr.sin_addr.s_addr = INADDR_ANY;
     _serverAddr.sin_port = htons(this->_port);
     if (bind(_serverFd, (struct sockaddr *)&_serverAddr, sizeof(_serverAddr)) < 0)
-    {
-        close(_serverFd);
-        errorExit("bind()");
-    }
+        stderrExit("bind() error");
 
     // Set the listen back log
     if (listen(_serverFd, 3) < 0)
     {
         close(_serverFd);
-        errorExit("listen()");
+        stderrExit("listen() error");
     }
-
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     eventList.push_back(event);
     _clientFds.push_back(_serverFd);
@@ -96,7 +83,7 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
     // Accept incoming connection
     int client_fd = accept(_serverFd, (struct sockaddr *)&client_addr, &addrlen);
     if (client_fd < 0)
-        errorExit("accept()");
+        stderrExit("accept() error");
 
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
@@ -111,9 +98,7 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
     if (setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
-    {
-        perror("setsockopt SO_LINGER");
-    }
+        stderrExit("setsockopt SO_LINGER error");
 
     eventList.push_back(new_event);
     _clientFds.push_back(client_fd);
@@ -143,16 +128,10 @@ int Socket::enableKeepAlive(int socketFd)
 
     // SO_KEEPALIVE 옵션 활성화
     if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive)) < 0)
-    {
-        perror("setsockopt SO_KEEPALIVE");
-        return -1;
-    }
+        stderrExit("setsockopt SO_KEEPALIVE error");
     // TCP_KEEPINTVL 옵션 설정 (유휴 상태에서 keep-alive 패킷 간의 간격)
     if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPINTVL, &keepAliveInterval, sizeof(keepAliveInterval)) < 0)
-    {
-        perror("setsockopt TCP_KEEPINTVL");
-        return -1;
-    }
+        stderrExit("setsockopt TCP_KEEPINTVL error");
     return 0;
 }
 

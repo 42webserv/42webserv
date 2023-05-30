@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 19:15:09 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 19:53:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ void Worker::eventEVError(int k, struct kevent &event)
 {
 	// 서버 소켓 에러
 	if (fd == sockets[k]->_serverFd)
-		errorExit("Server socket error");
+		stderrExit("Server socket error");
 	else
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
