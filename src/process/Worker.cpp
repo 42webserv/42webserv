@@ -379,7 +379,7 @@ bool Worker::isCGIRequest(ResponseData *response)
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
 	size_t pos = response->path.find("cgi-bin");
-	if (pos == std::string::npos && response->method == POST)
+	if (pos == std::string::npos && (response->method == POST || response->method == GET))
 		pos = response->path.find(".bla");
 	return (pos != std::string::npos);
 }
