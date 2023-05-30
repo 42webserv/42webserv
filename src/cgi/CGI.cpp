@@ -36,7 +36,7 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	//  {
 	//  	headers["CONTENT_LENGTH"] = toString(content_length);
 	//  }
-	this->envp_["AUTH_TYPE"] = "";
+	// this->envp_["AUTH_TYPE"] = "";
 	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
 	this->envp_["CONTENT_TYPE"] = request_parser.getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
@@ -46,11 +46,11 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	//  요청 URI의 PATH_INFO 구성요소를 가져와, 적합한 가상 : 실제 변환을 수행하여 맵핑.
 	this->envp_["QUERY_STRING"] = request.query;
 	this->envp_["REMOTE_ADDR"] = request.addr;
-	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
-	this->envp_["REMOTE_USER"] = "";
+	// this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
+	// this->envp_["REMOTE_USER"] = "";
 	this->envp_["REQUEST_METHOD"] = request.method;
-	this->envp_["REQUEST_URI"] = request.name; //
-	this->envp_["SCRIPT_NAME"] = request.name; //
+	this->envp_["REQUEST_URI"] = request.path;	//
+	this->envp_["SCRIPT_NAME"] = "webserv/1.1"; //
 	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
 	this->envp_["SERVER_PORT"] = request.strPort; // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";

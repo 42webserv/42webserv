@@ -90,6 +90,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             request->port = -1;
         request->body = body_;
         request->addr = addr_;
+        request->query = query_;
         return request;
     }
     return NULL;
