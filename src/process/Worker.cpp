@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 22:40:38 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/31 00:14:09 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,9 @@ void Worker::eventEVError(int k, struct kevent &event)
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
 		if (clients.find(fd) != clients.end())
+		{
 			sockets[k]->disconnectClient(fd, clients, event);
+		}
 	}
 }
 
@@ -580,10 +582,10 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 			value.erase(value.length() - 1);
 		if (value == "keep-alive")
 			return true;
-		else
+		else if (value == "close")
 			return false;
 	}
-	return false;
+	return true;
 }
 
 bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
