@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 13:32:08 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 19:15:09 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,11 +66,6 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 		}
 		if (n < 1)
 		{
-			// HTML 요청 메세지 보기
-			// struct kevent new_event;
-			// EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-			// event_list.push_back(new_event);
-			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 			UData *uData = static_cast<UData *>(event.udata);
 			if (uData->writeEventExist == false)
 			{
@@ -178,20 +173,16 @@ void Worker::run()
 	int nevents;
 
 	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
-	// std::cout << "listen : " << this->listen[0].value << std::endl;
-
 	int sockets_size;
-	// int k;
 	while (true)
 	{
-		// std::cout << "here" << std::endl;
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
 			break;
 		}
-		event_list.clear(); // 이벤트가 발생하면 event_list를 비워줌 왜>.?????
+		event_list.clear();
 		sockets_size = sockets.size();
 		for (int k = 0; k < sockets_size; k++)
 		{
@@ -241,8 +232,11 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete")
+	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
+			 responseUData->sessionID != "")
+	{
 		responseUData->wantToDeleteSessionInCookie = true;
+	}
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
@@ -482,8 +476,9 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		responseUData->wantToDeleteSessionInCookie == true)
 	{
 		std::string expireTime = getExpiryDate(-3600);
-		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << expireTime << CRLF;
+		oss << "Set-Cookie: sessionid="
+			<< "deleted"
+			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		responseUData->alreadySessionSend = false;
 		responseUData->expireTime = "";
 		responseUData->wantToDeleteSessionInCookie = false;
@@ -493,7 +488,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	{
 		std::string expireTime = getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << expireTime << CRLF;
+			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		responseUData->alreadySessionSend = true;
 		responseUData->expireTime = expireTime;
 	}
@@ -681,7 +676,9 @@ void Worker::cookieCheck(HTTPRequest *result)
 bool Worker::isCookieValid(const std::string &expireTime)
 {
 	std::tm expirationTime = {};
-	if (strptime(expireTime.c_str(), "%a, %d %b %Y %H:%M:%S", &expirationTime) == 0)
+	std::istringstream iss(expireTime);
+	iss >> std::get_time(&expirationTime, "%a, %d %b %Y %H:%M:%S");
+	if (iss.fail())
 		return false;
 	std::time_t currentTime = std::time(0);
 	std::time_t expiration = std::mktime(&expirationTime);
