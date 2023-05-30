@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 20:24:59 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 13:32:08 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,7 @@ void Worker::eventEVError(int k, struct kevent &event)
 
 bool Worker::eventFilterRead(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	if (fd == sockets[k]->_serverFd)
 	{
@@ -109,16 +108,13 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 
 bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	HTTPRequest *result = parser.parse(clients[fd]);
 	if (!result)
-	{
 		return false;
-	}
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	if (result->method != "HEAD" && result->headers.size() == 0)
+	if (result->method != HEAD && result->headers.size() == 0)
 		return false;
 	if (result->port == -1)
 		result->port = strtod(listen[0].value.c_str(), NULL);
@@ -158,8 +154,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 
 bool Worker::eventEOF(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	std::cout << "client want to disconnect" << std::endl;
 	sockets[k]->disconnectClient(fd, clients, event);
@@ -168,8 +163,7 @@ bool Worker::eventEOF(int k, struct kevent &event)
 
 bool Worker::eventFilterTimer(int k, struct kevent &event)
 {
-	found = std::find(sockets[k]->_clientFds.begin(), sockets[k]->_clientFds.end(), fd);
-	if (found == sockets[k]->_clientFds.end())
+	if (!hasClientFd(k))
 		return false;
 	std::cout << fd << " is time over" << std::endl;
 	deleteTimer(fd);
@@ -241,7 +235,7 @@ void Worker::run()
  * @param request request 를 파싱완료한 구조체
  * @param client_fd 서버의 fd
  */
-void Worker::requestHandler(const HTTPRequest &request, int client_fd)
+void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 {
 	Response res;
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
@@ -341,18 +335,21 @@ void Worker::requestHandler(const HTTPRequest &request, int client_fd)
  */
 std::string Worker::getCGILocation(ResponseData *response)
 {
-	for (size_t i = 0; i < response->server.locations.size(); ++i)
+	std::vector<Directive> &locations = response->server.locations;
+	for (size_t i = 0; i < locations.size(); ++i)
 	{
-		if (response->server.locations[i].value == "/result ")
+		Directive &location = locations[i];
+		if (location.value == "/result ")
 		{
 			std::string root = "";
 			std::string index = "";
-			for (size_t j = 0; j < response->server.locations[i].block.size(); j++)
+			for (size_t j = 0; j < location.block.size(); j++)
 			{
-				if (response->server.locations[i].block[j].name == "root")
-					root = response->server.locations[i].block[j].value;
-				if (response->server.locations[i].block[j].name == "index")
-					index = response->server.locations[i].block[j].value;
+				Directive &block = location.block[j];
+				if (block.name == "root")
+					root = block.value;
+				if (block.name == "index")
+					index = block.value;
 			}
 			return root + "/" + index;
 		}
@@ -381,58 +378,42 @@ void Worker::getResponse(ResponseData *response)
 {
 	if (invalidResponse(response))
 		return;
-	std::ifstream resource_file(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
-	if (!resource_file.is_open())						 // 혹시 open이 안될수있으니 한번더 체크
-		return errorResponse(response->clientFd);
 
-	std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
+	std::string resource_content = readFile(response->resourcePath);
+	if (resource_content.empty())
+		return errorResponse(response->clientFd);
 	std::string response_header = generateHeader(resource_content, response->contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
-	resource_file.close();
 }
 
-void Worker::postResponse(ResponseData *response) // request body 추가하기
+void Worker::postResponse(ResponseData *response)
 {
 	if (invalidResponse(response))
 		return;
-	std::ofstream outFile(response->resourcePath, std::ios::out | std::ios::trunc);
-	outFile << response->body;
-	outFile.close();
 
-	std::ifstream inFile(response->resourcePath); // 위에서 stat함수로 파일검사는 완료
-	if (!inFile.is_open())						  // 혹시 open이 안될수있으니 한번더 체크
-		return errorResponse(response->clientFd);
-
-	// POST는 생성된 내용을 반환하지 않아도 됨.
-	std::string body = "";
+	writeFile(response->resourcePath, response->body);
+	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
 	std::string response_header = generateHeader(body, response->contentType, 201);
 	ftSend(response, response_header);
-	// ftSend(response, resource_content);
-	inFile.close();
 }
 
 void Worker::putResponse(ResponseData *response)
 {
-	// temp
+	// TODO 이거 경로 제대로 되게 해야 함. 임시임
 	std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
 	resourcePath += response->path.substr(response->path.find_last_of('/'));
 	// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
 
-	std::ofstream outFile(resourcePath, std::ios::out | std::ios::trunc);
-	if (outFile.is_open())
+	if (writeFile(resourcePath, response->body))
 	{
-		outFile << response->body;
-		outFile.close();
 		// 리소스 생성에 성공한 경우
-		std::ifstream resource_file(resourcePath);
-		if (!resource_file.is_open())
+		std::string resource_content = readFile(resourcePath);
+		if (resource_content.empty())
 			return errorResponse(response->clientFd);
-		std::string resource_content((std::istreambuf_iterator<char>(resource_file)), std::istreambuf_iterator<char>());
 		std::string resource_header = generateHeader(resource_content, "text/html", 201);
 		ftSend(response, resource_header);
 		ftSend(response, resource_content);
-		resource_file.close();
 	}
 	else
 	{
@@ -448,7 +429,7 @@ void Worker::deleteResponse(ResponseData *response)
 {
 	std::string resourcePath = response->resourcePath;
 	std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
-	// 리소스 삭제 로직을
+
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
@@ -461,12 +442,9 @@ void Worker::deleteResponse(ResponseData *response)
 	{
 		// 삭제에 성공한 경우
 		std::string response_content = "Resource deleted successfully";
-		std::ifstream resource_file(response->resourcePath);
 		std::string response_header = generateHeader(response_content, "text/html", 200);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
-		resource_file.close();
-		return;
 	}
 }
 
@@ -477,9 +455,8 @@ void Worker::deleteResponse(ResponseData *response)
  */
 void Worker::errorResponse(int client_fd)
 {
-	std::string error_path = "./assets/html/404.html";
-	std::ifstream error_file(error_path);
-	std::string error_content((std::istreambuf_iterator<char>(error_file)), std::istreambuf_iterator<char>());
+	const std::string error_path = "./assets/html/404.html";
+	std::string error_content = readFile(error_path);
 	std::string error_header = generateErrorHeader(404, error_content);
 	ftSend(client_fd, error_header);
 	ftSend(client_fd, error_content);
@@ -749,4 +726,13 @@ bool Worker::invalidResponse(ResponseData *response)
 		return true;
 	}
 	return false;
+}
+
+bool Worker::hasClientFd(const int &k)
+{
+	Socket *socket = sockets[k];
+	std::vector<int>::iterator it = std::find(socket->_clientFds.begin(), socket->_clientFds.end(), fd);
+	if (it == socket->_clientFds.end())
+		return false;
+	return true;
 }
