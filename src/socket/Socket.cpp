@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 19:52:00 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:16:47 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,10 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
     : kq(kq), _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
-    this->_port = port;
+    struct linger linger;
     int opt;
 
+    this->_port = port;
     // Create an AF_INET stream socket to receive incoming connections on
     if (_serverFd < 0)
         stderrExit("socket() error");
@@ -35,7 +36,6 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
     if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         stderrExit("setsockopt() error");
 
-    struct linger linger;
     linger.l_onoff = 1;
     linger.l_linger = 10;
     // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
@@ -87,7 +87,8 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
 
     std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
-    fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
+    if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) < 0)
+        stderrExit("fcntl() error");
     UData *uData = new UData(client_fd, false, true);
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
 
