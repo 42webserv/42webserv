@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:12:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 19:32:08 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 16:03:01 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,5 +65,27 @@
 #define CSS_EXTENSION ".css"
 #define JS_EXTENSION ".js"
 #define ICO_EXTENSION ".ico"
+
+// directives
+
+#define MAIN_DIRECTIVE "main"
+#define HTTP_DIRECTIVE "http"
+#define SERVER_DIRECTIVE "server"
+#define LOCATION_DIRECTIVE "location"
+#define INCLUDE_DIRECTIVE "include"
+#define INDEX_DIRECTIVE "index"
+#define AUTOINDEX_DIRECTIVE "autoindex"
+#define LIMIT_EXCEPT_DIRECTIVE "limit_except"
+#define RETURN_DIRECTIVE "return"
+#define LISTEN_DIRECTIVE "listen"
+#define SERVER_NAME_DIRECTIVE "server_name"
+#define ERROR_PAGE_DIRECTIVE "error_page"
+#define CLIENT_MAX_BODY_SIZE_DIRECTIVE "client_max_body_size"
+#define ROOT_DIRECTIVE "root"
+#define TYPES_DIRECTIVE "types"
+#define CGI_EXTENSION_DIRECTIVE "cgi_extension"
+#define CGI_PATH_DIRECTIVE "cgi_path"
+
+#define DEFALUT_DIRECTIVE_VALUE_FAIL "fail"
 
 #endif
