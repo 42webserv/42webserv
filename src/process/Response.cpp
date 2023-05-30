@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/30 13:39:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:57:48 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,13 +262,11 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
             if (location.value == tmp)
             {
                 std::string file = request.path.substr(pos, request.path.length());
-                std::cout << "location : " << tmp << std::endl;
                 std::string root;
                 for (size_t i = 0; i < location.block.size(); i++)
                 {
                     if (location.block[i].name == "root")
                     {
-                        std::cout << "root : " << location.block[i].value << std::endl;
                         root = location.block[i].value;
                         if (isDirectory(root + file))
                         {

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 18:09:20 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:57:10 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,7 +133,6 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
-			std::cout << fd << " : 응답 완료" << std::endl;
 			struct kevent eventToDelete;
 			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
@@ -288,23 +287,11 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		if (isCGIRequest(response))
 		{
 			// cgi post method 실행
-			// std::cout << "YOUPI.BLA" << std::endl;
-			// std::cout << "body : " << std::endl;
-			// std::cout << "[" << response->body << "]" << std::endl;
+			// parser.printResult(request);
 			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI("./cgi_tester", request);
-			// std::cout << "&&&&&&&" << resource_content << std::endl;
-			// size_t pos = resource_content.find("\n");
-			// resource_content.erase(0, pos + 1);
-			// std::cout << "pos : " << pos << ", " << resource_content << std::endl;
-			// pos = resource_content.find("\n");
-			// resource_content.erase(0, pos + 1);
-			// std::cout << "pos : " << pos << ", " << resource_content << std::endl;
-			// pos = resource_content.find("\n");
-			// resource_content.erase(0, pos + 1);
-			// std::cout << "pos : " << pos << ", " << resource_content << std::endl;
-			std::cout << "[" << resource_content << "]" << std::endl;
+			std::cout << "[" << resource_content.length() << "]" << std::endl;
 			if ((response->resourcePath = getCGILocation(response)) == "")
 			{
 				std::cout << "getLocation" << std::endl;
@@ -312,7 +299,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 				return;
 			}
 			std::ifstream resource_file(response->resourcePath);
-			std::string response_header = generateHeader(resource_content, "text/html", 200);
+			std::string response_header = generateHeader(resource_content, (response->contentType), 200);
+			// std::string response_header = generateHeader(resource_content, "text/html", 200);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
 			resource_file.close();
