@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:12:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 16:03:01 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 16:24:33 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,16 @@
 #define TYPES_DIRECTIVE "types"
 #define CGI_EXTENSION_DIRECTIVE "cgi_extension"
 #define CGI_PATH_DIRECTIVE "cgi_path"
+#define DEFAULT_TYPE_DIRECTIVE "default_type"
+#define SEND_FILE_DIRECTIVE "send_file"
+#define TCP_NOPUSH_DIRECTIVE "tcp_nopush"
+#define ACCESS_LOG_DIRECTIVE "access_log"
+#define ERROR_LOG_DIRECTIVE "error_log"
+#define WORKER_PROCESS_DIRECTIVE "worker_process"
+#define USER_DIRECTIVE "user"
+#define PID_DIRECTIVE "pid"
 
+// directive values
 #define DEFALUT_DIRECTIVE_VALUE_FAIL "fail"
 
 #endif
