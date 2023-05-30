@@ -291,6 +291,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			std::cout << "YOUPI.BLA" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
+			std::cout << "&&&&&&&" << resource_content << std::endl;
 			if ((response->resourcePath = getCGILocation(response)) == "")
 			{
 				std::cout << "getLocation" << std::endl;

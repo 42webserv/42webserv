@@ -124,6 +124,7 @@ std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &reques
 	Config config;
 	initEnvp(request);
 
+	body = request.body;
 	try
 	{
 		envp = this->ENVPChangeStringArray();
@@ -180,7 +181,7 @@ std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &reques
 		{
 			memset(buffer, 0, 100001);
 			bytes = read(fileFD[1], buffer, 100000);
-			body += buffer;
+			// body += buffer;
 		}
 	}
 
