@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 15:10:16 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/29 21:53:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,11 +58,11 @@ class Response
 private:
     int getSuitableServer(int port, Server &serverManager);
     std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &server);
-    void setUpRoot(std::vector<Directive> &locationBlock, ResponseData *response);
-    void setUpIndex(std::vector<Directive> &locationBlock, ResponseData *response);
-    void setUpAutoindex(std::vector<Directive> &locationBlock, ResponseData *response);
-    void setUpLimitExcept(std::vector<Directive> &locationBlock, ResponseData *response);
-    void setUpReturnState(std::vector<Directive> &locationBlock, ResponseData *response);
+    void setUpRoot(ResponseData *response);
+    void setUpIndex(ResponseData *response);
+    void setUpAutoindex(ResponseData *response);
+    void setUpLimitExcept(ResponseData *response);
+    void setUpReturnState(ResponseData *response);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
 
 public:
