@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 14:01:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:16:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,6 @@ public:
     HTTPRequestParser();
 
     HTTPRequest *parse(const std::string &data);
-    std::string getContentType(const HTTPRequest &request);
     int getPort(const HTTPRequest &result);
     void printResult(const HTTPRequest &request);
 };

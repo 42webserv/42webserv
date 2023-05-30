@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 20:43:31 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:16:30 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,24 +299,6 @@ void HTTPRequestParser::reset()
     body_.clear();
     buffer_.clear();
     current_header_name_.clear();
-}
-
-/**
- * HTTP 요청 메세지에서 Content-Type 헤더의 값을 반환
- *
- * @param request 파싱된 HTTP 요청
- * @return 문자열의 Content-Type 값 혹은 빈 문자열
- */
-std::string HTTPRequestParser::getContentType(const HTTPRequest &request)
-{
-    std::map<std::string, std::string> headers = request.headers;
-
-    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
-    {
-        if (it->first == "Content-Type")
-            return it->second;
-    }
-    return "";
 }
 
 /**
