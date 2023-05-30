@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 22:13:32 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 22:37:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,10 +65,8 @@ private:
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData *response);
 	std::string getCGILocation(ResponseData *response);
-	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
-	int findSocketIndex(struct kevent &event);
 	bool checkHeaderIsKeepLive(const HTTPRequest *request);
 	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
 	void setTimer(int fd, int timeout);
