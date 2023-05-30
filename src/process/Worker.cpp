@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 17:24:48 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/30 18:09:20 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -288,10 +288,23 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		if (isCGIRequest(response))
 		{
 			// cgi post method 실행
-			std::cout << "YOUPI.BLA" << std::endl;
+			// std::cout << "YOUPI.BLA" << std::endl;
+			// std::cout << "body : " << std::endl;
+			// std::cout << "[" << response->body << "]" << std::endl;
+			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
-			std::cout << "&&&&&&&" << resource_content << std::endl;
+			std::string resource_content = cgi.excuteCGI("./cgi_tester", request);
+			// std::cout << "&&&&&&&" << resource_content << std::endl;
+			// size_t pos = resource_content.find("\n");
+			// resource_content.erase(0, pos + 1);
+			// std::cout << "pos : " << pos << ", " << resource_content << std::endl;
+			// pos = resource_content.find("\n");
+			// resource_content.erase(0, pos + 1);
+			// std::cout << "pos : " << pos << ", " << resource_content << std::endl;
+			// pos = resource_content.find("\n");
+			// resource_content.erase(0, pos + 1);
+			// std::cout << "pos : " << pos << ", " << resource_content << std::endl;
+			std::cout << "[" << resource_content << "]" << std::endl;
 			if ((response->resourcePath = getCGILocation(response)) == "")
 			{
 				std::cout << "getLocation" << std::endl;

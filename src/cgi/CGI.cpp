@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/17 16:16:38 by yje              ###   ########.fr       */
+/*   Updated: 2023/05/30 17:49:38 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +152,8 @@ std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &reques
 	write(fileFD[0], body.c_str(), body.size());
 	lseek(fileFD[0], 0, SEEK_SET);
 
+	std::cout << "cgi - body : " << body << std::endl;
+
 	pid = fork();
 	if (pid == -1)
 		throw std::runtime_error("Error create child process");
@@ -204,5 +206,6 @@ std::string CGI::excuteCGI(const std::string &context, const HTTPRequest &reques
 	delete[] envp;
 	if (pid == 0)
 		exit(0);
+	std::cout << "cgi body size : " << body.length() << std::endl;
 	return (body);
 }
