@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DefaultConfig.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 19:23:12 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 16:34:48 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include "commonError.hpp"
 #include "DefaultConfig.hpp"
 #include "Directive.hpp"
+#include "commonConfig.hpp"
 
 #define ERROR_DIRECTIVE_NAME "Error: Invalid name to "
 #define ERROR_DIRECTIVE_SIZE "Error: Invalid size to "
@@ -80,10 +81,10 @@ void DefaultConfig::addMainDirectives(Directive &main, const std::string name)
 {
 	std::map<std::string, std::string> dirs;
 	const std::pair<std::string, std::string> ps[] = {
-		std::make_pair("user", "nobody nobody"),
-		std::make_pair("worker_processes", "1"),
-		std::make_pair("error_log", "logs/error.log error"),
-		std::make_pair("pid", "logs/nginx.pid"),
+		std::make_pair(USER_DIRECTIVE, "nobody"),
+		std::make_pair(WORKER_PROCESS_DIRECTIVE, "1"),
+		std::make_pair(ERROR_LOG_DIRECTIVE, "logs/error.log error"),
+		std::make_pair(PID_DIRECTIVE, "logs/nginx.pid"),
 	};
 
 	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
@@ -92,7 +93,7 @@ void DefaultConfig::addMainDirectives(Directive &main, const std::string name)
 
 void DefaultConfig::checkMainDirectives(std::vector<Directive> &dirs)
 {
-	const std::string name = "main";
+	const std::string name = MAIN_DIRECTIVE;
 
 	if (dirs.size() == 0)
 		dirs.insert(dirs.begin(), newDir(name, "", name));
@@ -119,13 +120,13 @@ void DefaultConfig::addHttpDirectives(Directive &http, const std::string name)
 {
 	std::map<std::string, std::string> dirs;
 	const std::pair<std::string, std::string> ps[] = {
-		std::make_pair("include", "./assets/conf/mime.types"),
-		// std::make_pair("include", "/etc/nginx/proxy.conf"),
-		// std::make_pair("include", "/etc/nginx/fastcgi.conf"),
-		std::make_pair("index", "index.html index.htm index.php"),
-		std::make_pair("default_type", "application/octet-stream"),
-		std::make_pair("sendfile", "on"),
-		std::make_pair("tcp_nopush", "on"),
+		std::make_pair(INCLUDE_DIRECTIVE, "./assets/conf/mime.types"),
+		// std::make_pair(INCLUDE_DIRECTIVE, "/etc/nginx/proxy.conf"),
+		// std::make_pair(INCLUDE_DIRECTIVE, "/etc/nginx/fastcgi.conf"),
+		std::make_pair(INDEX_DIRECTIVE, "index.html index.htm index.php"),
+		std::make_pair(DEFAULT_TYPE_DIRECTIVE, "application/octet-stream"),
+		std::make_pair(SEND_FILE_DIRECTIVE, "on"),
+		std::make_pair(TCP_NOPUSH_DIRECTIVE, "on"),
 	};
 
 	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
@@ -134,7 +135,7 @@ void DefaultConfig::addHttpDirectives(Directive &http, const std::string name)
 
 void DefaultConfig::checkHttpDirectives(std::vector<Directive> &dirs)
 {
-	const std::string name = "http";
+	const std::string name = HTTP_DIRECTIVE;
 
 	for (std::vector<Directive>::iterator it = dirs.begin(); it != dirs.end(); it++)
 	{
@@ -148,10 +149,10 @@ void DefaultConfig::addServerDirectives(Directive &server, const std::string nam
 {
 	std::map<std::string, std::string> dirs;
 	const std::pair<std::string, std::string> ps[] = {
-		std::make_pair("listen", "80"),
-		std::make_pair("server_name", "domain1.com www.domain1.com"),
-		std::make_pair("access_log", "logs/domain1.access.log  main"),
-		std::make_pair("root", "html"),
+		std::make_pair(LISTEN_DIRECTIVE, "80"),
+		std::make_pair(SERVER_NAME_DIRECTIVE, "domain1.com www.domain1.com"),
+		std::make_pair(ACCESS_LOG_DIRECTIVE, "logs/domain1.access.log  main"),
+		std::make_pair(ROOT_DIRECTIVE, "html"),
 	};
 
 	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
@@ -160,7 +161,7 @@ void DefaultConfig::addServerDirectives(Directive &server, const std::string nam
 
 void DefaultConfig::checkServerDirectives(std::vector<Directive> &dirs)
 {
-	const std::string name = "server";
+	const std::string name = SERVER_DIRECTIVE;
 
 	for (std::vector<Directive>::iterator it = dirs.begin(); it != dirs.end(); it++)
 	{
@@ -185,7 +186,7 @@ void DefaultConfig::addLocationDirectives(Directive &location, const std::string
 
 void DefaultConfig::checkLocationDirectives(std::vector<Directive> &dirs)
 {
-	const std::string name = "location";
+	const std::string name = LOCATION_DIRECTIVE;
 
 	for (std::vector<Directive>::iterator it = dirs.begin(); it != dirs.end(); it++)
 	{

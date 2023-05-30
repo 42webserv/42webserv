@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Master.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/21 19:44:23 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 19:48:13 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,7 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 {
 	// Create a new kqueue
 	if (kq < 0)
-	{
-		perror("kqueue");
-		exit(EXIT_FAILURE);
-	}
+		stderrExit("kqueue");
 
 	// Parse the config file
 	this->config.parsedConfig(argc, argv);
