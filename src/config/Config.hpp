@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/25 22:00:50 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 16:12:19 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,34 +27,34 @@
  */
 typedef struct s_location_default
 {
-    std::string root;         // 필수
-    std::string index;        // 선택
-    std::string autoindex;    // 선택
-    std::string limit_except; // 선택
-    std::string return_;      // 선택
+    std::string root;
+    std::string index;
+    std::string autoindex;
+    std::string limit_except;
+    std::string return_;
 } t_location_default;
 
 typedef struct s_server_default
 {
-    std::string listen;               // 필수
-    std::string server_name;          // 선택 , Default = nobody
-    std::string error_page;           // 필수인듯?
-    std::string client_max_body_size; // 선택
-    std::string root;                 // 필수
-    t_location_default location;      // 선택
+    std::string listen;
+    std::string server_name;
+    std::string error_page;
+    std::string client_max_body_size;
+    std::string root;
+    t_location_default location;
 } t_server_default;
 
 typedef struct s_http_default
 {
-    std::string include;     // 선택
-    std::string index;       // 선택
-    t_server_default server; // 필수
+    std::string include;
+    std::string index;
+    t_server_default server;
 } t_http_default;
 
 typedef struct s_main_default
 {
-    std::string types;   // 선택
-    t_http_default http; // 필수
+    std::string types;
+    t_http_default http;
 } t_main_default;
 
 class Config
@@ -70,11 +70,11 @@ private:
     std::map<std::string, std::string> _location;
     void _setRelation();
     void _setIncludes();
-    void _checkRealtion(std::vector<Directive> &directive, std::vector<Directive> &preDirective);
+    void _checkRealtion(std::vector<Directive> &directive);
     void _checkParent(std::string &parentName, std::string rightPre, std::string blockName) const;
     void _checkChildes(std::vector<Directive> &block, std::map<std::string, std::string> &blockFormat, std::string prarentBlockName);
     void _checkRepeatition(std::vector<Directive> &directives, std::string &parentName);
-    void _checkValidValue(std::vector<Directive> &directives, std::vector<Directive> &preDirective);
+    void _checkValidValue(std::vector<Directive> &directives);
     void _checkEmpty(std::string &value, std::string directiveName, bool exist);
     bool _isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName, std::vector<Directive> &preDirective);
     bool _isDirectoryExists(const std::string &directoryPath, std::string directiveName);

@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/28 21:33:41 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:15:20 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include "commonConfig.hpp"
 
 /*
  * A default constructor
@@ -52,7 +53,7 @@ Server::~Server()
 void Server::setServer(Config &config)
 {
     std::vector<Directive> server;
-    config.getAllDirectives(server, config.getDirectives(), "server");
+    config.getAllDirectives(server, config.getDirectives(), SERVER_DIRECTIVE);
     setUpServer(server);
 }
 
@@ -66,11 +67,11 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "listen")
+        if (serverBlocks[i].name == LISTEN_DIRECTIVE)
         {
             int port = strtod(serverBlocks[i].value.c_str(), NULL);
             if (find(this->validPorts.begin(), this->validPorts.end(), port) != this->validPorts.end())
-                errorExit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
+                stderrExit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
             tmpServ.ports.push_back(port);
             this->validPorts.push_back(port);
         }
@@ -78,7 +79,7 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
     if (tmpServ.ports.size() != 0)
         return;
     if (find(this->validPorts.begin(), this->validPorts.end(), 80) != this->validPorts.end())
-        errorExit("Error : duplicate port number 80\n");
+        stderrExit("Error : duplicate port number 80\n");
     tmpServ.ports.push_back(80);
     this->validPorts.push_back(80);
 }
@@ -93,7 +94,7 @@ void Server::setUpLimitExcept(ServerInfo &tmpServ, std::vector<Directive> &serve
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "limit_except")
+        if (serverBlocks[i].name == LIMIT_EXCEPT_DIRECTIVE)
         {
             std::vector<std::string> tokens;
             std::istringstream iss(serverBlocks[i].value);
@@ -115,7 +116,7 @@ std::string Server::findServerName(std::vector<Directive> &serverBlocks)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "server_name")
+        if (serverBlocks[i].name == SERVER_NAME_DIRECTIVE)
             return serverBlocks[i].value;
     }
     return "nobody";
@@ -131,7 +132,7 @@ size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlocks)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "client_max_body_size")
+        if (serverBlocks[i].name == CLIENT_MAX_BODY_SIZE_DIRECTIVE)
             return static_cast<size_t>(strtod(serverBlocks[i].value.c_str(), NULL));
     }
     return -1;
@@ -147,7 +148,7 @@ std::string Server::findRoot(std::vector<Directive> &serverBlocks)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "root")
+        if (serverBlocks[i].name == ROOT_DIRECTIVE)
             return serverBlocks[i].value;
     }
     return "";
@@ -163,7 +164,7 @@ void Server::setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &serverBlock
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "index")
+        if (serverBlocks[i].name == INDEX_DIRECTIVE)
         {
             tmpServ.index = serverBlocks[i].value;
             return;
@@ -183,7 +184,7 @@ void Server::setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverB
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "error_page")
+        if (serverBlocks[i].name == ERROR_PAGE_DIRECTIVE)
         {
             std::vector<std::string> tokens;
             std::istringstream iss(serverBlocks[i].value);
@@ -211,7 +212,7 @@ void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBl
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        if (serverBlocks[i].name == "location")
+        if (serverBlocks[i].name == LOCATION_DIRECTIVE)
             tmpServ.locations.push_back(serverBlocks[i]);
     }
 }
