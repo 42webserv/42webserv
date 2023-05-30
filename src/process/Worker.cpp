@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 13:32:08 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 17:24:48 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,7 +379,7 @@ bool Worker::isCGIRequest(ResponseData *response)
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
 	// return request.find(".py") != std::string::npos;
 	size_t pos = response->path.find("cgi-bin");
-	if (pos == std::string::npos && (response->method == POST || response->method == GET))
+	if (pos == std::string::npos && response->method == POST)
 		pos = response->path.find(".bla");
 	return (pos != std::string::npos);
 }
