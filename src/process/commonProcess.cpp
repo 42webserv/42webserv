@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 22:05:05 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 21:20:13 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,4 +80,41 @@ std::string readFile(const std::string &path)
 	std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	file.close();
 	return contents;
+}
+
+/**
+ * HTTP 요청 메세지에서 Content-Type 헤더의 값을 반환
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return 문자열의 Content-Type 값 혹은 기본값
+ */
+const std::string getContentType(const HTTPRequest &request)
+{
+	const std::map<std::string, std::string> &headers = request.headers;
+
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+	{
+		if (isEqual(it->first, "Content-Type"))
+			return it->second;
+	}
+	return "text/plain";
+}
+
+std::string lower(const std::string &s)
+{
+	std::string lowerS = s;
+
+	for (size_t i = 0; i < lowerS.size(); i++)
+	{
+		lowerS[i] = std::tolower(lowerS[i]);
+	}
+	return lowerS;
+}
+
+bool isEqual(const std::string &s1, const std::string &s2)
+{
+	std::string lowerS1 = lower(s1);
+	std::string lowerS2 = lower(s2);
+
+	return lowerS1 == lowerS2;
 }
