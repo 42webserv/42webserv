@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 17:24:48 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/05/31 16:11:01 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,57 +257,49 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{
-		if (isCGIRequest(response))
+		if (isCGIRequest(*response))
 		{
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
+			std::string resource_content = cgi.excuteCGI(response->resourcePath);
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
-				std::cout << "getLocation" << std::endl;
-				// error_page
+				std::cout << "getCGILocation" << std::endl;
+				errorResponse(response->clientFd);
 				return;
 			}
-			std::ifstream resource_file(response->resourcePath);
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
-			resource_file.close();
 			return;
 		}
 		getResponse(response);
 	}
 	else if (response->method == POST)
 	{
-		// TODO 이건 뭘지 확인하기.
-		if (response->contentLength == 0)
-		{
-			delete response;
-			return;
-		}
-		if (isCGIRequest(response))
+		if (isCGIRequest(*response))
 		{
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
 			std::cout << "YOUPI.BLA" << std::endl;
 			std::cout << "&&&&&&" << response->resourcePath << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath, request);
-			if ((response->resourcePath = getCGILocation(response)) == "")
+			std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::cout << "&&&&&&&" << resource_content << std::endl;
+			response->resourcePath = getCGILocation(response);
+			if (response->resourcePath.empty())
 			{
-				std::cout << "getLocation" << std::endl;
-				// error_page
+				std::cout << "postCGILocation" << std::endl;
+				errorResponse(response->clientFd);
 				return;
 			}
-			std::ifstream resource_file(response->resourcePath);
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
-			resource_file.close();
 			return;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
-		if (request.body.length() == 0)
+		if (response->contentLength == 0)
 		{
 			getResponse(response);
 			return;
@@ -373,16 +365,24 @@ std::string Worker::getCGILocation(ResponseData *response)
 	return "";
 }
 
-bool Worker::isCGIRequest(ResponseData *response)
+bool Worker::isCGIRequest(const ResponseData &response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
-	// return request.find(".py") != std::string::npos;
-	size_t pos = response->path.find("cgi-bin");
-	if (pos == std::string::npos && response->method == POST)
-		pos = response->path.find(".bla");
-	return (pos != std::string::npos);
+	const std::vector<Directive> &location = response.location->block;
+
+	for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
+	{
+		Directive directive = *it;
+		if (directive.name == "cgi_path")
+		{
+			size_t pos = response.path.find(directive.value);
+			if (pos != std::string::npos)
+				return true;
+		}
+	}
+	return false;
 }
 
 /**

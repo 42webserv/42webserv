@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 22:13:32 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 20:45:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ private:
 	void errorResponse(int client_fd);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-	bool isCGIRequest(ResponseData *response);
+	bool isCGIRequest(const ResponseData &response);
 	std::string getCGILocation(ResponseData *response);
 	ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, ServerInfo &thisServer);
 	void broad(ResponseData *response);
