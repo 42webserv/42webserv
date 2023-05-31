@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 22:05:09 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/30 21:18:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,5 +33,7 @@ bool isFile(const std::string &path);
 bool isMethod(const std::string &method);
 bool writeFile(const std::string &path, const std::string &contents);
 std::string readFile(const std::string &path);
+const std::string getContentType(const HTTPRequest &request);
+bool isEqual(const std::string &s1, const std::string &s2);
 
 #endif

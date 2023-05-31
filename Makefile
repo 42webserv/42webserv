@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/29 13:03:21 by chanwjeo         ###   ########.fr        #
+#    Updated: 2023/05/30 20:05:01 by sunhwang         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,8 @@ DIR_SOCKET	= socket
 DIR_UTILS	= utils
 DIR_CGI		= cgi
 DIR_SERVER	= server
-SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARSE) $(DIR_PARSE)/HTTP $(DIR_PROCESS) $(DIR_SOCKET) $(DIR_UTILS) $(DIR_SERVER) $(DIR_CGI)))
+
+SRC_DIRS	= $(sort $(addprefix $(DIR_SRC)/, $(DIR_CONFIG) $(DIR_ERROR) $(DIR_PARSE) $(DIR_PROCESS) $(DIR_SOCKET) $(DIR_UTILS) $(DIR_SERVER) $(DIR_CGI)))
 SRC_INC_DIR	= $(addprefix -I, $(SRC_DIRS))
 INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 
@@ -35,12 +36,6 @@ SRC_SOCKET	= Socket
 SRC_UTILS	= Signal
 SRC_CGI		= CGI
 SRC_SERVER	= Server ServerInfo
-
-ifeq (,$(findstring bonus,$(MAKECMDGOALS)))
-# SRC_WINDOW	+= draw_rt
-else
-# SRC_WINDOW	+= draw_rt_bonus
-endif
 
 SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 			$(addprefix $(DIR_CONFIG)/,		$(SRC_CONFIG))	\
@@ -54,8 +49,6 @@ SRCS_LIST = $(addprefix $(DIR_SRC)/,						\
 
 CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3
 # CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -g3 -fsanitize=address
-# CXXFLAGS	= -std=c++98 -g3 -fsanitize=address
-
 
 SRCS = $(addsuffix .cpp, $(DIR_SRC)/main $(SRCS_LIST))
 OBJS = $(SRCS:%.cpp=$(OUT_DIR)%.o)
@@ -81,4 +74,3 @@ $(NAME): $(OBJS)
 $(OBJS): $(OUT_DIR)%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@
-
