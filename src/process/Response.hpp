@@ -53,7 +53,7 @@ private:
     void setUpLimitExcept(ResponseData *response);
     void setUpReturnState(ResponseData *response);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
-
+    std::string delQuery(std::string path);
 public:
     /*
      * A default constructor

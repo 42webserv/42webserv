@@ -230,6 +230,15 @@ std::string Response::getRootDirectory(const HTTPRequest &request, const ServerI
     return server.root;
 }
 
+std::string Response::delQuery(std::string path)
+{
+    size_t pos = path.rfind('/');
+    size_t pos_q = path.rfind('?');
+    if (pos_q > pos)
+        return (path.substr(0, pos_q));
+    return (path);
+}
+
 /**
  * request의 path와 매칭되는 location 블록을 찾아 반환
  * @param request request를 파싱완료한 구조체
@@ -242,9 +251,9 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
     {
         Directive &location = *it;
         location.value.erase(location.value.find_last_not_of(' ') + 1);
-        if (location.value == request.path)
+        if (location.value == delQuery(request.path))
             return &location;
-        if (location.value != "/" && request.method == PUT)
+        if (location.value != "/" && request.method == PUT) //PUT에서 작동하는데 먼지모르겠음
         {
             size_t pos = request.path.find(location.value);
             if (pos != std::string::npos)
@@ -254,14 +263,14 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
     size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
     while (pos != std::string::npos)
     {
-        std::string tmp = request.path.substr(0, pos);
+        std::string tmp = delQuery(request.path.substr(0, pos));
         for (std::vector<Directive>::iterator it = locations.begin(); it != locations.end(); it++)
         {
             Directive &location = *it;
             location.value.erase(location.value.find_last_not_of(' ') + 1);
             if (location.value == tmp)
             {
-                std::string file = request.path.substr(pos, request.path.length());
+                std::string file = delQuery(request.path.substr(pos, request.path.length()));
                 std::cout << "location : " << tmp << std::endl;
                 std::string root;
                 for (size_t i = 0; i < location.block.size(); i++)
