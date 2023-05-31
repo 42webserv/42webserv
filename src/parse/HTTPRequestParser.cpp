@@ -24,8 +24,7 @@ HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
  */
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
-    buffer_.clear();
-    headers_.clear();
+    reset();
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
     state_ = METHOD;
@@ -300,6 +299,12 @@ void HTTPRequestParser::reset()
     body_.clear();
     buffer_.clear();
     current_header_name_.clear();
+    query_.clear();
+    addr_.clear();
+    name_.clear();
+    port_.clear();
+    path_.clear();
+    http_version_.clear();
 }
 
 /**
