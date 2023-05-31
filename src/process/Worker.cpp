@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 16:34:21 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/31 16:36:12 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ void Worker::eventEVError(int k, struct kevent &event)
 {
 	// 서버 소켓 에러
 	if (fd == sockets[k]->_serverFd)
-		errorExit("Server socket error");
+		stderrExit("Server socket error");
 	else
 	{
 		// 클라이언트 소켓 에러 아니면 다른 에러
@@ -66,11 +66,6 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 		}
 		if (n < 1)
 		{
-			// HTML 요청 메세지 보기
-			// struct kevent new_event;
-			// EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-			// event_list.push_back(new_event);
-			// std::cout << "Received data from " << fd << ": " << clients[fd] << std::endl;
 			UData *uData = static_cast<UData *>(event.udata);
 			if (uData->writeEventExist == false)
 			{
@@ -177,20 +172,16 @@ void Worker::run()
 	int nevents;
 
 	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
-	// std::cout << "listen : " << this->listen[0].value << std::endl;
-
 	int sockets_size;
-	// int k;
 	while (true)
 	{
-		// std::cout << "here" << std::endl;
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
 			break;
 		}
-		event_list.clear(); // 이벤트가 발생하면 event_list를 비워줌 왜>.?????
+		event_list.clear();
 		sockets_size = sockets.size();
 		for (int k = 0; k < sockets_size; k++)
 		{
@@ -240,16 +231,16 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete")
+	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
+			 responseUData->sessionID != "")
+	{
 		responseUData->wantToDeleteSessionInCookie = true;
+	}
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
-		// 현재는 location을 찾지못해 limit.except에서 판별이안되 넘어오는 경우도있음!
 		// 잘못된 메서드일경우
-		std::string response_content = "Method not allowed";
-		std::string response_header = generateErrorHeader(405, response_content);
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		std::cout << "Method not allowed" << std::endl;
+		errorResponse(response, 405);
 		delete response;
 		return;
 	}
@@ -393,7 +384,7 @@ void Worker::getResponse(ResponseData *response)
 
 	std::string resource_content = readFile(response->resourcePath);
 	if (resource_content.empty())
-		return errorResponse(response->clientFd);
+		return errorResponse(response, 404);
 	std::string response_header = generateHeader(resource_content, response->contentType, 200);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
@@ -415,14 +406,13 @@ void Worker::putResponse(ResponseData *response)
 	// TODO 이거 경로 제대로 되게 해야 함. 임시임
 	std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
 	resourcePath += response->path.substr(response->path.find_last_of('/'));
-	// std::cout << "resourcepath(PUT)" << resourcePath << std::endl;
 
 	if (writeFile(resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
 		std::string resource_content = readFile(resourcePath);
 		if (resource_content.empty())
-			return errorResponse(response->clientFd);
+			return errorResponse(response, 404);
 		std::string resource_header = generateHeader(resource_content, "text/html", 201);
 		ftSend(response, resource_header);
 		ftSend(response, resource_content);
@@ -430,25 +420,20 @@ void Worker::putResponse(ResponseData *response)
 	else
 	{
 		// 리소스 생성에 실패한 경우
-		std::string response_content = "Failed to create the resource";
-		std::string response_header = generateErrorHeader(500, "text/html");
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		std::cout << "Failed to create the resource" << std::endl;
+		errorResponse(response, 500);
 	}
 }
 
 void Worker::deleteResponse(ResponseData *response)
 {
 	std::string resourcePath = response->resourcePath;
-	std::cout << "resourcepath(DELETE)" << resourcePath << std::endl;
 
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
-		std::string response_content = "Failed to delete the resource";
-		std::string response_header = generateErrorHeader(500, "text/html");
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		std::cout << "Failed to delete the resource" << std::endl;
+		errorResponse(response, 500);
 	}
 	else
 	{
@@ -461,17 +446,37 @@ void Worker::deleteResponse(ResponseData *response)
 }
 
 /**
- * 404 에러일 경우 나와야할 페이지 띄워주는 함수
+ * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
  *
  * @param client_fd 브라우저 포트번호
  */
-void Worker::errorResponse(int client_fd)
+std::string Worker::errorPageGenerator(int errorCode)
 {
-	const std::string error_path = "./assets/html/404.html";
-	std::string error_content = readFile(error_path);
-	std::string error_header = generateErrorHeader(404, error_content);
-	ftSend(client_fd, error_header);
-	ftSend(client_fd, error_content);
+	std::stringstream broadHtml;
+	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<h1>This is " << errorCode << " Page.</h1>\n</body>\n</html>";
+	return broadHtml.str();
+}
+
+/**
+ * 모든 에러에 대한 에러 페이지를 띄워주는 함수
+ *
+ * @param client_fd 브라우저 포트번호
+ */
+void Worker::errorResponse(ResponseData *response, int errorCode)
+{
+	std::string errorContent;
+	std::map<int, std::string>::iterator it = response->server.errorPage.find(errorCode);
+	if (it == response->server.errorPage.end())
+		errorContent = errorPageGenerator(errorCode);
+	else
+	{
+		const std::string errorPath = response->root + it->second;
+		errorContent = readFile(errorPath);
+		if (errorContent == "")
+			errorContent = errorPageGenerator(errorCode);
+	}
+	ftSend(response->clientFd, generateErrorHeader(errorCode, errorContent));
+	ftSend(response->clientFd, errorContent);
 }
 
 /**
@@ -494,8 +499,9 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		responseUData->wantToDeleteSessionInCookie == true)
 	{
 		std::string expireTime = getExpiryDate(-3600);
-		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << expireTime << CRLF;
+		oss << "Set-Cookie: sessionid="
+			<< "deleted"
+			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		responseUData->alreadySessionSend = false;
 		responseUData->expireTime = "";
 		responseUData->wantToDeleteSessionInCookie = false;
@@ -505,7 +511,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	{
 		std::string expireTime = getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
-			<< "; Expires=" << expireTime << CRLF;
+			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		responseUData->alreadySessionSend = true;
 		responseUData->expireTime = expireTime;
 	}
@@ -526,7 +532,6 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 std::string Worker::generateErrorHeader(int status_code, const std::string &message)
 {
 	std::ostringstream oss;
-	// oss << "HTTP/1.1 " << status_code << " " << message << CRLF;
 	oss << "HTTP/1.1 " << status_code << " OK" << CRLF;
 	oss << "Content-Length: " << message.length() << CRLF;
 	oss << "Content-Type: text/html" << CRLF;
@@ -693,7 +698,9 @@ void Worker::cookieCheck(HTTPRequest *result)
 bool Worker::isCookieValid(const std::string &expireTime)
 {
 	std::tm expirationTime = {};
-	if (strptime(expireTime.c_str(), "%a, %d %b %Y %H:%M:%S", &expirationTime) == 0)
+	std::istringstream iss(expireTime);
+	iss >> std::get_time(&expirationTime, "%a, %d %b %Y %H:%M:%S");
+	if (iss.fail())
 		return false;
 	std::time_t currentTime = std::time(0);
 	std::time_t expiration = std::mktime(&expirationTime);
@@ -734,7 +741,7 @@ bool Worker::invalidResponse(ResponseData *response)
 		else if (!response->redirect.empty())
 			redirection(response);
 		else
-			errorResponse(response->clientFd);
+			errorResponse(response, 404);
 		return true;
 	}
 	return false;
