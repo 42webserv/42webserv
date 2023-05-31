@@ -57,7 +57,10 @@ Directive Config::_parseDirective(const std::string &line)
 	if (directive.value[directive.value.length() - 1] == ';')
 		directive.value = trimdLine.substr(value_pos, trimdLine.size() - value_pos - 1);
 	if (directive.value.find("{") != std::string::npos)
+	{
 		directive.value.erase(directive.value.find("{"), 1);
+		directive.value = trim(directive.value);
+	}
 	return directive; // 블록이 있는 경우 블록이 존재하는 블록이 반환된다.
 }
 
