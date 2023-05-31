@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/31 16:21:38 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/31 19:45:58 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,13 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	//  	headers["CONTENT_LENGTH"] = toString(content_length);
 	//  }
 	// this->envp_["AUTH_TYPE"] = "";
+	char tempBuf[20];
+	std::sprintf(tempBuf, "%lu", request.body.length());
+	std::string tempStr(tempBuf);
 	if (std::to_string(request.body.length()) == "0")
 		this->envp_["CONTENT_LENGTH"] = "-1";
 	else
-		this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length()); // TODO to_string 사용하면 안됨.
+		this->envp_["CONTENT_LENGTH"] = tempStr;
 	// this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
 	this->envp_["CONTENT_TYPE"] = getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
