@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 21:31:22 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/31 16:34:21 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,7 +133,6 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
-			std::cout << fd << " : 응답 완료" << std::endl;
 			struct kevent eventToDelete;
 			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
