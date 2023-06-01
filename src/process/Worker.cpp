@@ -370,8 +370,10 @@ bool Worker::isCGIRequest(const ResponseData &response)
 	for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
 	{
 		Directive directive = *it;
+		std::cout << "A " << directive.name << std::endl;
 		if (directive.name == "cgi_path")
 		{
+			std::cout << "B " << directive.value << std::endl;
 			size_t pos = response.path.find(directive.value);
 			if (pos != std::string::npos)
 				return true;
