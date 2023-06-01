@@ -101,7 +101,7 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
     std::string path = response->root;
     // location에 등록된 index
     std::string index = response->index;
-
+    bool i = false;
     {
         // location에 등록된 root 값으로 routes에서 지워준다. location root로 대체됨.
         size_t pos = routes.find(response->location->value);
@@ -111,7 +111,8 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
         // location에 등록된 index 값으로 routes에서 지워준다. location index로 대체됨.
         if (!index.empty())
         {
-            pos = routes.find(index);
+            //에러날경우있음 root/123/index일때 다 123/index가 다 지워짐
+            pos = routes.find(index); 
             if (pos != std::string::npos)
                 routes = routes.substr(0, pos);
         }
@@ -125,15 +126,21 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
             {
                 routes = routes.substr(0, extensionPos);
                 index = extension;
+                i = true;
             }
         }
     }
     if (routes.compare(0, response->location->value.length(), response->location->value) != 0)
         path += routes;
-    if (path[path.length() - 1] != '/')
-        path += "/";
-    path += index;
-    return path;
+    if ((i == false && isDirectory(path)) || i == true)
+    {
+        path = path + "/" + index;
+    }
+    std::cout << "============= " << path << std::endl;
+    // if (path[path.length() - 1] != '/')
+    //     path += "/";
+    // path += index;
+    return (path);
 }
 
 std::string Response::findMimeType(const std::string &path, Config &config)
