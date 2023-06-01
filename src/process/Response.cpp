@@ -130,6 +130,13 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
     }
     if (routes.compare(0, response->location->value.length(), response->location->value) != 0)
         path += routes;
+    // TODO 경훈아~ 여기야
+    // if (isDirectory(path))
+    // {
+    //     if (path[path.length() - 1] != '/')
+    //         path += "/";
+    //     path += index;
+    // }
     if (path[path.length() - 1] != '/')
         path += "/";
     path += index;
