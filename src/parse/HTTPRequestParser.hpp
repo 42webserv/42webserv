@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 20:16:38 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/31 16:33:30 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ private:
     std::string http_version_;
     std::map<std::string, std::string> headers_;
     std::string body_;
+    std::string chunked_data; // chunked 인코딩된 데이터를 저장할 필드
     std::string buffer_;
     std::string current_header_name_;
     std::string query_;

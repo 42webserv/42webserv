@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/30 13:39:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/01 15:32:08 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,11 +61,10 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     int index = getSuitableServer(request.port, serverManger);
     if (index < 0)
         index = 0;
-    ServerInfo server = serverManger.servers[index];
-    ResponseData *response = new ResponseData;
+    ServerInfo &server = serverManger.servers[index];
+    ResponseData *response = new ResponseData();
     response->server = server;
     response->index = server.index;
-    response->path = request.path;
     response->method = request.method;
     response->clientFd = client_fd;
     response->root = getRootDirectory(request, server);
@@ -82,17 +81,72 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
         response->limitExcept = server.limitExcepts;
     response->resourcePath = response->root + "/" + response->index;
     // 경로에서 확장자 찾아준 뒤, Content-Type 찾기
+    response->contentType = findMimeType(response->resourcePath, config);
+    response->body = request.body;
+    response->contentLength = response->body.length();
+    response->path = getPath(request, response);
+    response->resourcePath = response->path;
+    return (response);
+}
+
+/**
+ * url에는 location의 path가 들어올 수도 location의 path 이후 서브 경로가 들어올 수 있다.
+ * 또한 url에는 index 값이 포함되어 들어올 수 있다. 마지막에 확장자가 없는 파일도 들어올 수 있다.
+ */
+std::string Response::getPath(const HTTPRequest &request, ResponseData *response)
+{
+    // 요청으로 들어온 경로
+    std::string routes = request.path;
+    // 반환될 변수. 첫 부분은 location에 등록된 root
+    std::string path = response->root;
+    // location에 등록된 index
+    std::string index = response->index;
+
+    {
+        // location에 등록된 root 값으로 routes에서 지워준다. location root로 대체됨.
+        size_t pos = routes.find(response->location->value);
+        if (pos != std::string::npos)
+            // routes = routes.substr(pos, response->location->value.length() - pos);
+            routes = routes.substr(pos + response->location->value.length());
+        // location에 등록된 index 값으로 routes에서 지워준다. location index로 대체됨.
+        if (!index.empty())
+        {
+            pos = routes.find(index);
+            if (pos != std::string::npos)
+                routes = routes.substr(0, pos);
+        }
+        pos = routes.rfind("/");
+        if (pos != std::string::npos)
+        {
+            size_t extensionPos = pos + 1;
+            std::string extension = routes.substr(pos + 1);
+            pos = extension.find(".");
+            if (pos != std::string::npos)
+            {
+                routes = routes.substr(0, extensionPos);
+                index = extension;
+            }
+        }
+    }
+    if (routes.compare(0, response->location->value.length(), response->location->value) != 0)
+        path += routes;
+    if (path[path.length() - 1] != '/')
+        path += "/";
+    path += index;
+    return path;
+}
+
+std::string Response::findMimeType(const std::string &path, Config &config)
+{
+    MimeTypesParser mime(config);
+    std::istringstream iss(path);
     std::vector<std::string> tokens;
-    std::istringstream iss(response->resourcePath);
     std::string token;
+
     while (std::getline(iss, token, '.'))
         tokens.push_back(token);
     std::string extension = tokens.back();
-    MimeTypesParser mime(config);
-    response->contentType = mime.getMimeType(extension);
-    response->body = request.body;
-    response->contentLength = response->body.length();
-    return (response);
+    return mime.getMimeType(extension);
 }
 
 /**
@@ -247,66 +301,30 @@ std::string Response::delQuery(std::string path)
  */
 Directive *Response::findLocation(const HTTPRequest &request, std::vector<Directive> &locations)
 {
+
+    // location 지시문의 value와 request의 path가 일치하는지 확인
     for (std::vector<Directive>::iterator it = locations.begin(); it != locations.end(); it++)
     {
         Directive &location = *it;
-        location.value.erase(location.value.find_last_not_of(' ') + 1);
-        if (location.value == delQuery(request.path))
+        if (location.value == request.path)
             return &location;
-        if (location.value != "/" && request.method == PUT) //PUT에서 작동하는데 먼지모르겠음
-        {
-            size_t pos = request.path.find(location.value);
-            if (pos != std::string::npos)
-                return &location;
-        }
     }
-    size_t pos = request.path.rfind('/'); // 처음엔 확장자만 지워서 매칭되는 location을 찾음
-    while (pos != std::string::npos)
+
+    // 일치하지 않는다면, 뒤에서 부터 /의 위치를 찾아 경로를 지우면서 locations을 순회하며 일치하는 location을 찾음
+    size_t pos = request.path.rfind('/');
+    while (pos != 0 && pos != std::string::npos)
     {
-        std::string tmp = delQuery(request.path.substr(0, pos));
+        std::string path = request.path.substr(0, pos);
         for (std::vector<Directive>::iterator it = locations.begin(); it != locations.end(); it++)
         {
             Directive &location = *it;
-            location.value.erase(location.value.find_last_not_of(' ') + 1);
-            if (location.value == tmp)
+            if (location.value == path)
             {
-                std::string file = delQuery(request.path.substr(pos, request.path.length()));
-                std::cout << "location : " << tmp << std::endl;
-                std::string root;
-                for (size_t i = 0; i < location.block.size(); i++)
-                {
-                    if (location.block[i].name == "root")
-                    {
-                        std::cout << "root : " << location.block[i].value << std::endl;
-                        root = location.block[i].value;
-                        if (isDirectory(root + file))
-                        {
-                            location.block[i].value = root + file;
-                            return &location;
-                        }
-                        else
-                        {
-                            for (size_t j = 0; j < location.block.size(); j++)
-                            {
-                                if (location.block[j].name == "index")
-                                {
-                                    location.block[j].value = file;
-                                    return &location;
-                                }
-                            }
-                            Directive index;
-                            index.name = "index";
-                            index.value = file;
-                            location.block.push_back(index);
-                            return &location;
-                        }
-                    }
-                }
                 return &location;
             }
         }
-        tmp = tmp.erase(pos);
-        pos = tmp.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
+        path = path.erase(pos);
+        pos = path.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
     }
     return NULL;
 }
