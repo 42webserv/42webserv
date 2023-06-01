@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 16:36:12 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/01 15:09:11 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,7 +255,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			if (response->resourcePath.empty())
 			{
 				std::cout << "getCGILocation" << std::endl;
-				errorResponse(response->clientFd);
+				errorResponse(response, 404);
 				return;
 			}
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
@@ -267,7 +267,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	}
 	else if (response->method == POST)
 	{
-		if (isCGIRequest(*response))
+		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
 			std::cout << "YOUPI.BLA" << std::endl;
 			CGI cgi(request);
@@ -277,7 +277,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			if (response->resourcePath.empty())
 			{
 				std::cout << "postCGILocation" << std::endl;
-				errorResponse(response->clientFd);
+				errorResponse(response, 404);
 				return;
 			}
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
@@ -334,7 +334,7 @@ std::string Worker::getCGILocation(ResponseData *response)
 	for (size_t i = 0; i < locations.size(); ++i)
 	{
 		Directive &location = locations[i];
-		if (location.value == "/result ")
+		if (location.value == "/result")
 		{
 			std::string root = "";
 			std::string index = "";
@@ -357,6 +357,9 @@ bool Worker::isCGIRequest(const ResponseData &response)
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
 	// 요청이 CGI 요청인 경우 true를 반환하고, 그렇지 않은 경우 false를 반환합니다.
+	if (response.location == NULL)
+		return false;
+
 	const std::vector<Directive> &location = response.location->block;
 
 	for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
@@ -392,9 +395,21 @@ void Worker::getResponse(ResponseData *response)
 
 void Worker::postResponse(ResponseData *response)
 {
+	const std::string clientMaxBodySize = "client_max_body_size";
 	if (invalidResponse(response))
 		return;
 
+	// TODO PUT도 해야 하나?
+	// check client_max_body_size
+	std::vector<Directive>::const_iterator it = findDirective(response->location->block, clientMaxBodySize);
+	if (it == response->location->block.end())
+		it = findDirective(response->server.locations, clientMaxBodySize);
+	if (it != response->location->block.end())
+	{
+		size_t max_body_size = atoi(it->value.c_str());
+		if (max_body_size < response->contentLength)
+			return errorResponse(response, 400);
+	}
 	writeFile(response->resourcePath, response->body);
 	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
 	std::string response_header = generateHeader(body, response->contentType, 201);
@@ -404,13 +419,10 @@ void Worker::postResponse(ResponseData *response)
 void Worker::putResponse(ResponseData *response)
 {
 	// TODO 이거 경로 제대로 되게 해야 함. 임시임
-	std::string resourcePath = response->resourcePath.substr(0, response->resourcePath.find_last_of('/'));
-	resourcePath += response->path.substr(response->path.find_last_of('/'));
-
-	if (writeFile(resourcePath, response->body))
+	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::string resource_content = readFile(resourcePath);
+		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
 		std::string resource_header = generateHeader(resource_content, "text/html", 201);
