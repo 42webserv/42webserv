@@ -30,6 +30,7 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	//  {
 	//  	headers["CONTENT_LENGTH"] = toString(content_length);
 	//  }
+	// tostring 수정 과정
 	// this->envp_["AUTH_TYPE"] = "";
 	// char tempBuf[20];
 	// std::sprintf(tempBuf, "%lu", request.body.length());

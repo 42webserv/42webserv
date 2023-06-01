@@ -53,13 +53,9 @@ private:
     void setUpLimitExcept(ResponseData *response);
     void setUpReturnState(ResponseData *response);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
-<<<<<<< HEAD
-    std::string delQuery(std::string path);
-=======
     std::string findMimeType(const std::string &path, Config &config);
     std::string getPath(const HTTPRequest &request, ResponseData *response);
 
->>>>>>> develop
 public:
     /*
      * A default constructor
