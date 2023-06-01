@@ -70,7 +70,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
-        if (request->method == "HEAD")
+        if (request->method == HEAD)
             return request;
         // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
         if (headers_.size() == 0)
