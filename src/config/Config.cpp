@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/30 16:16:21 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/31 22:02:39 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,10 @@ Directive Config::_parseDirective(const std::string &line)
 	if (directive.value[directive.value.length() - 1] == ';')
 		directive.value = trimdLine.substr(value_pos, trimdLine.size() - value_pos - 1);
 	if (directive.value.find(LEFT_BRACE) != std::string::npos)
+	{
 		directive.value.erase(directive.value.find(LEFT_BRACE), 1);
+		directive.value = Config::trim(directive.value);
+	}
 	return directive; // 블록이 있는 경우 블록이 존재하는 블록이 반환된다.
 }
 
