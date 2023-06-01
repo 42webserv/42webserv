@@ -47,6 +47,7 @@ class Response
 private:
     int getSuitableServer(int port, Server &serverManager);
     std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &server);
+    std::string delQuery(std::string path);
     void setUpRoot(ResponseData *response);
     void setUpIndex(ResponseData *response);
     void setUpAutoindex(ResponseData *response);
