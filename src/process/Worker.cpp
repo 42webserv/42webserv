@@ -359,7 +359,7 @@ std::string Worker::getCGILocation(ResponseData *response)
 	return "";
 }
 
-bool Worker::isCGIRequest(const ResponseData &response)
+bool Worker::isCGIRequest(ResponseData &response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
@@ -367,19 +367,35 @@ bool Worker::isCGIRequest(const ResponseData &response)
 	if (response.location == NULL)
 		return false;
 
-	const std::vector<Directive> &location = response.location->block;
-
-	for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
+	// const std::vector<Directive> &location = response.location->block;
+	// for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
+	// {
+	// 	Directive directive = *it;
+	// 	std::cout << "A " << directive.name << std::endl;
+	// 	if (directive.name == "cgi_path")
+	// 	{
+	// 		std::cout << "B ==" << directive.value << "==" << std::endl;
+	// 		size_t pos = response.path.find(directive.value);
+	// 		if (pos != std::string::npos)
+	// 			return true;
+	// 	}
+	// }
+	size_t pos = response.path.find(".", response.path.find_last_of("/"));
+	if (pos == std::string::npos)
+		return false;
+	std::string tmp = response.path.substr(pos);
+	if (std::find(response.cgiPath.begin(), response.cgiPath.end(), tmp) != response.cgiPath.end())
 	{
-		Directive directive = *it;
-		std::cout << "A " << directive.name << std::endl;
-		if (directive.name == "cgi_path")
+		tmp = response.cgiPath.back();
+		if (response.method == POST && tmp.find(".") == std::string::npos)
 		{
-			std::cout << "B ==" << directive.value << "==" << std::endl;
-			size_t pos = response.path.find(directive.value);
-			if (pos != std::string::npos)
-				return true;
+			response.path = response.path.substr(0, response.path.find_last_of("/"));
+			response.path += "/";
+			response.path += tmp;
 		}
+		response.cgiPath.push_back(tmp);
+		response.resourcePath = response.path;
+		return true;
 	}
 	return false;
 }

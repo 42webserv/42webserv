@@ -64,7 +64,7 @@ private:
 	void errorResponse(ResponseData *response, int errorCode);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-	bool isCGIRequest(const ResponseData &response);
+	bool isCGIRequest(ResponseData &response);
 	std::string getCGILocation(ResponseData *response);
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);

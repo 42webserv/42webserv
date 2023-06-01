@@ -119,12 +119,12 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
         pos = routes.rfind("/");
         if (pos != std::string::npos)
         {
-            size_t extensionPos = pos + 1;
+            size_t extensionPos = pos;
             std::string extension = routes.substr(pos + 1);
             pos = extension.find(".");
             if (pos != std::string::npos)
             {
-                routes = routes.substr(1, extensionPos);
+                routes = routes.substr(0, extensionPos);
                 index = extension;
                 i = true;
             }
@@ -133,9 +133,7 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
     if (routes.compare(0, response->location->value.length(), response->location->value) != 0)
         path += routes;
     if ((i == false && isDirectory(path)) || i == true)
-    {
         path = path + "/" + index;
-    }
     return (path);
 }
 
