@@ -257,10 +257,14 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{
+		std::cout << "dfjdkasfjklsajflsa" << std::endl;
 		if (isCGIRequest(*response))
 		{
+			std::cout << "&&&&&&" << response->resourcePath << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::string resource_content = cgi.excuteCGI("./src/cgi-bin/printEnvp.py");
+			// std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::cout << "&&&&&&&" << resource_content << std::endl;
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -375,6 +379,7 @@ bool Worker::isCGIRequest(const ResponseData &response)
 	for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
 	{
 		Directive directive = *it;
+		std::cout << directive.name << std::endl;
 		if (directive.name == "cgi_path")
 		{
 			size_t pos = response.path.find(directive.value);

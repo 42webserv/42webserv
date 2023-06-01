@@ -31,13 +31,15 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	//  	headers["CONTENT_LENGTH"] = toString(content_length);
 	//  }
 	// this->envp_["AUTH_TYPE"] = "";
-	char tempBuf[20];
-	std::sprintf(tempBuf, "%lu", request.body.length());
-	std::string tempStr(tempBuf);
+	// to string 변형 시도
+	// char tempBuf[20];
+	// std::sprintf(tempBuf, "%lu", request.body.length());
+	// std::string tempStr(tempBuf);
 	if (std::to_string(request.body.length()) == "0")
 		this->envp_["CONTENT_LENGTH"] = "-1";
 	else
-		this->envp_["CONTENT_LENGTH"] = tempStr;
+		this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
+	// this->envp_["CONTENT_LENGTH"] = tempStr;
 	// this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
 	this->envp_["CONTENT_TYPE"] = getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
