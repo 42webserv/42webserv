@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 20:16:47 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/05/30 22:51:29 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
     if (client_fd < 0)
         stderrExit("accept() error");
 
-    std::cout << "Accept new client:" << client_fd << std::endl;
+    // std::cout << "Accept new client:" << client_fd << std::endl;
     int flags = fcntl(client_fd, F_GETFL, 0);
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
@@ -115,7 +115,7 @@ void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients
     kevent(kq, &event, 1, NULL, 0, NULL);
     EV_SET(&event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
     kevent(kq, &event, 1, NULL, 0, NULL);
-    std::cout << "close client_fd: " << client_fd << std::endl;
+    // std::cout << "close client_fd: " << client_fd << std::endl;
     // shutdown(client_fd, SHUT_RDWR);
     close(client_fd);
     clients.erase(client_fd);
