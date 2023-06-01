@@ -273,11 +273,13 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		{
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
-			std::cout << "YOUPI.BLA" << std::endl;
+			// std::cout << "YOUPI.BLA" << std::endl;
 			std::cout << "&&&&&&" << response->resourcePath << std::endl;
+			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath);
 			std::cout << "&&&&&&&" << resource_content << std::endl;
+			std::cout << "[" << resource_content.length() << "]" << std::endl;
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -373,7 +375,7 @@ bool Worker::isCGIRequest(const ResponseData &response)
 		std::cout << "A " << directive.name << std::endl;
 		if (directive.name == "cgi_path")
 		{
-			std::cout << "B " << directive.value << std::endl;
+			std::cout << "B ==" << directive.value << "==" << std::endl;
 			size_t pos = response.path.find(directive.value);
 			if (pos != std::string::npos)
 				return true;
