@@ -31,6 +31,7 @@ struct ResponseData
     std::string contentType;
     std::string method;
     std::vector<std::string> limitExcept;
+    std::vector<std::string> cgiPath;
     std::string returnState;
     std::string redirect;
     Directive *location;
@@ -53,6 +54,7 @@ private:
     void setUpAutoindex(ResponseData *response);
     void setUpLimitExcept(ResponseData *response);
     void setUpReturnState(ResponseData *response);
+    void setUpCgiPath(ResponseData *respone);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
     std::string findMimeType(const std::string &path, Config &config);
     std::string getPath(const HTTPRequest &request, ResponseData *response);

@@ -76,15 +76,15 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
         setUpAutoindex(response);
         setUpLimitExcept(response);
         setUpReturnState(response);
+        setUpCgiPath(response);
     }
     if (response->limitExcept.size() < 1)
         response->limitExcept = server.limitExcepts;
-    response->resourcePath = response->root + "/" + response->index;
     // 경로에서 확장자 찾아준 뒤, Content-Type 찾기
-    response->contentType = findMimeType(response->resourcePath, config);
+    response->path = getPath(request, response);
+    response->contentType = findMimeType(response->path, config);
     response->body = request.body;
     response->contentLength = response->body.length();
-    response->path = getPath(request, response);
     response->resourcePath = response->path;
     return (response);
 }
@@ -124,7 +124,7 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
             pos = extension.find(".");
             if (pos != std::string::npos)
             {
-                routes = routes.substr(0, extensionPos);
+                routes = routes.substr(1, extensionPos);
                 index = extension;
                 i = true;
             }
@@ -136,10 +136,6 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
     {
         path = path + "/" + index;
     }
-    std::cout << "============= " << path << std::endl;
-    // if (path[path.length() - 1] != '/')
-    //     path += "/";
-    // path += index;
     return (path);
 }
 
@@ -271,6 +267,33 @@ void Response::setUpReturnState(ResponseData *response)
                 start++;
             tmp = dir.value.substr(start);
             response->redirect = tmp;
+            break;
+        }
+    }
+}
+
+void Response::setUpCgiPath(ResponseData *response)
+{
+    std::vector<Directive> &block = response->location->block;
+
+    for (size_t i = 0; i < block.size(); i++)
+    {
+        Directive &dir = block[i];
+        if (dir.name == "cgi_path")
+        {
+            size_t pos = dir.value.find(' ');
+            size_t start = 0;
+            while (pos != std::string::npos)
+            {
+                std::string tmp = dir.value.substr(start, pos - start);
+                response->cgiPath.push_back(tmp);
+                start = pos;
+                while (dir.value[start] != '\0' && dir.value[start] == ' ')
+                    start++;
+                pos = dir.value.find(' ', start);
+            }
+            std::string tmp = dir.value.substr(start);
+            response->cgiPath.push_back(tmp);
             break;
         }
     }
