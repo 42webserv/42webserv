@@ -59,92 +59,121 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 	}
 	else if (clients.find(fd) != clients.end())
 	{
-		char buf[1024];
-		int n = 1;
-		while (0 < (n = recv(fd, buf, sizeof(buf) - 1, 0)))
+		// char buf[1024];
+		// int n = 1;
+		// while (0 < (n = recv(fd, buf, sizeof(buf), 0)))
+		// {
+		// 	buf[n] = '\0';
+		// 	clients[fd] += buf;
+		// }
+		// if (n < 1)
+		// {
+		// 	UData *uData = static_cast<UData *>(event.udata);
+		// 	if (uData->writeEventExist == false)
+		// 	{
+		// 		struct kevent new_event;
+		// 		uData->writeEventExist = true;
+		// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
+		// 		event_list.push_back(new_event);
+		// 	}
+		// }
+
+		char buf[BUFFER_SIZE + 1];
+		ssize_t n;
+		struct kevent new_event;
+
+		memset(buf, 0, BUFFER_SIZE + 1);
+		while (true)
 		{
-			buf[n] = '\0';
-			clients[fd] += buf;
-		}
-		if (n < 1)
-		{
+			n = recv(fd, buf, BUFFER_SIZE, 0);
+			if (n < 0)
+			{
+				std::cout << "buf:" << buf << std::endl;
+				std::cout << std::endl;
+				std::cout << "clients[fd]:" << clients[fd] << std::endl;
+				clients[fd].clear();
+				return false;
+			}
+			else if (n < BUFFER_SIZE)
+			{
+				buf[n] = '\0';
+				clients[fd] += buf;
+			}
+			else
+			{
+				buf[BUFFER_SIZE] = '\0';
+				clients[fd] += buf;
+				continue;
+			}
 			UData *uData = static_cast<UData *>(event.udata);
 			if (uData->writeEventExist == false)
 			{
-				struct kevent new_event;
 				uData->writeEventExist = true;
 				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
 				event_list.push_back(new_event);
+				memset(buf, 0, BUFFER_SIZE + 1);
+				return true;
 			}
 		}
-
-		// char buf[BUFFER_SIZE + 1];
-		// ssize_t n;
-		// struct kevent new_event;
-
-		// while (true)
-		// {
-		// 	n = recv(fd, buf, BUFFER_SIZE, 0);
-		// 	if (n < BUFFER_SIZE)
-		// 	{
-		// 		buf[n] = '\0';
-		// 		clients[fd] += buf;
-		// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		// 		event_list.push_back(new_event);
-		// 		std::cout << "read: " << clients[fd] << std::endl;
-		// 		break;
-		// 	}
-		// 	else
-		// 	{
-		// 		// buf[BUFFER_SIZE] = '\0';
-		// 		clients[fd] += buf;
-		// 	}
 	}
 	return true;
 }
 
 bool Worker::eventFilterWrite(int k, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
-	HTTPRequest *result = parser.parse(clients[fd]);
-	if (!result)
-		return false;
-	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	if (result->method != HEAD && result->headers.size() == 0)
-		return false;
-	if (result->port == -1)
-		result->port = strtod(listen[0].value.c_str(), NULL);
-	responseUData = static_cast<UData *>(event.udata);
-	if (clients.find(fd) != clients.end() && result != NULL)
+	try
 	{
-		if (checkHeaderIsKeepLive(result))
-			registerKeepAlive(result, event, fd);
-		cookieCheck(result);
-		if (responseUData->max == 0)
+		if (!hasClientFd(k))
+			throw std::exception();
+		std::cout << "write: " << clients[fd] << std::endl;
+		HTTPRequest *result = parser.parse(clients[fd]);
+		if (!result)
+			throw std::exception();
+		// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+		if (result->method != HEAD && result->headers.size() == 0)
+			throw std::exception();
+		if (result->port == -1)
+			result->port = strtod(listen[0].value.c_str(), NULL);
+		responseUData = static_cast<UData *>(event.udata);
+		if (clients.find(fd) != clients.end() && result != NULL)
 		{
-			std::cout << "max is zero, disconnection!" << std::endl;
-			sockets[k]->disconnectClient(fd, clients, event);
-			return false;
+			if (checkHeaderIsKeepLive(result))
+				registerKeepAlive(result, event, fd);
+			cookieCheck(result);
+			if (responseUData->max == 0)
+			{
+				std::cout << "max is zero, disconnection!" << std::endl;
+				sockets[k]->disconnectClient(fd, clients, event);
+				throw std::exception();
+			}
+			if (result)
+			{
+				this->requestHandler(*result, fd);
+				struct kevent eventToDelete;
+				EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+				kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
+				responseUData->writeEventExist = false;
+			}
+			else
+				std::cout << "Failed to parse request" << std::endl;
+			responseUData->max = responseUData->max - 1;
+			// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
+			// sockets[k]->disconnectClient(fd, clients, event);
+			clients[fd].clear();
+			if (result)
+				delete result;
 		}
-		if (result)
-		{
-			this->requestHandler(*result, fd);
-			struct kevent eventToDelete;
-			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
-			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
-			responseUData->writeEventExist = false;
-		}
-		else
-			std::cout << "Failed to parse request" << std::endl;
-		responseUData->max = responseUData->max - 1;
-		// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
-		// sockets[k]->disconnectClient(fd, clients, event);
-		clients[fd].clear();
 	}
-	if (result)
-		delete result;
-
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+		struct kevent eventToDelete;
+		EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+		kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
+		responseUData->writeEventExist = false;
+		clients[fd].clear();
+		return false;
+	}
 	return true;
 }
 
@@ -174,7 +203,6 @@ void Worker::run()
 	int nevents;
 
 	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
-	int sockets_size;
 	while (true)
 	{
 		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
@@ -184,8 +212,7 @@ void Worker::run()
 			break;
 		}
 		event_list.clear();
-		sockets_size = sockets.size();
-		for (int k = 0; k < sockets_size; k++)
+		for (size_t k = 0; k < sockets.size(); k++)
 		{
 			for (int i = 0; i < nevents; i++)
 			{
@@ -195,25 +222,13 @@ void Worker::run()
 				if (event.flags & EV_ERROR)
 					eventEVError(k, event);
 				if (event.flags & EV_EOF)
-				{
-					if (eventEOF(k, event) == false)
-						continue;
-				}
+					eventEOF(k, event);
 				else if (event.filter == EVFILT_READ)
-				{
-					if (eventFilterRead(k, event) == false)
-						continue;
-				}
+					eventFilterRead(k, event);
 				else if (event.filter == EVFILT_WRITE)
-				{
-					if (eventFilterWrite(k, events[i]) == false)
-						continue;
-				}
+					eventFilterWrite(k, events[i]);
 				else if (event.filter == EVFILT_TIMER)
-				{
-					if (eventFilterTimer(k, event) == false)
-						continue;
-				}
+					eventFilterTimer(k, event);
 				else if (event.filter == EVFILT_SIGNAL)
 					signal.handleEvent(event, sockets);
 			}
