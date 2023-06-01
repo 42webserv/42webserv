@@ -61,7 +61,7 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 	{
 		char buf[1024];
 		int n = 1;
-		while (0 < (n = recv(fd, buf, sizeof(buf), 0)))
+		while (0 < (n = recv(fd, buf, sizeof(buf) - 1, 0)))
 		{
 			buf[n] = '\0';
 			clients[fd] += buf;
