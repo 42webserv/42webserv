@@ -22,16 +22,6 @@
 #include "HTTPRequestParser.hpp"
 #include "CGI.hpp"
 
-struct CGIData
-{
-    int port;
-    std::string path;
-    std::string body;
-    std::string query;
-    std::string addr;
-    std::string name;
-};
-
 struct ResponseData
 {
     int clientFd;
@@ -46,7 +36,6 @@ struct ResponseData
     Directive *location;
     std::string locationName;
     std::string path; // request의 path그대로 가져옴
-    // CGIData *cgi;
     bool autoindex;
     std::string body;
     size_t contentLength;
@@ -58,6 +47,7 @@ class Response
 private:
     int getSuitableServer(int port, Server &serverManager);
     std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &server);
+    std::string delQuery(std::string path);
     void setUpRoot(ResponseData *response);
     void setUpIndex(ResponseData *response);
     void setUpAutoindex(ResponseData *response);
