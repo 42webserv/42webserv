@@ -291,6 +291,15 @@ std::string Response::getRootDirectory(const HTTPRequest &request, const ServerI
     return server.root;
 }
 
+std::string Response::delQuery(std::string path)
+{
+    size_t pos = path.rfind('/');
+    size_t pos_q = path.rfind('?');
+    if (pos_q > pos)
+        return (path.substr(0, pos_q));
+    return (path);
+}
+
 /**
  * request의 path와 매칭되는 location 블록을 찾아 반환
  * @param request request를 파싱완료한 구조체

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/05/31 16:33:11 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/05/31 19:45:58 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,21 +30,31 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	//  {
 	//  	headers["CONTENT_LENGTH"] = toString(content_length);
 	//  }
-	this->envp_["AUTH_TYPE"] = "";
-	this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length()); // TODO to_string 사용하면 안됨.
+	// tostring 수정 과정
+	// this->envp_["AUTH_TYPE"] = "";
+	// char tempBuf[20];
+	// std::sprintf(tempBuf, "%lu", request.body.length());
+	// std::string tempStr(tempBuf);
+	if (std::to_string(request.body.length()) == "0")
+		this->envp_["CONTENT_LENGTH"] = "-1";
+	else
+		this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
+	// this->envp_["CONTENT_LENGTH"] = tempStr;
+	// this->envp_["CONTENT_LENGTH"] = std::to_string(request.body.length());
 	this->envp_["CONTENT_TYPE"] = getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
 	this->envp_["PATH_INFO"] = request.path;
-	this->envp_["PATH_TRANSLATED"] = request.path;
+	// this->envp_["PATH_TRANSLATED"] = request.path;
 	// PATH_INFO의 변환. 스크립트의 가상경로를, 실제 호출 할 때 사용되는 경로로 맵핑.
 	//  요청 URI의 PATH_INFO 구성요소를 가져와, 적합한 가상 : 실제 변환을 수행하여 맵핑.
 	this->envp_["QUERY_STRING"] = request.query;
+	// this->envp_["QUERY_STRING"] = request.query;
 	this->envp_["REMOTE_ADDR"] = request.addr;
-	this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
-	this->envp_["REMOTE_USER"] = "";
+	// this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
+	// this->envp_["REMOTE_USER"] = "";
 	this->envp_["REQUEST_METHOD"] = request.method;
-	this->envp_["REQUEST_URI"] = request.name; //
-	this->envp_["SCRIPT_NAME"] = request.name; //
+	this->envp_["REQUEST_URI"] = request.path;	//
+	this->envp_["SCRIPT_NAME"] = "webserv/1.1"; //
 	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
 	this->envp_["SERVER_PORT"] = request.strPort; // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
