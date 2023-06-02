@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/02 12:16:10 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 15:22:21 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,11 +50,11 @@ Server::~Server()
  *
  * @param config conf 파일을 파싱한 클래스
  */
-void Server::setServer(Config &config, const int kq)
+void Server::setServer(Config &config, const int kq, std::vector<struct kevent> &events)
 {
     std::vector<Directive> server;
     config.getAllDirectives(server, config.getDirectives(), SERVER_DIRECTIVE);
-    setUpServer(server, events, kq);
+    setUpServer(server, kq, events);
 }
 
 /**
@@ -222,7 +222,7 @@ void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBl
  *
  * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpServer(std::vector<Directive> &serverBlocks)
+void Server::setUpServer(std::vector<Directive> &serverBlocks, const int kq, const std::vector<struct kevent> events)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
@@ -238,8 +238,7 @@ void Server::setUpServer(std::vector<Directive> &serverBlocks)
         for (size_t i = 0; i < server.ports.size(); i++)
         {
             int &port = server.ports[i];
-            Socket socket = Socket(events, port, kq);
-            server.sockets.push_back(socket);
+            server.sockets.push_back(Socket(events, port, kq));
         }
         this->servers.push_back(server);
     }
