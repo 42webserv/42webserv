@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:46:05 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:45:41 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,7 +206,7 @@ void Worker::run()
 				}
 				else if (event.filter == EVFILT_WRITE)
 				{
-					if (eventFilterWrite(k, events[i]) == false)
+					if (eventFilterWrite(k, event) == false)
 						continue;
 				}
 				else if (event.filter == EVFILT_TIMER)
