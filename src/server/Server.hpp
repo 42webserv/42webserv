@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/02 15:21:28 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:16:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ struct ServerInfo
     std::vector<Directive> locations;
     std::map<int, std::string> errorPage;
     ServerInfo &operator=(const ServerInfo &ref);
+    void closeSockets() const;
 };
 
 class Server
@@ -40,7 +41,7 @@ class Server
 private:
     std::vector<int> validPorts;
 
-    void setUpServer(std::vector<Directive> &servrBlocks, const int kq, const std::vector<struct kevent> events);
+    void setUpServer(std::vector<Directive> &servrBlocks, const int &kq, std::vector<struct kevent> &events);
     void setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &servrBlocks);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);
     void setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);
@@ -76,6 +77,7 @@ public:
 
     void printServer();
     void setServer(Config &config, const int kq, std::vector<struct kevent> &events);
+    Socket *findSocket(const int fd);
 };
 
 /*

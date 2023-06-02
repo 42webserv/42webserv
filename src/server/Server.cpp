@@ -6,12 +6,13 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/02 15:22:21 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 20:13:37 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "commonConfig.hpp"
+#include "commonUtils.hpp"
 
 /*
  * A default constructor
@@ -78,10 +79,10 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
     }
     if (tmpServ.ports.size() != 0)
         return;
-    if (find(this->validPorts.begin(), this->validPorts.end(), 80) != this->validPorts.end())
+    if (find(this->validPorts.begin(), this->validPorts.end(), DEFAULT_PORT) != this->validPorts.end())
         stderrExit("Error : duplicate port number 80\n");
-    tmpServ.ports.push_back(80);
-    this->validPorts.push_back(80);
+    tmpServ.ports.push_back(DEFAULT_PORT);
+    this->validPorts.push_back(DEFAULT_PORT);
 }
 
 /**
@@ -135,7 +136,7 @@ size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlocks)
         if (serverBlocks[i].name == CLIENT_MAX_BODY_SIZE_DIRECTIVE)
             return static_cast<size_t>(strtod(serverBlocks[i].value.c_str(), NULL));
     }
-    return -1;
+    return DEFAULT_CLIENT_MAX_BODY_SIZE;
 }
 
 /**
@@ -222,7 +223,7 @@ void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBl
  *
  * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpServer(std::vector<Directive> &serverBlocks, const int kq, const std::vector<struct kevent> events)
+void Server::setUpServer(std::vector<Directive> &serverBlocks, const int &kq, std::vector<struct kevent> &events)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
@@ -238,7 +239,8 @@ void Server::setUpServer(std::vector<Directive> &serverBlocks, const int kq, con
         for (size_t i = 0; i < server.ports.size(); i++)
         {
             int &port = server.ports[i];
-            server.sockets.push_back(Socket(events, port, kq));
+            Socket socket(events, port, kq);
+            server.sockets.push_back(socket);
         }
         this->servers.push_back(server);
     }
@@ -270,4 +272,30 @@ void Server::printServer()
             std::cout << "errorPage : " << iter->first << ", " << iter->second << std::endl;
         std::cout << "===============================\n\n";
     }
+}
+
+Socket *Server::findSocket(const int fd)
+{
+    for (size_t i = 0; i < this->servers.size(); i++)
+    {
+        std::vector<Socket> &sockets = this->servers[i].sockets;
+        for (size_t j = 0; j < sockets.size(); j++)
+        {
+            Socket &socket = sockets[j];
+            if (socket._serverFd == fd)
+                return &socket;
+            else
+            {
+                const std::vector<int> &clientFds = socket._clientFds;
+                for (size_t k = 0; k < clientFds.size(); k++)
+                {
+                    const int clientFd = clientFds[k];
+                    if (clientFd == fd)
+                        return &socket;
+                }
+            }
+        }
+    }
+    std::cout << "NULL이 존재함 ?" << std::endl;
+    return NULL;
 }

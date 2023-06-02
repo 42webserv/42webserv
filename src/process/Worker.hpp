@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 10:31:36 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 20:28:34 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,21 +41,20 @@ class Worker
 private:
 	const int kq;
 	const Signal signal;
-	std::vector<Socket *> sockets;
 	std::vector<struct kevent> &events;
 	std::map<int, std::string> clients;
 	int fd;
-	Config config;
-	Server server;
+	Config &config;
+	Server &server;
 	HTTPRequestParser parser;
 	UData *responseUData;
 	std::vector<Directive> listen;
 
-	void eventEVError(int k, struct kevent &event);
-	bool eventFilterRead(int k, struct kevent &event);
-	bool eventFilterWrite(int k, struct kevent &event);
-	bool eventEOF(int k, struct kevent &event);
-	bool eventFilterTimer(int k, struct kevent &event);
+	void eventEVError(Socket &socket, struct kevent &event);
+	bool eventFilterRead(Socket &socket, struct kevent &event);
+	bool eventFilterWrite(Socket &socket, struct kevent &event);
+	bool eventEOF(Socket &socket, struct kevent &event);
+	bool eventFilterTimer(Socket &socket, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, const int &client_fd);
 	void getResponse(ResponseData *response);
 	void postResponse(ResponseData *response);
@@ -79,7 +78,6 @@ private:
 	void cookieCheck(HTTPRequest *result);
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
-	bool hasClientFd(const int &k);
 
 public:
 	Worker(Master &master);

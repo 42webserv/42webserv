@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 12:02:18 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 20:35:15 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,109 +14,80 @@
 #include "commonProcess.hpp"
 #include "Worker.hpp"
 
-Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), events(master.getEvents()), config(master.getConfig()), server(master.getServer())
-{
-	// Create sockets
-	for (size_t i = 0; i < server.servers.size(); i++)
-	{
-		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
-		{
-			Socket *socket = new Socket(events, server.servers[i].ports[j], kq);
-			sockets.push_back(socket);
-		}
-	}
-}
+Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), events(master.getEvents()), config(master.getConfig()), server(master.getServer()) {}
 
-Worker::~Worker()
-{
-	for (size_t i = 0; i < sockets.size(); i++)
-		delete (sockets[i]);
-}
+Worker::~Worker() {}
 
-void Worker::eventEVError(int k, struct kevent &event)
+void Worker::eventEVError(Socket &socket, struct kevent &event)
 {
-	// 서버 소켓 에러
-	if (fd == sockets[k]->_serverFd)
-		stderrExit("Server socket error");
+	if (fd == socket._serverFd)
+		stderrExit("Server socket error"); // 서버 소켓 에러
 	else
-	{
-		// 클라이언트 소켓 에러 아니면 다른 에러
-		if (clients.find(fd) != clients.end())
-		{
-			sockets[k]->disconnectClient(fd, clients, event);
-		}
-	}
+		socket.disconnectClient(fd, clients, event); // 클라이언트 소켓 에러 아니면 다른 에러
 }
 
-bool Worker::eventFilterRead(int k, struct kevent &event)
+bool Worker::eventFilterRead(Socket &socket, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
-	if (fd == sockets[k]->_serverFd)
+	// if (!hasClientFd(k))
+	// 	return false;
+	if (fd == socket._serverFd)
 	{
-		sockets[k]->handleEvent(events);
-		// int client_fd = sockets[k]->handleEvent(events);
-		// clients[client_fd].clear();
+		socket.handleEvent(events);
+		return true;
 	}
-	else if (clients.find(fd) != clients.end())
+	// char buf[1024];
+	// int n = 1;
+	// while (0 < (n = recv(fd, buf, sizeof(buf), 0)))
+	// {
+	// 	buf[n] = '\0';
+	// 	clients[fd] += buf;
+	// }
+	// if (n < 1)
+	// {
+	// 	UData *uData = static_cast<UData *>(event.udata);
+	// 	if (uData->writeEventExist == false)
+	// 	{
+	// 		struct kevent new_event;
+	// 		uData->writeEventExist = true;
+	// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
+	// 		event_list.push_back(new_event);
+	// 	}
+	// }
+	char buf[BUFFER_SIZE];
+	ssize_t n;
+	struct kevent new_event;
+
+	memset(buf, 0, BUFFER_SIZE);
+	clients[fd].clear();
+	while (true)
 	{
-		// char buf[1024];
-		// int n = 1;
-		// while (0 < (n = recv(fd, buf, sizeof(buf), 0)))
-		// {
-		// 	buf[n] = '\0';
-		// 	clients[fd] += buf;
-		// }
-		// if (n < 1)
-		// {
-		// 	UData *uData = static_cast<UData *>(event.udata);
-		// 	if (uData->writeEventExist == false)
-		// 	{
-		// 		struct kevent new_event;
-		// 		uData->writeEventExist = true;
-		// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
-		// 		event_list.push_back(new_event);
-		// 	}
-		// }
-
-		char buf[BUFFER_SIZE];
-		ssize_t n;
-		struct kevent new_event;
-
-		memset(buf, 0, BUFFER_SIZE);
-		clients[fd].clear();
-		while (true)
+		n = recv(fd, buf, BUFFER_SIZE - 1, 0);
+		if (n < 0)
+			std::cout << "n < 0:" << clients[fd] << std::endl;
+		else if (n < BUFFER_SIZE)
+			clients[fd].append(buf);
+		else
 		{
-			n = recv(fd, buf, BUFFER_SIZE - 1, 0);
-			if (n < 0)
-				std::cout << "n < 0:" << clients[fd] << std::endl;
-			else if (n < BUFFER_SIZE)
-				clients[fd].append(buf);
-			else
-			{
-				clients[fd].append(buf);
-				continue;
-			}
-			std::cout << "read: " << clients[fd] << std::endl;
-			UData *uData = static_cast<UData *>(event.udata);
-			if (uData->writeEventExist == false)
-			{
-				uData->writeEventExist = true;
-				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.udata);
-				events.push_back(new_event);
-				return true;
-			}
+			clients[fd].append(buf);
+			continue;
+		}
+		std::cout << "read: " << clients[fd] << std::endl;
+		UData *uData = static_cast<UData *>(event.udata);
+		if (uData->writeEventExist == false)
+		{
+			uData->writeEventExist = true;
+			EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.udata);
+			events.push_back(new_event);
+			return true;
 		}
 	}
 	return true;
 }
 
-bool Worker::eventFilterWrite(int k, struct kevent &event)
+bool Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	try
 	{
-		if (!hasClientFd(k))
-			throw std::exception();
 		std::cout << "write: " << clients[fd] << std::endl;
 		HTTPRequest *result = parser.parse(clients[fd]);
 		if (!result)
@@ -135,15 +106,15 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 			if (responseUData->max == 0)
 			{
 				std::cout << "max is zero, disconnection!" << std::endl;
-				sockets[k]->disconnectClient(fd, clients, event);
+				socket.disconnectClient(fd, clients, event);
 				throw std::exception();
 			}
 			if (result)
 			{
 				this->requestHandler(*result, fd);
 				struct kevent eventToDelete;
-				EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
-				kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
+				EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+				events.push_back(eventToDelete);
 				responseUData->writeEventExist = false;
 			}
 			else
@@ -169,22 +140,18 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 	return true;
 }
 
-bool Worker::eventEOF(int k, struct kevent &event)
+bool Worker::eventEOF(Socket &socket, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
 	std::cout << "client want to disconnect" << std::endl;
-	sockets[k]->disconnectClient(fd, clients, event);
+	socket.disconnectClient(fd, clients, event);
 	return true;
 }
 
-bool Worker::eventFilterTimer(int k, struct kevent &event)
+bool Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
 	std::cout << fd << " is time over" << std::endl;
 	deleteTimer(fd);
-	sockets[k]->disconnectClient(fd, clients, event);
+	socket.disconnectClient(fd, clients, event);
 	return true;
 }
 
@@ -194,36 +161,40 @@ void Worker::run()
 	struct kevent event;
 	int nevents;
 
+	memset(eventList, 0, sizeof(eventList));
+	memset(&event, 0, sizeof(event));
 	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
 	while (true)
 	{
-		nevents = kevent(kq, &events[0], events.size(), eventList, 10, NULL);
+		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), NULL);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for eventList: " << strerror(errno) << std::endl;
 			break;
 		}
 		events.clear();
-		server.servers.for (size_t k = 0; k < sockets.size(); k++)
-		{
-			for (int i = 0; i < nevents; i++)
-			{
-				event = eventList[i];
-				fd = event.ident;
 
-				if (event.flags & EV_ERROR)
-					eventEVError(k, event);
-				if (event.flags & EV_EOF)
-					eventEOF(k, event);
-				else if (event.filter == EVFILT_READ)
-					eventFilterRead(k, event);
-				else if (event.filter == EVFILT_WRITE)
-					eventFilterWrite(k, events[i]);
-				else if (event.filter == EVFILT_TIMER)
-					eventFilterTimer(k, event);
-				else if (event.filter == EVFILT_SIGNAL)
-					signal.handleEvent(event, sockets);
-			}
+		for (int i = 0; i < nevents; i++)
+		{
+			event = eventList[i];
+			fd = event.ident;
+			Socket *socket = this->server.findSocket(fd);
+			if (socket == NULL)
+				stderrExit("Error: socket not found");
+
+			Socket &k = *socket;
+			if (event.flags & EV_ERROR)
+				eventEVError(k, event);
+			if (event.flags & EV_EOF)
+				eventEOF(k, event);
+			else if (event.filter == EVFILT_READ)
+				eventFilterRead(k, event);
+			else if (event.filter == EVFILT_WRITE)
+				eventFilterWrite(k, events[i]);
+			else if (event.filter == EVFILT_TIMER)
+				eventFilterTimer(k, event);
+			else if (event.filter == EVFILT_SIGNAL)
+				signal.handleEvent(event, server.servers);
 		}
 	}
 }
@@ -661,15 +632,17 @@ void Worker::setTimer(int fd, int timeout)
 {
 	struct kevent timerEvent;
 	int timer_interval_ms = timeout * 1000;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, NULL);
+	events.push_back(timerEvent);
+	// kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 
 void Worker::deleteTimer(int fd)
 {
 	struct kevent timerEvent;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	events.push_back(timerEvent);
+	// kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 
 void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
@@ -773,13 +746,4 @@ bool Worker::invalidResponse(ResponseData *response)
 		return true;
 	}
 	return false;
-}
-
-bool Worker::hasClientFd(const int &k)
-{
-	Socket *socket = sockets[k];
-	std::vector<int>::iterator it = std::find(socket->_clientFds.begin(), socket->_clientFds.end(), fd);
-	if (it == socket->_clientFds.end())
-		return false;
-	return true;
 }

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 09:39:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 17:46:52 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 	this->config.parsedConfig(argc, argv);
 
 	// Set the server
-	this->server.setServer(this->config);
+	this->server.setServer(this->config, this->kq, this->events);
 	// this->server.printServer();
 }
 
