@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 15:23:13 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 20:14:40 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,15 +64,17 @@ private:
     const int kq;
 
 public:
-    int _port;
     const int _serverFd;
     std::vector<int> _clientFds;
-    Socket(std::vector<struct kevent> &events, const int port, const int kq);
+    Socket(std::vector<struct kevent> &events, const int &port, const int &kq);
     ~Socket();
+    Socket &operator=(const Socket &ref);
+    Socket(const Socket &ref);
     int handleEvent(std::vector<struct kevent> &events);
     void disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event);
     static int enableKeepAlive(int socketFd);
     bool findClientFd(int client_fd);
+    void closeClients() const;
 };
 
 #endif
