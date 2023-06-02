@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 22:18:42 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 00:41:19 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ public:
     Socket &operator=(const Socket &ref);
     Socket(const Socket &ref);
     int connectClient(std::vector<struct kevent> &events);
-    void disconnectClient(int &clientFd, struct kevent &event);
+    void disconnectClient(struct kevent &event);
     static int enableKeepAlive(int socketFd);
     bool findClientFd(int client_fd);
     void closeClients() const;

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 22:30:12 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 00:41:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,9 +125,10 @@ int Socket::connectClient(std::vector<struct kevent> &events)
     return client_fd;
 }
 
-void Socket::disconnectClient(int &clientFd, struct kevent &event)
+void Socket::disconnectClient(struct kevent &event)
 {
     std::cout << "disconnectClient" << std::endl;
+    const int &clientFd = event.ident;
     if (event.udata)
         delete static_cast<UData *>(event.udata);
     event.udata = NULL;
