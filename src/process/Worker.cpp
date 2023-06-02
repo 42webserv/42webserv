@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 18:05:55 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/02 18:47:34 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -280,13 +280,15 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::string resource_content = cgi.excuteCGI("./YoupiBanane/cgi_tester");
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
+			resource_content.erase(0, 2);
 			std::cout << "[" << resource_content.length() << "]" << std::endl;
 			std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
-			response->resourcePath = getCGILocation(response);
+			// response->resourcePath = getCGILocation(response);
+			std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			if (response->resourcePath.empty())
 			{
 				std::cout << "postCGILocation" << std::endl;
@@ -397,15 +399,15 @@ bool Worker::isCGIRequest(ResponseData &response)
 	std::string tmp = response.path.substr(pos);
 	if (std::find(response.cgiPath.begin(), response.cgiPath.end(), tmp) != response.cgiPath.end())
 	{
-		tmp = response.cgiPath.back();
-		if (response.method == POST && tmp.find(".") == std::string::npos)
-		{
-			response.path = response.path.substr(0, response.path.find_last_of("/"));
-			response.path += "/";
-			response.path += tmp;
-		}
-		response.cgiPath.push_back(tmp);
-		response.resourcePath = response.path;
+		// tmp = response.cgiPath.back();
+		// if (response.method == POST && tmp.find(".") == std::string::npos)
+		// {
+		// 	response.path = response.path.substr(0, response.path.find_last_of("/"));
+		// 	response.path += "/";
+		// 	response.path += tmp;
+		// }
+		// response.cgiPath.push_back(tmp);
+		// response.resourcePath = response.path;
 		return true;
 	}
 	return false;

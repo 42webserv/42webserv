@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 18:07:18 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/02 18:27:36 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -287,12 +287,14 @@ bool HTTPRequestParser::parseBody()
             if (chunk_size_str.empty())
                 break; // 마지막 청크를 나타내는 빈 문자열인 경우 종료
 
+            if (buffer_.length() > 2 && buffer_.substr(buffer_.length() - 6, 2) != "\n0")
+                return false;
+
             // chunk_size_str을 숫자로 변환
             std::istringstream iss(chunk_size_str);
             size_t chunk_size;
             if (!(iss >> std::hex >> chunk_size))
                 return false;
-            // std::cout << "chunk size_str : " << chunk_size_str << ", buffer_size : " << buffer_.size() << std::endl;
 
             if (chunk_size == 0)
             {
