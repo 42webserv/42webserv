@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:45:41 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:46:33 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -316,30 +316,31 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
 			// std::cout << "YOUPI.BLA" << std::endl;
-			std::cout << "POST PATH : " << response->resourcePath << std::endl;
-			std::cout << "[" << request.body.length() << "]" << std::endl;
+			// std::cout << "POST PATH : " << response->resourcePath << std::endl;
+			// std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI("./YoupiBanane/cgi_tester");
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
 			resource_content.erase(0, 2);
-			std::cout << "[" << resource_content.length() << "]" << std::endl;
-			std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
+			// std::cout << "[" << resource_content.length() << "]" << std::endl;
+			// std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
 			// response->resourcePath = getCGILocation(response);
-			std::cout << "POST PATH : " << response->resourcePath << std::endl;
+			// std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			if (response->resourcePath.empty())
 			{
 				std::cout << "postCGILocation" << std::endl;
 				errorResponse(response, 404);
 				return;
 			}
+			resource_content = resource_content.substr(0, 400000);
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
-			std::cout << "post1" << std::endl;
+			// std::cout << "post1" << std::endl;
 			ftSend(response, response_header);
-			std::cout << "post2" << std::endl;
+			// std::cout << "post2" << std::endl;
 			ftSend(response, resource_content);
-			std::cout << "post3" << std::endl;
+			// std::cout << "post3" << std::endl;
 			return;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.

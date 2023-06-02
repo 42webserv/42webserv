@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:45:19 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:40:21 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -358,33 +358,6 @@ bool HTTPRequestParser::parseBody()
     state_ = COMPLETE;
     return true;
 }
-// bool HTTPRequestParser::parseBody()
-// {
-//     if (method_ != POST && method_ != PUT)
-//     {
-//         state_ = COMPLETE;
-//         return true;
-//     }
-//     std::map<std::string, std::string>::iterator it = headers_.find("content-length");
-//     if (it != headers_.end())
-//     {
-//         int content_length = atoi(it->second.c_str());
-//         if (buffer_.size() < static_cast<size_t>(content_length))
-//             return false;
-//         body_ = buffer_.substr(0, content_length);
-//         buffer_.erase(0, content_length);
-//     }
-//     else
-//     {
-//         headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
-//         body_ = buffer_.substr(0, buffer_.size());
-//         buffer_.clear();
-//     }
-//     if (body_.empty())
-//         return false;
-//     state_ = COMPLETE;
-//     return true;
-// }
 
 /**
  * HTTP 요청 메세지 파싱이 끝나면 사용한 버퍼를 모두 지워줌
