@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:24:07 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:45:19 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,7 +278,8 @@ bool HTTPRequestParser::parseBody()
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
     {
-        std::cout << "\nnew request" << std::endl;
+        long long chunkSum = 0;
+
         // chunked 인코딩이 적용된 경우
         while (!buffer_.empty())
         {
@@ -290,6 +291,9 @@ bool HTTPRequestParser::parseBody()
 
             if (chunk_size_str.empty())
                 break; // 마지막 청크를 나타내는 빈 문자열인 경우 종료
+
+            if (buffer_.length() > 2 && buffer_.substr(buffer_.length() - 6, 2) != "\n0")
+                return false;
 
             // chunk_size_str을 숫자로 변환
             std::istringstream iss(chunk_size_str);
@@ -309,8 +313,13 @@ bool HTTPRequestParser::parseBody()
 
             std::string chunk_data = buffer_.substr(0, chunk_size); // 청크의 데이터 추출
             buffer_.erase(0, chunk_size + 2);
-            std::cout << "here, chunk_size : " << chunk_size << std::endl;
             body_ += chunk_data; // body에 청크 데이터 추가
+            if (body_.length() / 10000000 != chunkSum / 10000000 && body_.length() / 10000000 % 2 == 0)
+                std::cout << body_.length() / 10000000 * 10 << "\% complete!" << std::endl;
+            chunkSum += static_cast<long long>(chunk_size);
+
+            if (buffer_.size() == 0)
+                return false;
         }
     }
     else

@@ -31,7 +31,6 @@
 
 #define BUFFER_SIZE 1024
 
-struct CGIData;
 struct ResponseData;
 struct HTTPRequest;
 
