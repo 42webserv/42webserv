@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:38:52 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 22:37:46 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void Worker::eventEVError(Socket &socket, struct kevent &event)
 	if (fd == socket._serverFd)
 		stderrExit("Server socket error"); // 서버 소켓 에러
 	else
-		socket.disconnectClient(fd, clients, event); // 클라이언트 소켓 에러 아니면 다른 에러
+		socket.disconnectClient(fd, event); // 클라이언트 소켓 에러 아니면 다른 에러
 }
 
 void Worker::eventFilterSignal(struct kevent &event)
@@ -37,7 +37,7 @@ bool Worker::eventFilterRead(Socket &socket, struct kevent &event)
 	// 	return false;
 	if (fd == socket._serverFd)
 	{
-		socket.handleEvent(events);
+		socket.connectClient(events);
 		return true;
 	}
 	// char buf[1024];
@@ -111,7 +111,7 @@ bool Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 			if (responseUData->max == 0)
 			{
 				std::cout << "max is zero, disconnection!" << std::endl;
-				socket.disconnectClient(fd, clients, event);
+				socket.disconnectClient(fd, event);
 				throw std::exception();
 			}
 			if (result)
@@ -126,7 +126,7 @@ bool Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 				std::cout << "Failed to parse request" << std::endl;
 			responseUData->max = responseUData->max - 1;
 			// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
-			// sockets[k]->disconnectClient(fd, clients, event);
+			// sockets[k]->disconnectClient(fd, event);
 			clients[fd].clear();
 			if (result)
 				delete result;
@@ -148,7 +148,7 @@ bool Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 bool Worker::eventEOF(Socket &socket, struct kevent &event)
 {
 	std::cout << "client want to disconnect" << std::endl;
-	socket.disconnectClient(fd, clients, event);
+	socket.disconnectClient(fd, event);
 	return true;
 }
 
@@ -156,7 +156,7 @@ bool Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 {
 	std::cout << fd << " is time over" << std::endl;
 	deleteTimer(fd);
-	socket.disconnectClient(fd, clients, event);
+	socket.disconnectClient(fd, event);
 	return true;
 }
 
@@ -190,7 +190,7 @@ void Worker::run()
 			Socket &k = *socket;
 			if (event.flags & EV_ERROR)
 				eventEVError(k, event);
-			if (event.flags & EV_EOF)
+			else if (event.flags & EV_EOF)
 				eventEOF(k, event);
 			else if (event.filter == EVFILT_READ)
 				eventFilterRead(k, event);
@@ -635,18 +635,18 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 
 void Worker::setTimer(int fd, int timeout)
 {
-	struct kevent timerEvent;
+	struct kevent event;
 	int timer_interval_ms = timeout * 1000;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, NULL);
-	events.push_back(timerEvent);
+	EV_SET(&event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, NULL);
+	events.push_back(event);
 	// kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 
 void Worker::deleteTimer(int fd)
 {
-	struct kevent timerEvent;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-	events.push_back(timerEvent);
+	struct kevent event;
+	EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	events.push_back(event);
 	// kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 

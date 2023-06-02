@@ -6,12 +6,11 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 09:31:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 22:07:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
-#include "Worker.hpp"
 
 void leaks()
 {

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/02 20:13:37 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 22:17:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ Server::~Server()
  *
  * @param config conf 파일을 파싱한 클래스
  */
-void Server::setServer(Config &config, const int kq, std::vector<struct kevent> &events)
+void Server::setServer(Config &config, const int &kq, std::vector<struct kevent> &events)
 {
     std::vector<Directive> server;
     config.getAllDirectives(server, config.getDirectives(), SERVER_DIRECTIVE);
@@ -274,7 +274,7 @@ void Server::printServer()
     }
 }
 
-Socket *Server::findSocket(const int fd)
+Socket *Server::findSocket(const int &fd)
 {
     for (size_t i = 0; i < this->servers.size(); i++)
     {
