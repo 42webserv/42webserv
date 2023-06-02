@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/01 15:44:49 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 11:13:35 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,6 +253,9 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		{
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::size_t tmpIdx = resource_content.find("\n\n");
+			if (tmpIdx != std::string::npos)
+				resource_content = resource_content.substr(tmpIdx + 2);
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -274,11 +277,12 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
 			// std::cout << "YOUPI.BLA" << std::endl;
-			std::cout << "&&&&&&" << response->resourcePath << std::endl;
 			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath);
-			std::cout << "&&&&&&&" << resource_content << std::endl;
+			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
+			if (tmpIdx != std::string::npos)
+				resource_content = resource_content.substr(tmpIdx + 2);
 			std::cout << "[" << resource_content.length() << "]" << std::endl;
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
@@ -380,6 +384,7 @@ bool Worker::isCGIRequest(ResponseData &response)
 	// 			return true;
 	// 	}
 	// }
+
 	size_t pos = response.path.find(".", response.path.find_last_of("/"));
 	if (pos == std::string::npos)
 		return false;
