@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 11:13:35 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/02 19:41:30 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		}
 		if (result)
 		{
-			this->requestHandler(*result, fd);
+			this->requestHandler(*result, fd, k);
 			struct kevent eventToDelete;
 			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
@@ -221,23 +221,54 @@ void Worker::run()
 	}
 }
 
+bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response)
+{
+	std::map<std::string, std::string>::const_iterator it = request.headers.find("content-length");
+	if (it != request.headers.end()) // Client의 request body size가 너무 큰 경우
+	{
+		std::string str = it->second.substr(0, it->second.find_last_of('\r'));
+		std::stringstream ss(str);
+		size_t requestBodySize;
+		ss >> requestBodySize;
+
+		if (invalidResponse(response))
+			return false;
+
+		size_t clientMaxBodySize = server.servers[k].clientMaxBodySize;
+
+		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(server.servers[k].locations, LOCATION_DIRECTIVE, request.path);
+		if (dir != server.servers[k].locations.end())
+		{
+			std::vector<Directive>::const_iterator dirr;
+			dirr = findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
+			if (dirr != dir->block.end())
+				clientMaxBodySize = atoi(dirr->value.c_str());
+		}
+		std::cout << "clientMaxBodySize = " << clientMaxBodySize << std::endl;
+		std::cout << "requestBodySize = " << requestBodySize << std::endl;
+
+		if (requestBodySize > clientMaxBodySize)
+		{
+			std::cout << "It have too big body than client_max_body_size" << std::endl;
+			errorResponse(response, 413);
+			delete response;
+			return false;
+		}
+	}
+	return true;
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
  * @param request request 를 파싱완료한 구조체
  * @param client_fd 서버의 fd
  */
-void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
+void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, int k)
 {
 	Response res;
 	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
-	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
-		responseUData->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
-			 responseUData->sessionID != "")
-	{
-		responseUData->wantToDeleteSessionInCookie = true;
-	}
+
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
@@ -246,6 +277,14 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		delete response;
 		return;
 	}
+	if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
+		return;
+	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+		responseUData->sessionID = generateSessionID(32);
+	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
+			 responseUData->sessionID != "")
+		responseUData->wantToDeleteSessionInCookie = true;
+
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{

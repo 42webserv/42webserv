@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/30 20:15:20 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:29:48 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlocks)
         if (serverBlocks[i].name == CLIENT_MAX_BODY_SIZE_DIRECTIVE)
             return static_cast<size_t>(strtod(serverBlocks[i].value.c_str(), NULL));
     }
-    return -1;
+    return 1000000;
 }
 
 /**
