@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 11:13:35 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/02 18:05:55 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -277,6 +277,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
 			// std::cout << "YOUPI.BLA" << std::endl;
+			std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(response->resourcePath);
@@ -284,6 +285,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
 			std::cout << "[" << resource_content.length() << "]" << std::endl;
+			std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -292,8 +294,11 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 				return;
 			}
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
+			std::cout << "post1" << std::endl;
 			ftSend(response, response_header);
+			std::cout << "post2" << std::endl;
 			ftSend(response, resource_content);
+			std::cout << "post3" << std::endl;
 			return;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
@@ -313,6 +318,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	}
 	else if (response->method == PUT)
 	{
+		std::cout << "PUT HERE" << std::endl;
 		putResponse(response);
 	}
 	else if (response->method == OPTIONS)
@@ -449,9 +455,12 @@ void Worker::postResponse(ResponseData *response)
 void Worker::putResponse(ResponseData *response)
 {
 	// TODO 이거 경로 제대로 되게 해야 함. 임시임
+	if (response->body.length() > 10000)
+		response->body = response->body.substr(0, 10000);
 	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
+		std::cout << "putResponse, response->resoursePath : " << response->resourcePath << std::endl;
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
