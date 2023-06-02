@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 13:01:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/02 12:14:57 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,7 @@
 struct ServerInfo
 {
     std::vector<int> ports;
-    // Socket *socket;
-    std::vector<Socket *> sockets;
+    std::vector<Socket> sockets;
     size_t clientMaxBodySize;
     std::string serverName;
     std::string root;
@@ -41,9 +40,6 @@ class Server
 private:
     std::vector<int> validPorts;
 
-    /*
-     * Add it if you feel necessary additional member functions.
-     */
     void setUpServer(std::vector<Directive> &servrBlocks);
     void setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &servrBlocks);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);

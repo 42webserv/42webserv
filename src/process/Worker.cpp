@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/01 15:44:49 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 12:02:18 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 #include "commonProcess.hpp"
 #include "Worker.hpp"
 
-Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
+Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), events(master.getEvents()), config(master.getConfig()), server(master.getServer())
 {
 	// Create sockets
 	for (size_t i = 0; i < server.servers.size(); i++)
 	{
 		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
 		{
-			Socket *socket = new Socket(master.getEvents(), server.servers[i].ports[j], kq);
+			Socket *socket = new Socket(events, server.servers[i].ports[j], kq);
 			sockets.push_back(socket);
 		}
 	}
@@ -54,8 +54,9 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 		return false;
 	if (fd == sockets[k]->_serverFd)
 	{
-		int client_fd = sockets[k]->handleEvent(event_list);
-		clients[client_fd].clear();
+		sockets[k]->handleEvent(events);
+		// int client_fd = sockets[k]->handleEvent(events);
+		// clients[client_fd].clear();
 	}
 	else if (clients.find(fd) != clients.end())
 	{
@@ -78,40 +79,31 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 		// 	}
 		// }
 
-		char buf[BUFFER_SIZE + 1];
+		char buf[BUFFER_SIZE];
 		ssize_t n;
 		struct kevent new_event;
 
-		memset(buf, 0, BUFFER_SIZE + 1);
+		memset(buf, 0, BUFFER_SIZE);
+		clients[fd].clear();
 		while (true)
 		{
-			n = recv(fd, buf, BUFFER_SIZE, 0);
+			n = recv(fd, buf, BUFFER_SIZE - 1, 0);
 			if (n < 0)
-			{
-				std::cout << "buf:" << buf << std::endl;
-				std::cout << std::endl;
-				std::cout << "clients[fd]:" << clients[fd] << std::endl;
-				clients[fd].clear();
-				return false;
-			}
+				std::cout << "n < 0:" << clients[fd] << std::endl;
 			else if (n < BUFFER_SIZE)
-			{
-				buf[n] = '\0';
-				clients[fd] += buf;
-			}
+				clients[fd].append(buf);
 			else
 			{
-				buf[BUFFER_SIZE] = '\0';
-				clients[fd] += buf;
+				clients[fd].append(buf);
 				continue;
 			}
+			std::cout << "read: " << clients[fd] << std::endl;
 			UData *uData = static_cast<UData *>(event.udata);
 			if (uData->writeEventExist == false)
 			{
 				uData->writeEventExist = true;
-				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
-				event_list.push_back(new_event);
-				memset(buf, 0, BUFFER_SIZE + 1);
+				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.udata);
+				events.push_back(new_event);
 				return true;
 			}
 		}
@@ -198,25 +190,25 @@ bool Worker::eventFilterTimer(int k, struct kevent &event)
 
 void Worker::run()
 {
-	struct kevent events[10];
+	struct kevent eventList[10];
 	struct kevent event;
 	int nevents;
 
 	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
 	while (true)
 	{
-		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
+		nevents = kevent(kq, &events[0], events.size(), eventList, 10, NULL);
 		if (nevents == -1)
 		{
-			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
+			std::cerr << "Error waiting for eventList: " << strerror(errno) << std::endl;
 			break;
 		}
-		event_list.clear();
-		for (size_t k = 0; k < sockets.size(); k++)
+		events.clear();
+		server.servers.for (size_t k = 0; k < sockets.size(); k++)
 		{
 			for (int i = 0; i < nevents; i++)
 			{
-				event = events[i];
+				event = eventList[i];
 				fd = event.ident;
 
 				if (event.flags & EV_ERROR)

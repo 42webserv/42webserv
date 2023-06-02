@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 16:36:16 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 10:31:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@
 #include "commonError.hpp"
 #include "Config.hpp"
 #include "HTTPRequestParser.hpp"
-#include "Master.hpp"
 #include "MimeTypesParser.hpp"
 #include "Response.hpp"
 #include "Server.hpp"
@@ -35,13 +34,15 @@ struct CGIData;
 struct ResponseData;
 struct HTTPRequest;
 
+class Master;
+
 class Worker
 {
 private:
 	const int kq;
 	const Signal signal;
 	std::vector<Socket *> sockets;
-	std::vector<struct kevent> &event_list;
+	std::vector<struct kevent> &events;
 	std::map<int, std::string> clients;
 	int fd;
 	Config config;

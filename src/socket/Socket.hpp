@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 16:18:59 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 12:10:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,7 @@
  */
 struct UData
 {
-    UData(int fd,
-          bool keepLive,
-          bool isClient)
+    UData(int fd, bool keepLive, bool isClient)
     {
         this->fd = fd;
         this->keepLive = keepLive;

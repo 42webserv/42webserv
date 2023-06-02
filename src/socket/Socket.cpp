@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 22:51:29 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/02 08:35:03 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
     UData *uData = new UData(client_fd, false, true);
-    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
+    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, uData);
 
     struct linger lingerOption;
     lingerOption.l_onoff = 1;   // SO_LINGER 활성화
@@ -98,8 +98,8 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
 
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
-    if (setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
-        stderrExit("setsockopt SO_LINGER error");
+    // if (setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
+    //     stderrExit("setsockopt SO_LINGER error");
 
     eventList.push_back(new_event);
     _clientFds.push_back(client_fd);

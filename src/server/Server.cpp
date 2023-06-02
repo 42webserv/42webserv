@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/30 20:15:20 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 12:16:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,11 +50,11 @@ Server::~Server()
  *
  * @param config conf 파일을 파싱한 클래스
  */
-void Server::setServer(Config &config)
+void Server::setServer(Config &config, const int kq)
 {
     std::vector<Directive> server;
     config.getAllDirectives(server, config.getDirectives(), SERVER_DIRECTIVE);
-    setUpServer(server);
+    setUpServer(server, events, kq);
 }
 
 /**
@@ -226,16 +226,22 @@ void Server::setUpServer(std::vector<Directive> &serverBlocks)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        ServerInfo tmpServ;
-        setUpListen(tmpServ, serverBlocks[i].block);
-        tmpServ.serverName = findServerName(serverBlocks[i].block);
-        tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlocks[i].block);
-        tmpServ.root = findRoot(serverBlocks[i].block);
-        setUpIndex(tmpServ, serverBlocks[i].block);
-        setUpErrorPage(tmpServ, serverBlocks[i].block);
-        setUpLimitExcept(tmpServ, serverBlocks[i].block);
-        setUpLocation(tmpServ, serverBlocks[i].block);
-        this->servers.push_back(tmpServ);
+        ServerInfo server;
+        setUpListen(server, serverBlocks[i].block);
+        server.serverName = findServerName(serverBlocks[i].block);
+        server.clientMaxBodySize = findClientMaxBodySize(serverBlocks[i].block);
+        server.root = findRoot(serverBlocks[i].block);
+        setUpIndex(server, serverBlocks[i].block);
+        setUpErrorPage(server, serverBlocks[i].block);
+        setUpLimitExcept(server, serverBlocks[i].block);
+        setUpLocation(server, serverBlocks[i].block);
+        for (size_t i = 0; i < server.ports.size(); i++)
+        {
+            int &port = server.ports[i];
+            Socket socket = Socket(events, port, kq);
+            server.sockets.push_back(socket);
+        }
+        this->servers.push_back(server);
     }
 }
 
