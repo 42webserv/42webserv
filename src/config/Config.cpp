@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/31 22:02:39 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 09:48:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,12 @@
 
 Config::Config()
 {
-	this->_directives = std::vector<Directive>();
 	this->_setRelation();
 }
 
 Config::~Config()
 {
+	// TODO clearBlock을 만들고 재귀로 돌면서 가장 안쪽 블록부터 지워나가기
 	for (size_t i = 0; i < this->_directives.size(); i++)
 		this->_directives[i].block.clear();
 	this->_directives.clear();
@@ -220,9 +220,7 @@ void Config::getAllDirectives(std::vector<Directive> &newDirectives, const std::
 	for (size_t i = 0; i < directives.size(); i++)
 	{
 		if (directives[i].name == dirName)
-		{
 			newDirectives.push_back(directives[i]);
-		}
 		if (directives[i].block.empty())
 			continue;
 		this->getAllDirectives(newDirectives, directives[i].block, dirName);
