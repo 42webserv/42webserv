@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/01 15:44:42 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:24:07 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "commonProcess.hpp"
 #include "HTTPRequestParser.hpp"
 
-HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
+HTTPRequestParser::HTTPRequestParser() : pass_to_body_flag_(false), state_(METHOD) {}
 
 /**
  * HTTP 요청 메세지를 파싱해서 구조체에 담아 반환
@@ -31,7 +31,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     state_ = METHOD;
     // std::cout << "data: [" << data << "]" << std::endl;
 
-    while (!buffer_.empty())
+    while (!buffer_.empty() || pass_to_body_flag_)
     {
         switch (state_)
         {
@@ -63,7 +63,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             return NULL;
         }
     }
-
     if (state_ == COMPLETE)
     {
         HTTPRequest *request = new HTTPRequest;
@@ -234,7 +233,18 @@ bool HTTPRequestParser::parseHeaderValue()
     {
         buffer_.erase(0, 2);
         body_ = "";
-        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
+        // buffer_.empty() ? state_ = COMPLETE : state_ = BODY;
+        if (method_ == POST || method_ == PUT)
+        {
+            pass_to_body_flag_ = true;
+            state_ = BODY;
+        }
+        else
+        {
+            buffer_ = "";
+            state_ = COMPLETE;
+        }
+        // state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
         // std::cout << "state_ :" << method_ << std::endl;
         // if (state_ == BODY && buffer_.empty())
         // {
@@ -264,12 +274,7 @@ std::string sizeToString(size_t value)
  */
 bool HTTPRequestParser::parseBody()
 {
-    if (method_ != POST && method_ != PUT)
-    {
-        state_ = COMPLETE;
-        return true;
-    }
-
+    pass_to_body_flag_ = false;
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
     {
@@ -315,6 +320,11 @@ bool HTTPRequestParser::parseBody()
         if (content_length_it != headers_.end())
         {
             int content_length = std::stoi(content_length_it->second);
+            if (buffer_.empty())
+            {
+                state_ = COMPLETE;
+                return true;
+            }
             if (buffer_.size() < static_cast<size_t>(content_length))
                 return false;
             body_ = buffer_.substr(0, content_length);
@@ -324,6 +334,11 @@ bool HTTPRequestParser::parseBody()
         {
             headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
             body_ = buffer_.substr(0, buffer_.size());
+            if (buffer_.empty())
+            {
+                state_ = COMPLETE;
+                return true;
+            }
             buffer_.clear();
         }
     }
