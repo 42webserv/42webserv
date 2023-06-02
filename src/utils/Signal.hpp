@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:36:22 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/10 17:05:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:18:59 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,8 @@
 
 #include <sys/event.h>
 #include "Socket.hpp"
-#define MAX_SIGNAL 7
+// #define MAX_SIGNAL 7
+#define MAX_SIGNAL 3
 
 class Signal
 {
@@ -23,9 +24,9 @@ private:
 	unsigned int signals[MAX_SIGNAL];
 
 public:
-	Signal(std::vector<struct kevent> &event_list);
+	Signal(std::vector<struct kevent> &events);
 	~Signal();
-	void handleEvent(const struct kevent &event, std::vector<Socket *> &sockets) const;
+	void handleEvent(const struct kevent &event, const std::vector<ServerInfo> &servers) const;
 };
 
 #endif
