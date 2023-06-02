@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:46:33 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 23:26:30 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -290,8 +290,9 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response))
 		{
+			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\n\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
@@ -316,18 +317,20 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
 			// std::cout << "YOUPI.BLA" << std::endl;
-			// std::cout << "POST PATH : " << response->resourcePath << std::endl;
-			// std::cout << "[" << request.body.length() << "]" << std::endl;
+			std::cout << "POST PATH : " << response->resourcePath << std::endl;
+			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI("./YoupiBanane/cgi_tester");
+			// std::string resource_content = cgi.excuteCGI("./YoupiBanane/cgi_tester");
+			std::cout << getCGIPath(*response) << std::endl;
+			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
 			resource_content.erase(0, 2);
-			// std::cout << "[" << resource_content.length() << "]" << std::endl;
-			// std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
+			std::cout << "[" << resource_content.length() << "]" << std::endl;
+			std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
 			// response->resourcePath = getCGILocation(response);
-			// std::cout << "POST PATH : " << response->resourcePath << std::endl;
+			std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			if (response->resourcePath.empty())
 			{
 				std::cout << "postCGILocation" << std::endl;
@@ -411,6 +414,30 @@ std::string Worker::getCGILocation(ResponseData *response)
 	return "";
 }
 
+/**
+ * cgi에 해당할 때, 로케이션 상태에 따라 CGI path를 따로 설정해주는 함수
+ *
+ * @param CGIPath executeCGI 함수에 사용될 문자열
+ */
+std::string Worker::getCGIPath(ResponseData &response)
+{
+	for (size_t i = 0; i < response.location->block.size(); i++)
+		if (response.location->block[i].name == "root")
+		{
+			if (response.cgiPath.size() == 1)
+			{
+				size_t pos = response.path.find(".", response.path.find_last_of("/"));
+				if (pos == std::string::npos)
+					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/")) + response.cgiPath.back();
+				else
+					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/"));
+			}
+			else
+				return response.location->block[i].value + "/" + response.cgiPath.back();
+		}
+	return "";
+}
+
 bool Worker::isCGIRequest(ResponseData &response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
@@ -419,37 +446,16 @@ bool Worker::isCGIRequest(ResponseData &response)
 	if (response.location == NULL)
 		return false;
 
-	// const std::vector<Directive> &location = response.location->block;
-	// for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
-	// {
-	// 	Directive directive = *it;
-	// 	std::cout << "A " << directive.name << std::endl;
-	// 	if (directive.name == "cgi_path")
-	// 	{
-	// 		std::cout << "B ==" << directive.value << "==" << std::endl;
-	// 		size_t pos = response.path.find(directive.value);
-	// 		if (pos != std::string::npos)
-	// 			return true;
-	// 	}
-	// }
+	// /cgi_bin 로케이션을 위함
+	if (response.cgiPath.size() == 1)
+		return true;
 
 	size_t pos = response.path.find(".", response.path.find_last_of("/"));
 	if (pos == std::string::npos)
 		return false;
 	std::string tmp = response.path.substr(pos);
 	if (std::find(response.cgiPath.begin(), response.cgiPath.end(), tmp) != response.cgiPath.end())
-	{
-		// tmp = response.cgiPath.back();
-		// if (response.method == POST && tmp.find(".") == std::string::npos)
-		// {
-		// 	response.path = response.path.substr(0, response.path.find_last_of("/"));
-		// 	response.path += "/";
-		// 	response.path += tmp;
-		// }
-		// response.cgiPath.push_back(tmp);
-		// response.resourcePath = response.path;
 		return true;
-	}
 	return false;
 }
 

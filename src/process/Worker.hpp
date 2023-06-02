@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:43:28 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 22:02:05 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ private:
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData &response);
 	std::string getCGILocation(ResponseData *response);
+	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
 	bool checkHeaderIsKeepLive(const HTTPRequest *request);
