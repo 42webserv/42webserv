@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 20:35:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:38:52 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,11 @@ void Worker::eventEVError(Socket &socket, struct kevent &event)
 		stderrExit("Server socket error"); // 서버 소켓 에러
 	else
 		socket.disconnectClient(fd, clients, event); // 클라이언트 소켓 에러 아니면 다른 에러
+}
+
+void Worker::eventFilterSignal(struct kevent &event)
+{
+	signal.handleEvent(event.ident, server.servers);
 }
 
 bool Worker::eventFilterRead(Socket &socket, struct kevent &event)
@@ -190,11 +195,11 @@ void Worker::run()
 			else if (event.filter == EVFILT_READ)
 				eventFilterRead(k, event);
 			else if (event.filter == EVFILT_WRITE)
-				eventFilterWrite(k, events[i]);
+				eventFilterWrite(k, event);
 			else if (event.filter == EVFILT_TIMER)
 				eventFilterTimer(k, event);
 			else if (event.filter == EVFILT_SIGNAL)
-				signal.handleEvent(event, server.servers);
+				eventFilterSignal(event);
 		}
 	}
 }

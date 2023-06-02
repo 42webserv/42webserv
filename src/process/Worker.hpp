@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 20:28:34 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:37:49 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,11 +50,12 @@ private:
 	UData *responseUData;
 	std::vector<Directive> listen;
 
-	void eventEVError(Socket &socket, struct kevent &event);
-	bool eventFilterRead(Socket &socket, struct kevent &event);
-	bool eventFilterWrite(Socket &socket, struct kevent &event);
 	bool eventEOF(Socket &socket, struct kevent &event);
+	bool eventFilterRead(Socket &socket, struct kevent &event);
 	bool eventFilterTimer(Socket &socket, struct kevent &event);
+	bool eventFilterWrite(Socket &socket, struct kevent &event);
+	void eventEVError(Socket &socket, struct kevent &event);
+	void eventFilterSignal(struct kevent &event);
 	void requestHandler(const HTTPRequest &request, const int &client_fd);
 	void getResponse(ResponseData *response);
 	void postResponse(ResponseData *response);

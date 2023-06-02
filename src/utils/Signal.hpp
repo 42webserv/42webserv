@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:36:22 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:18:59 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:37:21 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ private:
 public:
 	Signal(std::vector<struct kevent> &events);
 	~Signal();
-	void handleEvent(const struct kevent &event, const std::vector<ServerInfo> &servers) const;
+	void handleEvent(const int &signal, const std::vector<ServerInfo> &servers) const;
 };
 
 #endif

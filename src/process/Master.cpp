@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 17:46:52 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:33:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 
 Master::~Master()
 {
-	// delete config;
 	close(kq);
 }
 

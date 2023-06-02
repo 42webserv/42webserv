@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:18:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:37:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,13 +39,12 @@ Signal::~Signal()
 		signal(signals[i], SIG_DFL);
 }
 
-void Signal::handleEvent(const struct kevent &event, const std::vector<ServerInfo> &servers) const
+void Signal::handleEvent(const int &signal, const std::vector<ServerInfo> &servers) const
 {
-	const int sig = event.ident;
 	for (size_t i = 0; i < MAX_SIGNAL; i++)
 	{
 		// TERM, INT: 빠른 종료
-		if (sig == SIGTERM || sig == SIGINT)
+		if (signal == SIGTERM || signal == SIGINT)
 		{
 			for (std::vector<ServerInfo>::const_iterator it = servers.begin(); it != servers.end(); it++)
 			{
@@ -55,7 +54,7 @@ void Signal::handleEvent(const struct kevent &event, const std::vector<ServerInf
 			exit(EXIT_SUCCESS);
 		}
 		// QUIT: 정상적인 종료
-		else if (sig == SIGQUIT)
+		else if (signal == SIGQUIT)
 		{
 			for (std::vector<ServerInfo>::const_iterator it = servers.begin(); it != servers.end(); it++)
 			{
