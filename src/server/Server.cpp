@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/02 22:17:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 00:42:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,11 @@ Server &Server::operator=(const Server &ref)
  */
 Server::~Server()
 {
+    for (std::vector<ServerInfo>::const_iterator it = this->servers.begin(); it != this->servers.end(); it++)
+    {
+        ServerInfo server = *it;
+        server.closeSockets();
+    }
 }
 
 /**
@@ -239,7 +244,7 @@ void Server::setUpServer(std::vector<Directive> &serverBlocks, const int &kq, st
         for (size_t i = 0; i < server.ports.size(); i++)
         {
             int &port = server.ports[i];
-            Socket socket(events, port, kq);
+            Socket *socket = new Socket(events, port, kq);
             server.sockets.push_back(socket);
         }
         this->servers.push_back(server);
@@ -278,10 +283,10 @@ Socket *Server::findSocket(const int &fd)
 {
     for (size_t i = 0; i < this->servers.size(); i++)
     {
-        std::vector<Socket> &sockets = this->servers[i].sockets;
+        std::vector<Socket *> &sockets = this->servers[i].sockets;
         for (size_t j = 0; j < sockets.size(); j++)
         {
-            Socket &socket = sockets[j];
+            Socket &socket = *sockets[j];
             if (socket._serverFd == fd)
                 return &socket;
             else
@@ -296,6 +301,5 @@ Socket *Server::findSocket(const int &fd)
             }
         }
     }
-    std::cout << "NULL이 존재함 ?" << std::endl;
     return NULL;
 }

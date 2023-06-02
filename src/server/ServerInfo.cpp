@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/28 19:09:51 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:16:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 00:34:22 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,11 @@ ServerInfo &ServerInfo::operator=(const ServerInfo &ref)
 
 void ServerInfo::closeSockets() const
 {
-	for (std::vector<Socket>::const_iterator it = this->sockets.begin(); it != this->sockets.end(); it++)
+	for (std::vector<Socket *>::const_iterator it = this->sockets.begin(); it != this->sockets.end(); it++)
 	{
-		const Socket &socket = *it;
-		socket.closeClients();
-		close(socket._serverFd);
+		const Socket *socket = *it;
+		socket->closeClients();
+		close(socket->_serverFd);
+		delete socket;
 	}
 }
