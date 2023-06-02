@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonProcess.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 19:22:14 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:30:12 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,5 +36,6 @@ std::string readFile(const std::string &path);
 const std::string getContentType(const HTTPRequest &request);
 bool isEqual(const std::string &s1, const std::string &s2);
 std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
+std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value);
 
 #endif

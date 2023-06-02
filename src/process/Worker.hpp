@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 16:36:16 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:43:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ private:
 	bool eventFilterWrite(int k, struct kevent &event);
 	bool eventEOF(int k, struct kevent &event);
 	bool eventFilterTimer(int k, struct kevent &event);
-	void requestHandler(const HTTPRequest &request, const int &client_fd);
+	void requestHandler(const HTTPRequest &request, const int &client_fd, int k);
 	void getResponse(ResponseData *response);
 	void postResponse(ResponseData *response);
 	void putResponse(ResponseData *response);
@@ -78,6 +78,7 @@ private:
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
 	bool hasClientFd(const int &k);
+	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
 
 public:
 	Worker(Master &master);

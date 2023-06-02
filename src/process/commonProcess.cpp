@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonProcess.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/31 19:50:55 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:30:43 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,6 +124,16 @@ std::vector<Directive>::const_iterator findDirective(const std::vector<Directive
 	for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
 	{
 		if (isEqual(it->name, name))
+			return it;
+	}
+	return directives.end();
+}
+
+std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value)
+{
+	for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
+	{
+		if (isEqual(it->name, name) && isEqual(it->value, value))
 			return it;
 	}
 	return directives.end();
