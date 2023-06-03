@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 12:57:33 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 14:05:11 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,23 +166,23 @@ bool HTTPRequestParser::parseHTTPVersion()
     // buffer_.erase(0, pos);
     bufferIndex = pos;
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
-    if (buffer_.find("\n", bufferIndex) == 0)
+    if (buffer_.find("\n", bufferIndex) == bufferIndex)
     {
         bufferIndex++;
         // buffer_.erase(0, 1);
     }
-    else if (buffer_.find("\r", bufferIndex) == 0 && buffer_.find("\n", bufferIndex) == 1)
+    else if (buffer_.find("\r", bufferIndex) == bufferIndex && buffer_.find("\n", bufferIndex) == bufferIndex + 1)
     {
         bufferIndex += 2;
         // buffer_.erase(0, 2);
     }
-    else if (buffer_.find("\r", bufferIndex) == 0)
+    else if (buffer_.find("\r", bufferIndex) == bufferIndex)
     {
         bufferIndex++;
         // buffer_.erase(0, 1);
     }
     state_ = HEADER_NAME;
-    if (buffer_.empty())
+    if (buffer_.length() == bufferIndex)
     {
         std::cout << "com1" << std::endl;
         state_ = COMPLETE;
