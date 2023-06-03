@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 12:54:01 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 12:57:33 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ bool HTTPRequestParser::parsePath()
     // 만약 path_가 "/aaaa/bbbb/"이라면, 마지막 "/"를 제거해주기 위함.
     if (path_ != "/" && path_.substr(path_.length() - 1) == "/")
         path_ = buffer_.substr(bufferIndex, pos - bufferIndex - 1);
-    buffer_.erase(0, pos + 1);
+    // buffer_.erase(0, pos + 1);
     bufferIndex = pos + 1;
     pos = path_.find("?");
     if (pos != std::string::npos)
@@ -155,22 +155,32 @@ size_t minPos(size_t p1, size_t p2, size_t p3)
  */
 bool HTTPRequestParser::parseHTTPVersion()
 {
-    size_t pos1 = buffer_.find("\r");
-    size_t pos2 = buffer_.find("\n");
-    size_t pos3 = buffer_.find(CRLF);
+    size_t pos1 = buffer_.find("\r", bufferIndex);
+    size_t pos2 = buffer_.find("\n", bufferIndex);
+    size_t pos3 = buffer_.find(CRLF, bufferIndex);
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
     size_t pos = minPos(pos1, pos2, pos3);
-    http_version_ = buffer_.substr(0, pos);
+    http_version_ = buffer_.substr(bufferIndex, pos - bufferIndex);
     // 지금까지 사용한 버퍼 지우기
-    buffer_.erase(0, pos);
+    // buffer_.erase(0, pos);
+    bufferIndex = pos;
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
-    if (buffer_.find("\n") == 0)
-        buffer_.erase(0, 1);
-    else if (buffer_.find("\r") == 0 && buffer_.find("\n") == 1)
-        buffer_.erase(0, 2);
-    else if (buffer_.find("\r") == 0)
-        buffer_.erase(0, 1);
+    if (buffer_.find("\n", bufferIndex) == 0)
+    {
+        bufferIndex++;
+        // buffer_.erase(0, 1);
+    }
+    else if (buffer_.find("\r", bufferIndex) == 0 && buffer_.find("\n", bufferIndex) == 1)
+    {
+        bufferIndex += 2;
+        // buffer_.erase(0, 2);
+    }
+    else if (buffer_.find("\r", bufferIndex) == 0)
+    {
+        bufferIndex++;
+        // buffer_.erase(0, 1);
+    }
     state_ = HEADER_NAME;
     if (buffer_.empty())
     {
