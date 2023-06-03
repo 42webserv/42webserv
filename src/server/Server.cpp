@@ -6,12 +6,13 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/02 19:29:48 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/03 13:52:23 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "commonConfig.hpp"
+#include "commonProcess.hpp"
 
 /*
  * A default constructor
@@ -71,7 +72,7 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
         {
             int port = strtod(serverBlocks[i].value.c_str(), NULL);
             if (find(this->validPorts.begin(), this->validPorts.end(), port) != this->validPorts.end())
-                stderrExit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
+                stderrExit(("Error : duplicate port number " + ftToString(port) + "\n").c_str());
             tmpServ.ports.push_back(port);
             this->validPorts.push_back(port);
         }
