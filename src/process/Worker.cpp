@@ -6,13 +6,11 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:23:20 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:36:08 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "commonConfig.hpp"
-#include "commonProcess.hpp"
-#include "commonUtils.hpp"
+#include "Master.hpp"
 #include "Worker.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), events(master.getEvents()), config(master.getConfig()), server(master.getServer()) {}
@@ -62,16 +60,10 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	HTTPRequest *result = parser.parse(uData->request);
 	uData->request.clear();
 	if (!result)
-	{
-		socket.disconnectClient(event);
 		return;
-	}
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
 	if (result->method != HEAD && result->headers.size() == 0)
-	{
-		socket.disconnectClient(event);
 		return;
-	}
 	if (result->port == -1)
 		result->port = strtod(listen[0].value.c_str(), NULL);
 	if (result != NULL)
@@ -89,7 +81,6 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 		if (result)
 		{
 			this->requestHandler(*result, fd);
-			socket.disconnectClient(event);
 		}
 		else
 			std::cout << "Failed to parse request" << std::endl;
@@ -171,24 +162,54 @@ void Worker::run()
 	}
 }
 
+bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response)
+{
+	std::map<std::string, std::string>::const_iterator it = request.headers.find("content-length");
+	if (it != request.headers.end()) // Client의 request body size가 너무 큰 경우
+	{
+		std::string str = it->second.substr(0, it->second.find_last_of('\r'));
+		std::stringstream ss(str);
+		size_t requestBodySize;
+		ss >> requestBodySize;
+
+		if (invalidResponse(response))
+			return false;
+
+		size_t clientMaxBodySize = response->server.clientMaxBodySize;
+		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
+		if (dir != response->server.locations.end())
+		{
+			std::vector<Directive>::const_iterator dirr;
+			dirr = findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
+			if (dirr != dir->block.end())
+				clientMaxBodySize = atoi(dirr->value.c_str());
+		}
+		std::cout << "clientMaxBodySize = " << clientMaxBodySize << std::endl;
+		std::cout << "requestBodySize = " << requestBodySize << std::endl;
+
+		if (requestBodySize > clientMaxBodySize)
+		{
+			std::cout << "It have too big body than client_max_body_size" << std::endl;
+			errorResponse(response, 413);
+			delete response;
+			return false;
+		}
+	}
+	return true;
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
  * @param request request 를 파싱완료한 구조체
- * @param client_fd 서버의 fd
+ * @param clientFd 서버의 fd
  */
-void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
+void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 {
 	Response res;
-	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
+	ResponseData *response = res.getResponseData(request, clientFd, config, this->server);
 
-	// 만약 /session 으로 요청이 들어온다면 session을 만들어줌
-	if (response->path == "/session" && udata->sessionID.empty() && udata->sesssionValid == false)
-		udata->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete" && udata->alreadySessionSend == true && udata->sessionID != "")
-		udata->wantToDeleteSessionInCookie = true;
-	// limitExcept에 method가 없는 경우
-	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end())
+	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
 		std::cout << "Method not allowed" << std::endl;
@@ -196,13 +217,24 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 		delete response;
 		return;
 	}
+	if (checkHttpRequestClientMaxBodySize(request, response) == false)
+		return;
+	if (response->path == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+		udata->sessionID = generateSessionID(32);
+	else if (response->path == "/session/delete" && udata->alreadySessionSend == true && udata->sessionID != "")
+		udata->wantToDeleteSessionInCookie = true;
+
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{
 		if (isCGIRequest(*response))
 		{
+			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath);
+			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
+			std::size_t tmpIdx = resource_content.find("\n\n");
+			if (tmpIdx != std::string::npos)
+				resource_content = resource_content.substr(tmpIdx + 2);
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -224,22 +256,33 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 			// cgi post method 실행
 			std::cout << request.query << std::endl;
 			// std::cout << "YOUPI.BLA" << std::endl;
-			std::cout << "&&&&&&" << response->resourcePath << std::endl;
+			std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(response->resourcePath);
-			std::cout << "&&&&&&&" << resource_content << std::endl;
+			// std::string resource_content = cgi.excuteCGI("./YoupiBanane/cgi_tester");
+			std::cout << getCGIPath(*response) << std::endl;
+			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
+			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
+			if (tmpIdx != std::string::npos)
+				resource_content = resource_content.substr(tmpIdx + 2);
+			resource_content.erase(0, 2);
 			std::cout << "[" << resource_content.length() << "]" << std::endl;
-			response->resourcePath = getCGILocation(response);
+			std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
+			// response->resourcePath = getCGILocation(response);
+			std::cout << "POST PATH : " << response->resourcePath << std::endl;
 			if (response->resourcePath.empty())
 			{
 				std::cout << "postCGILocation" << std::endl;
 				errorResponse(response, 404);
 				return;
 			}
+			resource_content = resource_content.substr(0, 400000);
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
+			// std::cout << "post1" << std::endl;
 			ftSend(response, response_header);
+			// std::cout << "post2" << std::endl;
 			ftSend(response, resource_content);
+			// std::cout << "post3" << std::endl;
 			return;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
@@ -259,6 +302,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd)
 	}
 	else if (response->method == PUT)
 	{
+		std::cout << "PUT HERE" << std::endl;
 		putResponse(response);
 	}
 	else if (response->method == OPTIONS)
@@ -310,6 +354,30 @@ std::string Worker::getCGILocation(ResponseData *response)
 	return "";
 }
 
+/**
+ * cgi에 해당할 때, 로케이션 상태에 따라 CGI path를 따로 설정해주는 함수
+ *
+ * @param CGIPath executeCGI 함수에 사용될 문자열
+ */
+std::string Worker::getCGIPath(ResponseData &response)
+{
+	for (size_t i = 0; i < response.location->block.size(); i++)
+		if (response.location->block[i].name == "root")
+		{
+			if (response.cgiPath.size() == 1)
+			{
+				size_t pos = response.path.find(".", response.path.find_last_of("/"));
+				if (pos == std::string::npos)
+					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/")) + response.cgiPath.back();
+				else
+					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/"));
+			}
+			else
+				return response.location->block[i].value + "/" + response.cgiPath.back();
+		}
+	return "";
+}
+
 bool Worker::isCGIRequest(const ResponseData &response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
@@ -318,20 +386,16 @@ bool Worker::isCGIRequest(const ResponseData &response)
 	if (response.location == NULL)
 		return false;
 
-	const std::vector<Directive> &location = response.location->block;
+	// /cgi_bin 로케이션을 위함
+	if (response.cgiPath.size() == 1)
+		return true;
 
-	for (std::vector<Directive>::const_iterator it = location.begin(); it != location.end(); it++)
-	{
-		Directive directive = *it;
-		std::cout << "A " << directive.name << std::endl;
-		if (directive.name == "cgi_path")
-		{
-			std::cout << "B ==" << directive.value << "==" << std::endl;
-			size_t pos = response.path.find(directive.value);
-			if (pos != std::string::npos)
-				return true;
-		}
-	}
+	size_t pos = response.path.find(".", response.path.find_last_of("/"));
+	if (pos == std::string::npos)
+		return false;
+	std::string tmp = response.path.substr(pos);
+	if (std::find(response.cgiPath.begin(), response.cgiPath.end(), tmp) != response.cgiPath.end())
+		return true;
 	return false;
 }
 
@@ -379,9 +443,12 @@ void Worker::postResponse(ResponseData *response)
 void Worker::putResponse(ResponseData *response)
 {
 	// TODO 이거 경로 제대로 되게 해야 함. 임시임
+	if (response->body.length() > 10000)
+		response->body = response->body.substr(0, 10000);
 	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
+		std::cout << "putResponse, response->resoursePath : " << response->resourcePath << std::endl;
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
@@ -420,7 +487,7 @@ void Worker::deleteResponse(ResponseData *response)
 /**
  * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
  *
- * @param client_fd 브라우저 포트번호
+ * @param errorCode 에러 코드
  */
 std::string Worker::errorPageGenerator(int errorCode)
 {
@@ -432,7 +499,8 @@ std::string Worker::errorPageGenerator(int errorCode)
 /**
  * 모든 에러에 대한 에러 페이지를 띄워주는 함수
  *
- * @param client_fd 브라우저 포트번호
+ * @param response 응답에 사용될 구조체
+ * @param errorCode 에러 코드
  */
 void Worker::errorResponse(ResponseData *response, int errorCode)
 {

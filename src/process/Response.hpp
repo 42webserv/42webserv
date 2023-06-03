@@ -6,21 +6,18 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 11:51:11 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:28:01 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef Response_HPP
 #define Response_HPP
 
-#include "Master.hpp"
-#include "Signal.hpp"
-#include "Socket.hpp"
 #include "Config.hpp"
+#include "HTTPRequestParser.hpp"
+#include "MimeTypesParser.hpp"
 #include "Server.hpp"
 #include "Worker.hpp"
-#include "HTTPRequestParser.hpp"
-#include "CGI.hpp"
 
 struct ResponseData
 {

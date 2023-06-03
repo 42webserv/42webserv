@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:14:20 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:35:30 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,20 +19,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "CGI.hpp"
+#include "commonConfig.hpp"
 #include "commonError.hpp"
-#include "Config.hpp"
+#include "commonProcess.hpp"
+#include "commonUtils.hpp"
 #include "HTTPRequestParser.hpp"
-#include "MimeTypesParser.hpp"
-#include "Response.hpp"
 #include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
 
-struct CGIData;
-struct ResponseData;
-struct HTTPRequest;
-
 class Master;
+struct ResponseData;
 
 class Worker
 {
@@ -52,7 +49,7 @@ private:
 	void eventFilterWrite(Socket &socket, struct kevent &event);
 	void eventEVError(Socket &socket, struct kevent &event);
 	void eventFilterSignal(struct kevent &event);
-	void requestHandler(const HTTPRequest &request, const int &client_fd);
+	void requestHandler(const HTTPRequest &request, const int &clientFd);
 	void getResponse(ResponseData *response);
 	void postResponse(ResponseData *response);
 	void putResponse(ResponseData *response);
@@ -63,8 +60,9 @@ private:
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(const ResponseData &response);
 	std::string getCGILocation(ResponseData *response);
+	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
-	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
+	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int clientFd);
 	bool checkHeaderIsKeepLive(const HTTPRequest *request);
 	bool checkKeepLiveOptions(const HTTPRequest *request);
 	void setTimer(int fd, int timeout);
@@ -75,6 +73,7 @@ private:
 	void cookieCheck(HTTPRequest *result);
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
+	bool checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response);
 
 public:
 	Worker(Master &master);

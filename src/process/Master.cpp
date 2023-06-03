@@ -6,11 +6,10 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:33:10 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:35:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
 #include <unistd.h>
 #include "Master.hpp"
 
