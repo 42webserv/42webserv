@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 15:55:56 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/04 00:35:45 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,6 +125,9 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 		{
 			std::cout << "max is zero, disconnection!" << std::endl;
 			sockets[k]->disconnectClient(fd, clients, event);
+			clients[fd].clear();
+			if (result)
+				delete result;
 			return false;
 		}
 		if (result)
@@ -134,12 +137,14 @@ bool Worker::eventFilterWrite(int k, struct kevent &event)
 			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
 			responseUData->writeEventExist = false;
+			if (responseUData->keepLive == true)
+				responseUData->max = responseUData->max - 1;
 		}
-		else
-			std::cout << "Failed to parse request" << std::endl;
-		responseUData->max = responseUData->max - 1;
-		// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
-		// sockets[k]->disconnectClient(fd, clients, event);
+		if (responseUData->max == 0)
+		{
+			std::cout << "communication number of " << fd << " is zero, disconnection!" << std::endl;
+			sockets[k]->disconnectClient(fd, clients, event);
+		}
 		clients[fd].clear();
 	}
 	if (result)
@@ -244,9 +249,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 			if (dirr != dir->block.end())
 				clientMaxBodySize = atoi(dirr->value.c_str());
 		}
-		std::cout << "clientMaxBodySize = " << clientMaxBodySize << std::endl;
-		std::cout << "requestBodySize = " << requestBodySize << std::endl;
-
 		if (requestBodySize > clientMaxBodySize)
 		{
 			std::cout << "It have too big body than client_max_body_size" << std::endl;
@@ -683,8 +685,8 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
 {
 	UData *uData = static_cast<UData *>(event.udata);
-	// std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 이걸로
-	std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 이걸로
+	// std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
 	std::string timeout;
 	std::string max;
 	size_t timeoutIdx;
