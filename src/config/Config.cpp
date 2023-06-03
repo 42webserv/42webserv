@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/06/03 15:18:19 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/04 00:48:17 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,10 +132,7 @@ void Config::_setIncludes()
 		std::ifstream includeFile;
 		includeFile.open(includes[i].value);
 		if (!includeFile.is_open())
-		{
-			std::cerr << "Error: Invalid include config file '" << includes[i].value << "'" << std::endl;
-			exit(1);
-		}
+			stderrExit("Error: Invalid include config file '" + includes[i].value + "'");
 		std::vector<Directive> includeDirectives;
 		_setBlock(includeFile, includeDirectives, MAIN_DIRECTIVE);
 		_directives[0].block.push_back(includeDirectives[0]);
@@ -149,40 +146,25 @@ void Config::parsedConfig(int argc, char const **argv)
 	std::ifstream infile;
 
 	if (argc != 1 && argc != 2)
-	{
-		std::cerr << "Usage: ./webserv [config_file]" << std::endl;
-		exit(1);
-	}
+		stderrExit("Usage: ./webserv [config_file]");
 	if (argc == 2)
 	{
 		if (!CheckConfigValid::Parse(argv[1]))
-		{
-			std::cerr << "Error: Invalid config file" << std::endl;
-			exit(1);
-		}
+			stderrExit("Error: Invalid config file");
 		filename = argv[1];
 	}
 	else
 	{
 		if (!CheckConfigValid::Parse(DEFAULT_CONF_PATH))
-		{
-			std::cerr << "Error: Invalid config file" << std::endl;
-			exit(1);
-		}
+			stderrExit("Error: Invalid config file");
 		filename = DEFAULT_CONF_PATH;
 	}
 	infile.open(filename);
 	if (!infile.is_open())
-	{
-		std::cerr << "Error: Invalid config file '" << filename << "'" << std::endl;
-		exit(1);
-	}
+		stderrExit("Error: Invalid config file '" + filename + "'");
 	_setBlock(infile, _directives, MAIN_DIRECTIVE);
 	if (_directives.size() == 0) // empty file
-	{
-		std::cerr << "Error: Invalid config file '" << filename << "'" << std::endl;
-		exit(1);
-	}
+		stderrExit("Error: Invalid config file '" + filename + "'");
 	if (_directives[0].name != MAIN_DIRECTIVE)
 	{
 		std::vector<Directive> tmp = _directives;
@@ -257,10 +239,7 @@ std::string Config::trim(const std::string &str)
 void Config::_checkParent(std::string &parentName, std::string rightPre, std::string blockName) const
 {
 	if (parentName != rightPre)
-	{
-		std::cerr << "Error: " << blockName << " directive must be in " << rightPre << " block" << std::endl;
-		exit(1);
-	}
+		stderrExit("Error: " + blockName + " directive must be in " + rightPre + " block");
 }
 
 /*
@@ -274,12 +253,7 @@ void Config::_checkChildes(std::vector<Directive> &block, std::map<std::string, 
 	{
 		it = blockFormat.find(block[j].name);
 		if (it == blockFormat.end())
-		{
-			std::cerr << "Error: " << block[j].name << " directive can not be in "
-					  << prarentBlockName
-					  << " block" << std::endl;
-			exit(1);
-		}
+			stderrExit("Error: " + block[j].name + " directive can not be in " + prarentBlockName + " block");
 	}
 }
 
@@ -301,10 +275,7 @@ void Config::_checkRepeatition(std::vector<Directive> &directives, std::string &
 			if (directives[i].name == ERROR_PAGE_DIRECTIVE)
 				continue;
 			if (directives[i].name == directives[k].name)
-			{
-				std::cerr << "Error: The same " << directives[i].name << " directive exists within " << parentName << " directive." << std::endl;
-				exit(1);
-			}
+				stderrExit("Error: The same " + directives[i].name + " directive exists within " + parentName + " directive.");
 		}
 	}
 }
@@ -366,15 +337,9 @@ std::vector<std::string> Config::split(std::string input, char delimiter)
 void Config::_checkEmpty(std::string &value, std::string directiveName, bool exist)
 {
 	if (value.empty() && exist)
-	{
-		std::cerr << "Error: " << directiveName << " value must be not empty" << std::endl;
-		exit(1);
-	}
+		stderrExit("Error: " + directiveName + " value must be not empty");
 	if (!value.empty() && !exist)
-	{
-		std::cerr << "Error: " << directiveName << " value must be empty" << std::endl;
-		exit(1);
-	}
+		stderrExit("Error: " + directiveName + " value must be empty");
 }
 
 // 필요없을 시 지울 것 // _isFileExists, _isDirectoryExists을 위해서 남겨놓음.
@@ -404,10 +369,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 			for (size_t j = 0; j < directives[i].value.size(); j++)
 			{
 				if (directives[i].value[j] < '0' || directives[i].value[j] > '9')
-				{
-					std::cerr << "Error: listen value must be number" << std::endl;
-					exit(1);
-				}
+					stderrExit("Error: listen value must be number");
 			}
 		}
 		if (directives[i].name == LOCATION_DIRECTIVE)
@@ -423,19 +385,13 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 			_checkEmpty(directives[i].value, ERROR_PAGE_DIRECTIVE, true);
 			std::vector<std::string> errorPage = split(directives[i].value, ' ');
 			if (errorPage.size() < 2) // 여러개 들어와도 처리하도록 해놔야한다.
-			{
-				std::cerr << "Error: error_page value must be number or file" << std::endl;
-				exit(1);
-			}
+				stderrExit("Error: error_page value must be number or file");
 			for (size_t j = 0; j < errorPage.size() - 1; j++)
 			{
 				for (size_t k = 0; k < errorPage[j].length(); k++)
 				{
 					if (errorPage[j][k] < '0' || errorPage[j][k] > '9')
-					{
-						std::cerr << "Error: error_page errorCode must be number" << std::endl;
-						exit(1);
-					}
+						stderrExit("Error: error_page errorCode must be number");
 				}
 			}
 			// 필요없을 시 지울 것 //
@@ -447,20 +403,14 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 			for (size_t j = 0; j < directives[i].value.size(); j++)
 			{
 				if (directives[i].value[j] < '0' || directives[i].value[j] > '9')
-				{
-					std::cerr << "Error: client_max_body_size value must be number" << std::endl;
-					exit(1);
-				}
+					stderrExit("Error: client_max_body_size value must be number");
 			}
 		}
 		if (directives[i].name == AUTOINDEX_DIRECTIVE)
 		{
 			_checkEmpty(directives[i].value, AUTOINDEX_DIRECTIVE, true);
 			if (directives[i].value != "on" && directives[i].value != "off")
-			{
-				std::cerr << "Error: autoindex value must be on or off" << std::endl;
-				exit(1);
-			}
+				stderrExit("Error: autoindex value must be on or off");
 		}
 		if (directives[i].name == INDEX_DIRECTIVE)
 		{
@@ -476,10 +426,7 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 			{
 				// TODO : GET, POST, DELETE, PUT 외에 다른 메소드가 들어오면 에러 처리를 잡아주는 함수로 변경하기.
 				if (excepts[i] != GET && excepts[i] != POST && excepts[i] != DELETE && excepts[i] != PUT)
-				{
-					std::cerr << "Error: limit_except value must be GET or POST or DELETE" << std::endl;
-					exit(1);
-				}
+					stderrExit("Error: limit_except value must be GET or POST or DELETE");
 			}
 		}
 		if (directives[i].name == RETURN_DIRECTIVE)
@@ -487,17 +434,11 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 			_checkEmpty(directives[i].value, RETURN_DIRECTIVE, true);
 			std::vector<std::string> returns = split(directives[i].value, ' ');
 			if (returns.size() != 2)
-			{
-				std::cerr << "Error: return value must be number or file" << std::endl;
-				exit(1);
-			}
+				stderrExit("Error: return value must be number or file");
 			for (size_t j = 0; j < returns[0].size(); j++)
 			{
 				if (returns[0][j] < '0' || returns[0][j] > '9')
-				{
-					std::cerr << "Error: return errorCode must be number" << std::endl;
-					exit(1);
-				}
+					stderrExit("Error: return errorCode must be number");
 			}
 		}
 		if (directives[i].block.empty())
