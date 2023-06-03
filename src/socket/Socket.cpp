@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 10:51:58 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:21:31 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ Socket::~Socket()
     close(_serverFd);
 }
 
-int Socket::connectClient(std::vector<struct kevent> &events)
+void Socket::connectClient(std::vector<struct kevent> &events)
 {
     socklen_t addrlen = sizeof(_serverAddr);
     struct sockaddr_in clientAddr;
@@ -122,7 +122,34 @@ int Socket::connectClient(std::vector<struct kevent> &events)
 
     events.push_back(event);
     _clientFds.push_back(clientFd);
-    return clientFd;
+}
+
+void Socket::receiveRequest(struct kevent &event)
+{
+    const int &fd = event.ident;
+    UData *udata = static_cast<UData *>(event.udata);
+    char buf[BUFFER_SIZE];
+    ssize_t n;
+
+    memset(buf, 0, BUFFER_SIZE);
+    while (true)
+    {
+        n = recv(fd, buf, BUFFER_SIZE - 1, 0);
+        if (n < 0)
+        {
+            std::cout << "recv error" << std::endl;
+            break;
+        }
+        else
+        {
+            buf[n] = '\0';
+            udata->request.append(buf);
+            if (n < BUFFER_SIZE)
+                break;
+            else
+                continue;
+        }
+    }
 }
 
 void Socket::disconnectClient(struct kevent &event)

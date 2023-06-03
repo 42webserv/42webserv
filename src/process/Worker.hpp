@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:37:49 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:14:20 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,6 @@
 #include "Signal.hpp"
 #include "Socket.hpp"
 
-#define BUFFER_SIZE 1024
-
 struct CGIData;
 struct ResponseData;
 struct HTTPRequest;
@@ -39,21 +37,19 @@ class Master;
 class Worker
 {
 private:
-	const int kq;
+	const int &kq;
 	const Signal signal;
 	std::vector<struct kevent> &events;
-	std::map<int, std::string> clients;
-	int fd;
 	Config &config;
 	Server &server;
 	HTTPRequestParser parser;
-	UData *responseUData;
 	std::vector<Directive> listen;
+	UData *udata;
 
-	bool eventEOF(Socket &socket, struct kevent &event);
-	bool eventFilterRead(Socket &socket, struct kevent &event);
-	bool eventFilterTimer(Socket &socket, struct kevent &event);
-	bool eventFilterWrite(Socket &socket, struct kevent &event);
+	void eventEOF(Socket &socket, struct kevent &event);
+	void eventFilterRead(Socket &socket, struct kevent &event);
+	void eventFilterTimer(Socket &socket, struct kevent &event);
+	void eventFilterWrite(Socket &socket, struct kevent &event);
 	void eventEVError(Socket &socket, struct kevent &event);
 	void eventFilterSignal(struct kevent &event);
 	void requestHandler(const HTTPRequest &request, const int &client_fd);
@@ -70,7 +66,7 @@ private:
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
 	bool checkHeaderIsKeepLive(const HTTPRequest *request);
-	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
+	bool checkKeepLiveOptions(const HTTPRequest *request);
 	void setTimer(int fd, int timeout);
 	void deleteTimer(int fd);
 	std::string generateSessionID(int length);

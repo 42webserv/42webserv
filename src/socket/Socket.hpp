@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 10:52:02 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:21:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include <sys/event.h>
 #include <vector>
 #include <netinet/tcp.h>
+
+#define BUFFER_SIZE 1024
 
 /*
  * event에 같이 들고 다닐 user에 대한 데이터이다.
@@ -37,7 +39,6 @@ struct UData
         this->isClient = isClient;
         this->max = -1;
         this->timeout = -1;
-        this->writeEventExist = false;
         this->sessionID = "";
         this->alreadySessionSend = false;
         this->sesssionValid = false;
@@ -50,7 +51,6 @@ struct UData
     int timeout;
     bool keepLive;
     bool isClient;
-    bool writeEventExist;
     std::string sessionID;
     bool alreadySessionSend;
     bool sesssionValid;
@@ -72,7 +72,8 @@ public:
     ~Socket();
     Socket &operator=(const Socket &ref);
     Socket(const Socket &ref);
-    int connectClient(std::vector<struct kevent> &events);
+    void connectClient(std::vector<struct kevent> &events);
+    void receiveRequest(struct kevent &event);
     void disconnectClient(struct kevent &event);
     static int enableKeepAlive(int socketFd);
     void closeClients() const;
