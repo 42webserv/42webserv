@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:00:49 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 12:54:01 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
  */
 bool HTTPRequestParser::parseMethod()
 {
-    size_t pos = buffer_.find(' ');
+    size_t pos = buffer_.find(' ', bufferIndex);
     if (pos == std::string::npos)
         return false;
     std::string method_str = buffer_.substr(0, pos);
@@ -112,7 +112,8 @@ bool HTTPRequestParser::parseMethod()
         method_ = method_str;
     else
         return false;
-    buffer_.erase(0, pos + 1);
+    // buffer_.erase(0, pos + 1);
+    bufferIndex = pos + 1;
     state_ = PATH;
     return true;
 }
@@ -124,15 +125,17 @@ bool HTTPRequestParser::parseMethod()
  */
 bool HTTPRequestParser::parsePath()
 {
-    size_t pos = buffer_.find(' ');
+    size_t pos = buffer_.find(' ', bufferIndex);
     if (pos == std::string::npos)
         return false;
-    path_ = buffer_.substr(0, pos);
+    // path_ = buffer_.substr(0, pos);
+    path_ = buffer_.substr(bufferIndex, pos - bufferIndex);
 
     // 만약 path_가 "/aaaa/bbbb/"이라면, 마지막 "/"를 제거해주기 위함.
     if (path_ != "/" && path_.substr(path_.length() - 1) == "/")
-        path_ = buffer_.substr(0, pos - 1);
+        path_ = buffer_.substr(bufferIndex, pos - bufferIndex - 1);
     buffer_.erase(0, pos + 1);
+    bufferIndex = pos + 1;
     pos = path_.find("?");
     if (pos != std::string::npos)
         query_ = path_.substr(pos);
