@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 00:42:21 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:41:54 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ public:
 
     void printServer();
     void setServer(Config &config, const int &kq, std::vector<struct kevent> &events);
+    ServerInfo &findServer(const int &fd);
     Socket *findSocket(const int &fd);
 };
 

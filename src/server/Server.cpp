@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 00:42:38 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:55:21 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,6 +276,31 @@ void Server::printServer()
         for (std::map<int, std::string>::iterator iter = this->servers[i].errorPage.begin(); iter != this->servers[i].errorPage.end(); iter++)
             std::cout << "errorPage : " << iter->first << ", " << iter->second << std::endl;
         std::cout << "===============================\n\n";
+    }
+}
+
+ServerInfo &Server::findServer(const int &fd)
+{
+    for (size_t i = 0; i < this->servers.size(); i++)
+    {
+        ServerInfo &server = this->servers[i];
+        std::vector<Socket *> &sockets = server.sockets;
+        for (size_t j = 0; j < sockets.size(); j++)
+        {
+            Socket &socket = *sockets[j];
+            if (socket._serverFd == fd)
+                return server;
+            else
+            {
+                const std::vector<int> &clientFds = socket._clientFds;
+                for (size_t k = 0; k < clientFds.size(); k++)
+                {
+                    const int clientFd = clientFds[k];
+                    if (clientFd == fd)
+                        return server;
+                }
+            }
+        }
     }
 }
 
