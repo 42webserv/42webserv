@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 00:41:10 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 10:51:58 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,18 +97,18 @@ int Socket::connectClient(std::vector<struct kevent> &events)
     socklen_t addrlen = sizeof(_serverAddr);
     struct sockaddr_in clientAddr;
     struct kevent event;
+    UData *udata;
 
     // Accept incoming connection
-    int client_fd = accept(_serverFd, (struct sockaddr *)&clientAddr, &addrlen);
-    if (client_fd < 0)
+    int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &addrlen);
+    if (clientFd < 0)
         stderrExit("accept() error");
 
-    // std::cout << "Accept new client:" << client_fd << std::endl;
-    int flags = fcntl(client_fd, F_GETFL, 0);
-    if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) < 0)
+    if (fcntl(clientFd, F_SETFL, O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
-    UData *uData = new UData(client_fd, false, true);
-    EV_SET(&event, client_fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, uData);
+
+    udata = new UData(clientFd, false, true); // 처음 udata 생성
+    EV_SET(&event, clientFd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, udata);
 
     struct linger lingerOption;
     lingerOption.l_onoff = 1;   // SO_LINGER 활성화
@@ -121,25 +121,21 @@ int Socket::connectClient(std::vector<struct kevent> &events)
     //     stderrExit("setsockopt SO_LINGER error");
 
     events.push_back(event);
-    _clientFds.push_back(client_fd);
-    return client_fd;
+    _clientFds.push_back(clientFd);
+    return clientFd;
 }
 
 void Socket::disconnectClient(struct kevent &event)
 {
-    std::cout << "disconnectClient" << std::endl;
     const int &clientFd = event.ident;
-    if (event.udata)
-        delete static_cast<UData *>(event.udata);
-    event.udata = NULL;
+    UData *udata = static_cast<UData *>(event.udata);
 
-    struct kevent newEvent;
-    EV_SET(&newEvent, clientFd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    kevent(kq, &newEvent, 1, NULL, 0, NULL);
-    EV_SET(&newEvent, clientFd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    kevent(kq, &newEvent, 1, NULL, 0, NULL);
-    close(clientFd);
+    std::cout << "Disconnect Client" << std::endl;
+    if (udata)
+        delete udata;
+    event.udata = NULL;
     _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), clientFd), _clientFds.end());
+    close(clientFd);
 }
 
 int Socket::enableKeepAlive(int socketFd)
@@ -154,16 +150,6 @@ int Socket::enableKeepAlive(int socketFd)
     if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPINTVL, &keepAliveInterval, sizeof(keepAliveInterval)) < 0)
         stderrExit("setsockopt TCP_KEEPINTVL error");
     return 0;
-}
-
-bool Socket::findClientFd(int client_fd)
-{
-    for (std::vector<int>::const_iterator it = _clientFds.begin(); it != _clientFds.end(); ++it)
-    {
-        if (*it == client_fd)
-            return true;
-    }
-    return false;
 }
 
 void Socket::closeClients() const

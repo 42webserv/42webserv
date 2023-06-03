@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 00:41:19 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 10:52:02 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,11 +38,12 @@ struct UData
         this->max = -1;
         this->timeout = -1;
         this->writeEventExist = false;
-        std::string sessionID = "";
+        this->sessionID = "";
         this->alreadySessionSend = false;
         this->sesssionValid = false;
         this->expireTime = "";
         this->wantToDeleteSessionInCookie = false;
+        this->request = "";
     };
     int fd;
     int max;
@@ -55,6 +56,7 @@ struct UData
     bool sesssionValid;
     std::string expireTime;
     bool wantToDeleteSessionInCookie;
+    std::string request; // recv로 받아야 할 문자열
 };
 
 class Socket
@@ -73,7 +75,6 @@ public:
     int connectClient(std::vector<struct kevent> &events);
     void disconnectClient(struct kevent &event);
     static int enableKeepAlive(int socketFd);
-    bool findClientFd(int client_fd);
     void closeClients() const;
 };
 
