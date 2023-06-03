@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 14:05:11 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:49:12 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 
     // std::cout << "data: [" << data << "]" << std::endl;
 
-    while (!buffer_.empty() || pass_to_body_flag_)
+    while (bufferIndex < buffer_.size() || pass_to_body_flag_)
     {
         switch (state_)
         {
@@ -112,7 +112,6 @@ bool HTTPRequestParser::parseMethod()
         method_ = method_str;
     else
         return false;
-    // buffer_.erase(0, pos + 1);
     bufferIndex = pos + 1;
     state_ = PATH;
     return true;
@@ -128,13 +127,11 @@ bool HTTPRequestParser::parsePath()
     size_t pos = buffer_.find(' ', bufferIndex);
     if (pos == std::string::npos)
         return false;
-    // path_ = buffer_.substr(0, pos);
     path_ = buffer_.substr(bufferIndex, pos - bufferIndex);
 
     // 만약 path_가 "/aaaa/bbbb/"이라면, 마지막 "/"를 제거해주기 위함.
     if (path_ != "/" && path_.substr(path_.length() - 1) == "/")
         path_ = buffer_.substr(bufferIndex, pos - bufferIndex - 1);
-    // buffer_.erase(0, pos + 1);
     bufferIndex = pos + 1;
     pos = path_.find("?");
     if (pos != std::string::npos)
@@ -162,25 +159,14 @@ bool HTTPRequestParser::parseHTTPVersion()
         return false;
     size_t pos = minPos(pos1, pos2, pos3);
     http_version_ = buffer_.substr(bufferIndex, pos - bufferIndex);
-    // 지금까지 사용한 버퍼 지우기
-    // buffer_.erase(0, pos);
     bufferIndex = pos;
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
     if (buffer_.find("\n", bufferIndex) == bufferIndex)
-    {
         bufferIndex++;
-        // buffer_.erase(0, 1);
-    }
     else if (buffer_.find("\r", bufferIndex) == bufferIndex && buffer_.find("\n", bufferIndex) == bufferIndex + 1)
-    {
         bufferIndex += 2;
-        // buffer_.erase(0, 2);
-    }
     else if (buffer_.find("\r", bufferIndex) == bufferIndex)
-    {
         bufferIndex++;
-        // buffer_.erase(0, 1);
-    }
     state_ = HEADER_NAME;
     if (buffer_.length() == bufferIndex)
     {
@@ -197,16 +183,17 @@ bool HTTPRequestParser::parseHTTPVersion()
  */
 bool HTTPRequestParser::parseHeaderName()
 {
-    size_t pos = buffer_.find(':');
+    size_t pos = buffer_.find(':', bufferIndex);
     // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
     {
         state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
         buffer_.clear();
-        return true;
+        // return true; // 불완전한 요청도 받기
+        return false; // 완전한 요청만 받기
     }
-    current_header_name_ = buffer_.substr(0, pos);
-    buffer_.erase(0, pos + 1);
+    current_header_name_ = buffer_.substr(bufferIndex, pos - bufferIndex);
+    bufferIndex = pos + 1;
     state_ = HEADER_VALUE;
     return true;
 }
@@ -219,36 +206,32 @@ bool HTTPRequestParser::parseHeaderName()
  */
 bool HTTPRequestParser::parseHeaderValue()
 {
-    size_t pos1 = buffer_.find("\r");
-    size_t pos2 = buffer_.find("\n");
-    size_t pos3 = buffer_.find(CRLF);
-    if ((method_ != POST && method_ != HEAD) && pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
-    {
-        // std::cout << "HEAD : " << method_ << std::endl;
+    size_t pos1 = buffer_.find("\r", bufferIndex);
+    size_t pos2 = buffer_.find("\n", bufferIndex);
+    size_t pos3 = buffer_.find(CRLF, bufferIndex);
+    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
-    }
     size_t pos = minPos(pos1, pos2, pos3);
-    std::string header_value = buffer_.substr(1, pos - 1);
+    std::string header_value = buffer_.substr(bufferIndex + 1, pos - bufferIndex - 1);
     headers_.insert(std::make_pair(current_header_name_, header_value));
-    buffer_.erase(0, pos);
+    bufferIndex = pos;
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
-    if (buffer_.find("\n") == 0)
-        buffer_.erase(0, 1);
-    else if (buffer_.find("\r") == 0 && buffer_.find("\n") == 1)
-        buffer_.erase(0, 2);
-    else if (buffer_.find("\r") == 0)
-        buffer_.erase(0, 1);
+    if (buffer_.find("\n", bufferIndex) == bufferIndex)
+        bufferIndex++;
+    else if (buffer_.find("\r", bufferIndex) == bufferIndex && buffer_.find("\n", bufferIndex) == bufferIndex + 1)
+        bufferIndex += 2;
+    else if (buffer_.find("\r", bufferIndex) == bufferIndex)
+        bufferIndex++;
     if (current_header_name_ == "Host")
     {
         pos = header_value.find(":");
         if (pos != std::string::npos)
             addr_ = header_value.substr(0, pos);
     }
-    if (buffer_.substr(0, 2) == CRLF)
+    if (buffer_.substr(bufferIndex, 2) == CRLF)
     {
-        buffer_.erase(0, 2);
+        bufferIndex += 2;
         body_ = "";
-        // buffer_.empty() ? state_ = COMPLETE : state_ = BODY;
         if (method_ == POST || method_ == PUT)
         {
             pass_to_body_flag_ = true;
@@ -259,16 +242,11 @@ bool HTTPRequestParser::parseHeaderValue()
             buffer_ = "";
             state_ = COMPLETE;
         }
-        // state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
-        // std::cout << "state_ :" << method_ << std::endl;
-        // if (state_ == BODY && buffer_.empty())
-        // {
-        //     std::cout << "com4" << std::endl;
-        //     state_ = COMPLETE;
-        // }
     }
-    else if (buffer_.empty())
+    else if (buffer_.size() == bufferIndex)
+    {
         state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
+    }
     else
         state_ = HEADER_NAME;
     return true;
@@ -296,13 +274,13 @@ bool HTTPRequestParser::parseBody()
         long long chunkSum = 0;
 
         // chunked 인코딩이 적용된 경우
-        while (!buffer_.empty())
+        while (buffer_.size() != bufferIndex)
         {
-            size_t pos = buffer_.find(CRLF); // 청크의 크기를 나타내는 줄바꿈 위치 찾기
+            size_t pos = buffer_.find(CRLF, bufferIndex); // 청크의 크기를 나타내는 줄바꿈 위치 찾기
             if (pos == std::string::npos)
                 return false;
-            std::string chunk_size_str = buffer_.substr(0, pos); // 청크의 크기를 나타내는 문자열
-            buffer_.erase(0, pos + 2);
+            std::string chunk_size_str = buffer_.substr(bufferIndex, pos - bufferIndex); // 청크의 크기를 나타내는 문자열
+            bufferIndex = pos + 2;
 
             if (chunk_size_str.empty())
                 break; // 마지막 청크를 나타내는 빈 문자열인 경우 종료
@@ -326,8 +304,8 @@ bool HTTPRequestParser::parseBody()
             if (buffer_.size() < chunk_size + 2)
                 return false;
 
-            std::string chunk_data = buffer_.substr(0, chunk_size); // 청크의 데이터 추출
-            buffer_.erase(0, chunk_size + 2);
+            std::string chunk_data = buffer_.substr(bufferIndex, chunk_size); // 청크의 데이터 추출
+            bufferIndex += chunk_size + 2;
             body_ += chunk_data; // body에 청크 데이터 추가
             if (body_.length() / 10000000 != chunkSum / 10000000 && body_.length() / 10000000 % 2 == 0)
                 std::cout << body_.length() / 10000000 * 10 << "\% complete!" << std::endl;
@@ -351,13 +329,13 @@ bool HTTPRequestParser::parseBody()
             }
             if (buffer_.size() < static_cast<size_t>(content_length))
                 return false;
-            body_ = buffer_.substr(0, content_length);
-            buffer_.erase(0, content_length);
+            body_ = buffer_.substr(bufferIndex, content_length);
+            bufferIndex += content_length;
         }
         else
         {
             headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
-            body_ = buffer_.substr(0, buffer_.size());
+            body_ = buffer_.substr(bufferIndex, buffer_.size());
             if (buffer_.empty())
             {
                 state_ = COMPLETE;

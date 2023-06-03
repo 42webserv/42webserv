@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 23:26:30 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:51:45 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -337,9 +337,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 				errorResponse(response, 404);
 				return;
 			}
-			resource_content = resource_content.substr(0, 400000);
+			// resource_content = resource_content.substr(0, 400000);
 			std::string response_header = generateHeader(resource_content, "text/html", 200);
-			// std::cout << "post1" << std::endl;
 			ftSend(response, response_header);
 			// std::cout << "post2" << std::endl;
 			ftSend(response, resource_content);
