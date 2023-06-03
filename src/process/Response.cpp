@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/01 15:32:08 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:51:06 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,12 @@ int Response::getSuitableServer(int port, Server &serverManager)
  * ResponseDate구조체를 얻어옴. 만약 location과 일치한다면 location을 우선으로 가져옴
  *
  * @param request request 를 파싱완료한 구조체
- * @param client_fd 웹 소켓
+ * @param clientFd 웹 소켓
  * @param config conf 파일을 파싱한 클래스
  * @param serverManger 서버 관리 클래스
  * @return 전부 채워진 ResponseDate구조체
  */
-ResponseData *Response::getResponseData(const HTTPRequest &request, const int &client_fd, Config &config, Server &serverManger)
+ResponseData *Response::getResponseData(const HTTPRequest &request, const int &clientFd, Config &config, Server &serverManger)
 {
     int index = getSuitableServer(request.port, serverManger);
     if (index < 0)
@@ -66,7 +66,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->server = server;
     response->index = server.index;
     response->method = request.method;
-    response->clientFd = client_fd;
+    response->clientFd = clientFd;
     response->root = getRootDirectory(request, server);
     response->location = findLocation(request, server.locations);
     if (response->location != NULL)
@@ -111,8 +111,8 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
         // location에 등록된 index 값으로 routes에서 지워준다. location index로 대체됨.
         if (!index.empty())
         {
-            //에러날경우있음 root/123/index일때 다 123/index가 다 지워짐
-            pos = routes.find(index); 
+            // 에러날경우있음 root/123/index일때 다 123/index가 다 지워짐
+            pos = routes.find(index);
             if (pos != std::string::npos)
                 routes = routes.substr(0, pos);
         }

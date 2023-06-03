@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:14 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 09:39:26 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:58:56 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,7 @@
 #include <sys/event.h>
 #include <vector>
 #include "Config.hpp"
-#include "Config.hpp"
-#include "server/Server.hpp"
+#include "Server.hpp"
 #include "Worker.hpp"
 
 class Master

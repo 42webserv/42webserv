@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:21:31 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:51:15 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     // TODO 일단 clientFD는 이 옵션 적용하지 않는 테스트
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
-    // if (setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
+    // if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
     //     stderrExit("setsockopt SO_LINGER error");
 
     events.push_back(event);

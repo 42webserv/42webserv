@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/01 13:49:07 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:51:11 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
-    ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, Config &config, Server &serverManger);
+    ResponseData *getResponseData(const HTTPRequest &request, const int &clientFd, Config &config, Server &serverManger);
 };
 
 /*
