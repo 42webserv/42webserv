@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:40:21 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:00:49 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     buffer_ += data;
     chunked_data = "";
     state_ = METHOD;
+    bufferIndex = 0;
+
     // std::cout << "data: [" << data << "]" << std::endl;
 
     while (!buffer_.empty() || pass_to_body_flag_)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 19:45:48 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/03 11:00:53 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ private:
     std::string body_;
     std::string chunked_data; // chunked 인코딩된 데이터를 저장할 필드
     std::string buffer_;
+    size_t bufferIndex;
     std::string current_header_name_;
     std::string query_;
     std::string addr_;
