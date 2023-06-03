@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 15:51:45 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:55:56 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -683,8 +683,8 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
 {
 	UData *uData = static_cast<UData *>(event.udata);
-	// std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 익스텐션에서는 아래로 써야함.
-	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive");
+	// std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 이걸로
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
 	std::string timeout;
 	std::string max;
 	size_t timeoutIdx;
@@ -708,7 +708,7 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				timeout = options[i].substr(timeoutIdx + 8, options[i].length() - 1);
 				if (timeout.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				uData->timeout = std::stoi(timeout.c_str());
+				uData->timeout = ftStoi(timeout);
 				if (uData->timeout < 0)
 					return false;
 			}
@@ -717,7 +717,7 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				max = options[i].substr(maxIdx + 4, options[i].length() - 1);
 				if (max.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				uData->max = std::stoi(max.c_str());
+				uData->max = ftStoi(max);
 				if (uData->max < 0)
 					return false;
 			}

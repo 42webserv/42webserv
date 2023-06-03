@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 15:49:12 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:55:38 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,7 +321,7 @@ bool HTTPRequestParser::parseBody()
         std::map<std::string, std::string>::iterator content_length_it = headers_.find("content-length");
         if (content_length_it != headers_.end())
         {
-            int content_length = std::stoi(content_length_it->second);
+            int content_length = ftStoi(content_length_it->second);
             if (buffer_.empty())
             {
                 state_ = COMPLETE;

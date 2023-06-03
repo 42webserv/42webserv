@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/05/31 22:02:39 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 15:18:19 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,7 +172,17 @@ void Config::parsedConfig(int argc, char const **argv)
 		filename = DEFAULT_CONF_PATH;
 	}
 	infile.open(filename);
+	if (!infile.is_open())
+	{
+		std::cerr << "Error: Invalid config file '" << filename << "'" << std::endl;
+		exit(1);
+	}
 	_setBlock(infile, _directives, MAIN_DIRECTIVE);
+	if (_directives.size() == 0) // empty file
+	{
+		std::cerr << "Error: Invalid config file '" << filename << "'" << std::endl;
+		exit(1);
+	}
 	if (_directives[0].name != MAIN_DIRECTIVE)
 	{
 		std::vector<Directive> tmp = _directives;
