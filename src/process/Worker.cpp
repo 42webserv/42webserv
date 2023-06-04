@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 15:55:56 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/04 13:50:57 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,6 +258,13 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 	return true;
 }
 
+std::string toHexString(size_t value)
+{
+	std::stringstream ss;
+	ss << std::hex << value;
+	return ss.str();
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -303,7 +310,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 				errorResponse(response, 404);
 				return;
 			}
-			std::string response_header = generateHeader(resource_content, "text/html", 200);
+			std::string response_header = generateHeader(resource_content, "text/html", 200, false);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
 			return;
@@ -315,34 +322,32 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
 			// cgi post method 실행
-			std::cout << request.query << std::endl;
-			// std::cout << "YOUPI.BLA" << std::endl;
-			std::cout << "POST PATH : " << response->resourcePath << std::endl;
-			std::cout << "[" << request.body.length() << "]" << std::endl;
 			CGI cgi(request);
-			// std::string resource_content = cgi.excuteCGI("./YoupiBanane/cgi_tester");
-			std::cout << getCGIPath(*response) << std::endl;
 			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
-				resource_content = resource_content.substr(tmpIdx + 2);
-			resource_content.erase(0, 2);
-			std::cout << "[" << resource_content.length() << "]" << std::endl;
-			std::cout << "[" << resource_content.substr(0, 100) << "]" << std::endl;
-			// response->resourcePath = getCGILocation(response);
-			std::cout << "POST PATH : " << response->resourcePath << std::endl;
+				resource_content = resource_content.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
-			{
-				std::cout << "postCGILocation" << std::endl;
-				errorResponse(response, 404);
-				return;
-			}
-			// resource_content = resource_content.substr(0, 400000);
-			std::string response_header = generateHeader(resource_content, "text/html", 200);
+				return errorResponse(response, 404);
+			std::string response_header = generateHeader(resource_content, "text/html", 200, true);
 			ftSend(response, response_header);
-			// std::cout << "post2" << std::endl;
-			ftSend(response, resource_content);
-			// std::cout << "post3" << std::endl;
+			size_t contentIndex = 0;
+			std::string content;
+			size_t chunkSize = 1000;
+			size_t streamSize = (resource_content.length() / chunkSize * chunkSize == resource_content.length()) ? resource_content.length() / chunkSize : resource_content.length() / chunkSize + 1;
+			for (size_t i = 0; i < streamSize; i++)
+			{
+				if (i == streamSize - 1)
+					content = resource_content.substr(contentIndex * chunkSize, resource_content.length() - contentIndex * chunkSize);
+				else
+					content = resource_content.substr(contentIndex * chunkSize, chunkSize);
+				std::string chunkSizeHex = toHexString(content.length());
+				std::string chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
+				ftSend(response, chunkData);
+				contentIndex++;
+			}
+			ftSend(response, "0\r\n\r\n");
+			std::cout << "분할 응답 완료" << std::endl;
 			return;
 		}
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
@@ -370,7 +375,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		std::string response_header = generateHeader(response_content, "text/html", 200);
+		std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -471,7 +476,7 @@ void Worker::getResponse(ResponseData *response)
 	std::string resource_content = readFile(response->resourcePath);
 	if (resource_content.empty())
 		return errorResponse(response, 404);
-	std::string response_header = generateHeader(resource_content, response->contentType, 200);
+	std::string response_header = generateHeader(resource_content, response->contentType, 200, false);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
 }
@@ -495,7 +500,7 @@ void Worker::postResponse(ResponseData *response)
 	}
 	writeFile(response->resourcePath, response->body);
 	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
-	std::string response_header = generateHeader(body, response->contentType, 201);
+	std::string response_header = generateHeader(body, response->contentType, 201, false);
 	ftSend(response, response_header);
 }
 
@@ -511,7 +516,7 @@ void Worker::putResponse(ResponseData *response)
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resource_content, "text/html", 201);
+		std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
 		ftSend(response, resource_header);
 		ftSend(response, resource_content);
 	}
@@ -537,7 +542,7 @@ void Worker::deleteResponse(ResponseData *response)
 	{
 		// 삭제에 성공한 경우
 		std::string response_content = "Resource deleted successfully";
-		std::string response_header = generateHeader(response_content, "text/html", 200);
+		std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -584,14 +589,17 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked)
 {
 	HTTPRequestParser parser;
 	std::ostringstream oss;
 
 	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
-	oss << "Content-Length: " << content.length() << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
+	if (chunked)
+		oss << "Transfer-Encoding: chunked" << CRLF;
+	else
+		oss << "Content-Length: " << content.length() << CRLF;
 	if (responseUData->alreadySessionSend == true &&
 		responseUData->sessionID != "" &&
 		responseUData->wantToDeleteSessionInCookie == true)
@@ -659,7 +667,7 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType, 200);
+	std::string response_header = generateHeader(tmp, contentType, 200, false);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
