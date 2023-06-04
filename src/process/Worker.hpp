@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 22:02:05 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/04 13:01:36 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ private:
 	void deleteResponse(ResponseData *response);
 	std::string errorPageGenerator(int errorCode);
 	void errorResponse(ResponseData *response, int errorCode);
-	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode);
+	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData &response);
 	std::string getCGILocation(ResponseData *response);
