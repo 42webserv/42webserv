@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 16:02:57 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/05 19:33:58 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ private:
 	bool hasClientFd(const int &k);
 	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
 	std::string extractSubstring(const std::string &A, const std::string &B, const std::string &C);
-	std::string extractSubstring(const std::string &A, const std::string &B);
+	// std::string extractSubstring(const std::string &A, const std::string &B);
 	void setResponse(ResponseData *response, const std::string &resource_content);
 
 public:

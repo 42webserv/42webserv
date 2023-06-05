@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 16:28:45 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/05 19:41:26 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -310,9 +310,12 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			// std::cout << "**&*&&*&&&" << std::endl;
 
 			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
-			std::size_t tmpIdx = resource_content.find("\n\n");
-			if (tmpIdx != std::string::npos)
-				resource_content = resource_content.substr(tmpIdx + 2);
+			// std::cout << resource_content << std::endl;
+			setResponse(response, resource_content);
+
+			// std::size_t tmpIdx = resource_content.find("\n\n");
+			// if (tmpIdx != std::string::npos)
+				// resource_content = resource_content.substr(tmpIdx + 2);
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -322,9 +325,11 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			}
 
 			// const std::string &content, const std::string &contentType, int statusCode, bool chunked
-			std::string response_header = generateHeader(resource_content, "text/html", 200, false);
+			// std::string response_header = generateHeader(resource_content, "text/html", 200, false);
+			std::string response_header = generateHeader(response->body, response->contentType, response->statusCode, false);
+
 			ftSend(response, response_header);
-			ftSend(response, resource_content);
+			ftSend(response, response->body);
 			return;
 		}
 		getResponse(response);
@@ -346,6 +351,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 
 			// std::cout << "~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 			// std::cout << resource_content << std::endl;
+			// std::cout << response->body << std::endl;
 			// std::cout << "**&*&&*&&&" << std::endl;
 			// std::cout << "status code : " << response->statusCode << std::endl;
 			// std::cout << "----------------" << std::endl;
@@ -904,8 +910,11 @@ std::string Worker::extractSubstring(const std::string &A, const std::string &B,
 
 	start += B.length();
 	size_t end = A.find(C, start);
+	if (C == "\0")
+		return A.substr(start);
 	if (end == std::string::npos)
 	{
+		// return A.substr(start);
 		// C를 찾지 못한 경우
 		return "";
 	}
@@ -913,23 +922,23 @@ std::string Worker::extractSubstring(const std::string &A, const std::string &B,
 	return A.substr(start, end - start);
 }
 
-std::string Worker::extractSubstring(const std::string &A, const std::string &B)
-{
-	size_t start = A.find(B);
-	if (start == std::string::npos)
-	{
-		// B를 찾지 못한 경우
-		return "";
-	}
+// std::string Worker::extractSubstring(const std::string &A, const std::string &B)
+// {
+// 	size_t start = A.find(B);
+// 	if (start == std::string::npos)
+// 	{
+// 		// B를 찾지 못한 경우
+// 		return "";
+// 	}
 
-	start += B.length();
-	return A.substr(start);
-}
+// 	start += B.length();
+// 	return A.substr(start);
+// }
 
 void Worker::setResponse(ResponseData *response, const std::string &resource_content)
 {
 	response->statusCode = ftStoi(extractSubstring(resource_content, "Status: ", " OK"));
 	response->contentType = extractSubstring(resource_content, "Content-Type: ", CRLF);
 	response->charset = extractSubstring(resource_content, "charset=", CRLF);
-	response->body = extractSubstring(resource_content, "\r\n\r\n");
+	response->body = extractSubstring(resource_content, "\r\n\r\n", "\0");
 }
