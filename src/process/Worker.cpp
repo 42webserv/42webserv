@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 20:52:38 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 21:12:05 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,13 +39,11 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 	// Server socket
 	if (fd == socket._serverFd)
 	{
-		std::cout << "eventFilterRead server " << fd << std::endl;
 		socket.connectClient(events);
 		return;
 	}
 	else
 	{
-		std::cout << "eventFilterRead client " << fd << std::endl;
 		// Client socket
 		socket.receiveRequest(event);
 		UData *uData = static_cast<UData *>(event.udata);
@@ -62,9 +60,7 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
-	std::cout << "eventFilterWrite client " << fd << std::endl;
 	UData *uData = static_cast<UData *>(event.udata);
-	HTTPRequest *result = udata->result;
 	// uData->request.clear();
 	// if (!result)
 	// 	return;
@@ -74,19 +70,19 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	// if (result->port == -1)
 	// 	result->port = strtod(listen[0].value.c_str(), NULL);
 	udata = uData; // Worker data 변수에 저장
-	if (checkHeaderIsKeepLive(result))
-		registerKeepAlive(result, event, fd);
-	cookieCheck(result);
+	if (checkHeaderIsKeepLive(udata->result))
+		registerKeepAlive(udata->result, event, fd);
+	cookieCheck(udata->result);
 	if (udata->max == 0)
 	{
 		std::cout << "max is zero, disconnection!" << std::endl;
 		socket.disconnectClient(event);
-		if (result)
-			delete result;
+		if (udata->result)
+			delete udata->result;
 	}
-	if (result)
+	if (udata->result)
 	{
-		this->requestHandler(*result, fd);
+		this->requestHandler(*udata->result, fd);
 		if (udata->keepLive == true)
 			udata->max -= 1;
 	}
@@ -104,17 +100,7 @@ void Worker::eventEOF(Socket &socket, struct kevent &event)
 	if (fd == socket._serverFd)
 		stderrExit("Server socket EOF");
 	else
-	{
 		socket.disconnectClient(event);
-		if (event.filter == EVFILT_READ)
-		{
-			std::cout << "EOF on fd " << fd << " is read" << std::endl;
-		}
-		else if (event.filter == EVFILT_WRITE)
-		{
-			std::cout << "EOF on fd " << fd << " is write" << std::endl;
-		}
-	}
 }
 
 void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
