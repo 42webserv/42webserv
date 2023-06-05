@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 21:56:42 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 22:21:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,7 +226,6 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	{
 		if (isCGIRequest(*response))
 		{
-			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\n\n");
@@ -250,7 +249,6 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	{
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
-			std::cout << "here" << std::endl;
 			// cgi post method 실행
 			CGI cgi(request);
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
@@ -301,7 +299,6 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	}
 	else if (response->method == PUT)
 	{
-		std::cout << "PUT HERE" << std::endl;
 		putResponse(response);
 	}
 	else if (response->method == OPTIONS)

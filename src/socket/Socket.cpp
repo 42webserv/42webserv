@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 22:17:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 22:22:16 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,13 +29,16 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
     if (_serverFd < 0)
         stderrExit("socket() error");
 
+    if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) < 0)
+        stderrExit("fcntl non-block failed\n");
+
     opt = 1;
     // Allow socket descriptor to be reuseable
     if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         stderrExit("setsockopt() error");
 
     linger.l_onoff = 1;
-    linger.l_linger = 10;
+    linger.l_linger = 0;
     // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
     if (setsockopt(_serverFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
         stderrExit("setsockopt() error");
@@ -55,7 +58,7 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
         stderrExit("bind() error");
 
     // Set the listen back log
-    if (listen(_serverFd, 3) < 0)
+    if (listen(_serverFd, SOMAXCONN) < 0)
     {
         close(_serverFd);
         stderrExit("listen() error");
@@ -109,8 +112,8 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
 
     struct linger lingerOption;
-    lingerOption.l_onoff = 1;   // SO_LINGER 활성화
-    lingerOption.l_linger = 10; // linger 시간을 10초로 설정
+    lingerOption.l_onoff = 1;  // SO_LINGER 활성화
+    lingerOption.l_linger = 0; // linger 시간을 10초로 설정
 
     // TODO 일단 clientFD는 이 옵션 적용하지 않는 테스트
     // 소켓에 SO_LINGER 옵션 적용
