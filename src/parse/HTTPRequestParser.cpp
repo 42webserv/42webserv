@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 17:43:37 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 17:50:11 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,23 +81,23 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         if (headers_.size() == 0)
             return request;
         request->headers = headers_;
-        std::map<std::string, std::string>::iterator it = request->headers.find("Host");
-        if (it != headers_.end())
+        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
+        if (findHostIterator != headers_.end())
         {
-            size_t pos = it->second.find(":");
-            request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+            size_t pos = findHostIterator->second.find(":");
+            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
             if (request->port == 0)
                 request->port = -1;
             // std::cout << "request->port : " << request->port << std::endl;
-            request->strPort = it->second.substr(pos + 1, it->second.length());
+            request->strPort = findHostIterator->second.substr(pos + 1, findHostIterator->second.length());
         }
         else
             request->port = -1;
         request->body = body_;
         request->addr = addr_;
         request->query = query_;
-        std::map<std::string, std::string>::iterator it = request->headers.find("Transfer-Encoding");
-        if (it != request->headers.end() && it->second == "chunked")
+        std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
+        if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == "chunked")
             request->chunked = true;
         return request;
     }
