@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/05 17:44:22 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 20:58:09 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->clientFd = client_fd;
     response->headers = request.headers;
     response->chunked = request.chunked;
+    response->bodySize = request.bodySize;
     response->root = getRootDirectory(request, server);
     response->location = findLocation(request, server.locations);
     if (response->location != NULL)

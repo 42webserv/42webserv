@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 17:50:11 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 20:59:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     chunked_data = "";
     state_ = METHOD;
     bufferIndex = 0;
+    bodySize_ = -1;
 
     if (data.length() > 500)
         std::cout << "data: [" << data.substr(0, 500) << "]" << std::endl;
@@ -94,6 +95,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         else
             request->port = -1;
         request->body = body_;
+        request->bodySize = bodySize_;
         request->addr = addr_;
         request->query = query_;
         std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
@@ -304,6 +306,7 @@ bool HTTPRequestParser::parseBody()
             {
                 buffer_.clear();
                 state_ = COMPLETE;
+                bodySize_ = body_.length();
                 return true;
             }
 
@@ -334,17 +337,19 @@ bool HTTPRequestParser::parseBody()
                 return false;
             body_ = buffer_.substr(bufferIndex, content_length);
             bufferIndex += content_length;
+            bodySize_ = content_length;
         }
         else
         {
             headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
             body_ = buffer_.substr(bufferIndex, buffer_.size());
-            if (buffer_.empty())
-            {
-                state_ = COMPLETE;
-                return true;
-            }
+            bodySize_ = body_.length();
             buffer_.clear();
+            // if (buffer_.empty())
+            // {
+            state_ = COMPLETE;
+            return true;
+            // }
         }
     }
 

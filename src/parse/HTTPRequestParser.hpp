@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 17:43:47 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 21:01:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ struct HTTPRequest
     std::string name;
     std::string strPort;
     bool chunked;
+    long long bodySize;
     //  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
 };
 
@@ -65,6 +66,7 @@ private:
     std::string addr_;
     std::string name_;
     std::string port_;
+    long long bodySize_;
 
     bool parseMethod();
     bool parsePath();
