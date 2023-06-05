@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 13:55:06 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 13:18:16 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -323,8 +323,12 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
+			std::cout << "here" << std::endl;
 			// cgi post method 실행
 			CGI cgi(request);
+			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
+			if (it != response->headers.end())
+				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
 			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
@@ -335,7 +339,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			ftSend(response, response_header);
 			size_t contentIndex = 0;
 			std::string content;
-			size_t chunkSize = 1000;
+			size_t chunkSize = 500;
+			std::string chunkData;
 			size_t streamSize = (resource_content.length() / chunkSize * chunkSize == resource_content.length()) ? resource_content.length() / chunkSize : resource_content.length() / chunkSize + 1;
 			for (size_t i = 0; i < streamSize; i++)
 			{
@@ -344,7 +349,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 				else
 					content = resource_content.substr(contentIndex * chunkSize, chunkSize);
 				std::string chunkSizeHex = toHexString(content.length());
-				std::string chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
+				chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
 				ftSend(response, chunkData);
 				contentIndex++;
 			}

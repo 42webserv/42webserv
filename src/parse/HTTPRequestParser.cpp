@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 15:00:05 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/04 16:17:21 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,8 +274,6 @@ bool HTTPRequestParser::parseBody()
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
     {
-        long long chunkSum = 0;
-
         // chunked 인코딩이 적용된 경우
         while (buffer_.size() != bufferIndex)
         {
@@ -310,9 +308,6 @@ bool HTTPRequestParser::parseBody()
             std::string chunk_data = buffer_.substr(bufferIndex, chunk_size); // 청크의 데이터 추출
             bufferIndex += chunk_size + 2;
             body_ += chunk_data; // body에 청크 데이터 추가
-            if (body_.length() / 10000000 != chunkSum / 10000000 && body_.length() / 10000000 % 2 == 0)
-                std::cout << body_.length() / 10000000 * 10 << "\% complete!" << std::endl;
-            chunkSum += static_cast<long long>(chunk_size);
 
             if (buffer_.size() == 0)
                 return false;
