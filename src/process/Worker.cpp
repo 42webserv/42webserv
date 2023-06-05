@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 02:11:03 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 05:33:54 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -300,17 +300,11 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response))
 		{
-			std::cout<<"herehehehehehrerere"<<std::endl;
 			CGI cgi(request);
-			std::cout << "getCGILocation"<<getCGIPath(*response) << std::endl;
-			std::string cgiPath = getCGIPath(*response);
-			if (cgiPath == "./src/cgi-bin/uploadFile")
-				cgiPath = "./src/cgi-bin/upload.py";
-			// std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
-			std::cout << "cgipath" << cgiPath << std::endl;
+			// std::cout << "getCGILocation"<<getCGIPath(*response) << std::endl;
+			std::string cgiPath = getCGIPath(*response);;
+			// std::cout << "cgipath" << cgiPath << std::endl;
 			std::string resource_content = cgi.excuteCGI(cgiPath);
-
-			std::cout <<"[resource content " << resource_content << "]" << std::endl;
 			std::size_t tmpIdx = resource_content.find("\n\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
@@ -337,11 +331,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
 			if (it != response->headers.end())
 				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
-			// cgi.setEnvp("HTTP_COOKIE", "");
-			// cgi.setEnvp("HTTP_USER_AGENT", "");
-			// UPLOAD 일때  http://localhost:8080/cgi-bin/upload
-			//upload.html
-			// std::string resource_content = cgi.excuteCGI("./src/cgi-bin/printEnvp");
 			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
@@ -473,27 +462,20 @@ bool Worker::isCGIRequest(ResponseData &response)
 	if (response.cgiPath.size() == 1)
 	{
 		// upload
-		// response->path = "/cgi-bin/upload" -> "upload"
-		std::cout << "response.path : " << response.path << std::endl;
-		// std::string path = response.path; // "./src/cgi-bin/upload.py"
-		std::string path; // "./src/cgi-bin/upload.py"
-		size_t pos =response.path.rfind("/");
+		std::string path;
+		size_t pos = response.path.rfind("/");// "./src/cgi-bin/upload.py" -> upload.py 추출
 		if (pos != std::string::npos)
 			path = response.path.substr(pos+1);
-		// std::cout<<"path " << path << std::endl;
+		std::cout<<"path " << path << std::endl; //upload.py
 		// ./src/cgi-bin/src/cgi-bin/upload.py
-		if (path == "uploadFile")
+		if (path == "upload") //uploadFile
 		{
-			std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
+			// std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
 			// std::string uploadContent = uploadPageGenerator(getCGIPath(response)); // root + upload + .py
 			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
-			std::cout << "uploadContent"<< uploadContent << std::endl;
-			std::cout << " response_header"<<  response_header << std::endl;
-
 			ftSend(response, response_header);
 			ftSend(response, uploadContent);
-
 		}
 		return true;
 	}
