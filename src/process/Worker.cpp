@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 15:30:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:45:39 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,7 +321,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	}
 	else if (response->method == POST)
 	{
-		std::cout << "response->contentLength : " << response->contentLength << std::endl;
+		// std::cout << "response->contentLength : " << response->contentLength << std::endl;
+		std::string resourceContent;
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
 			std::cout << "CGI HERE" << std::endl;
@@ -330,25 +331,25 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
 			if (it != response->headers.end())
 				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
-			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
-			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
+			resourceContent = cgi.excuteCGI(getCGIPath(*response));
+			std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
-				resource_content = resource_content.substr(tmpIdx + 4);
+				resourceContent = resourceContent.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
 				return errorResponse(response, 404);
-			std::string response_header = generateHeader(resource_content, "text/html", 200, true);
+			std::string response_header = generateHeader(resourceContent, "text/html", 200, true);
 			ftSend(response, response_header);
 			size_t contentIndex = 0;
 			std::string content;
 			size_t chunkSize = 500;
 			std::string chunkData;
-			size_t streamSize = (resource_content.length() / chunkSize * chunkSize == resource_content.length()) ? resource_content.length() / chunkSize : resource_content.length() / chunkSize + 1;
+			size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
 			for (size_t i = 0; i < streamSize; i++)
 			{
 				if (i == streamSize - 1)
-					content = resource_content.substr(contentIndex * chunkSize, resource_content.length() - contentIndex * chunkSize);
+					content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
 				else
-					content = resource_content.substr(contentIndex * chunkSize, chunkSize);
+					content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
 				std::string chunkSizeHex = toHexString(content.length());
 				chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
 				ftSend(response, chunkData);
@@ -358,6 +359,30 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			std::cout << "분할 응답 완료" << std::endl;
 			return;
 		}
+		else
+		{
+			const std::string clientMaxBodySize = "client_max_body_size";
+			if (invalidResponse(response))
+				return;
+
+			// TODO PUT도 해야 하나?
+			// check client_max_body_size
+			std::vector<Directive>::const_iterator it = findDirective(response->location->block, clientMaxBodySize);
+			if (it == response->location->block.end())
+				it = findDirective(response->server.locations, clientMaxBodySize);
+			if (it != response->location->block.end())
+			{
+				size_t max_body_size = atoi(it->value.c_str());
+				if (max_body_size < response->contentLength)
+					return errorResponse(response, 413);
+			}
+			writeFile(response->resourcePath, response->body);
+			std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
+			std::string response_header = generateHeader(body, response->contentType, 201, false);
+			ftSend(response, response_header);
+			return;
+		}
+
 		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
 		// if (response->contentLength == 0)
 		// {
@@ -365,7 +390,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		// 	return;
 		// }
 		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
-		std::cout << "POST HERE" << std::endl;
+		// std::cout << "POST HERE" << std::endl;
 		postResponse(response);
 	}
 	else if (response->method == HEAD)
