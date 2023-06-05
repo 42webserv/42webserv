@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 15:16:19 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/04 16:36:11 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
         {
             int port = strtod(serverBlocks[i].value.c_str(), NULL);
             if (find(this->validPorts.begin(), this->validPorts.end(), port) != this->validPorts.end())
-                stderrExit(("Error : duplicate port number " + std::to_string(port) + "\n").c_str());
+                stderrExit(("Error : duplicate port number " + ftToString(port) + "\n").c_str());
             tmpServ.ports.push_back(port);
             this->validPorts.push_back(port);
         }

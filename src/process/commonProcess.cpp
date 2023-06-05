@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:37:09 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/04 16:35:58 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,4 +99,13 @@ const std::string getContentType(const HTTPRequest &request)
 			return it->second;
 	}
 	return "text/plain";
+}
+
+int ftStoi(const std::string &str)
+{
+	std::stringstream ss(str);
+	int requestBodySize;
+	ss >> requestBodySize;
+
+	return requestBodySize;
 }
