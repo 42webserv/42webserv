@@ -6,13 +6,12 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 16:35:58 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:21:14 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <algorithm>
 #include "commonProcess.hpp"
-#include "commonUtils.hpp"
 
 /**
  * @brief Send response to client
@@ -99,13 +98,4 @@ const std::string getContentType(const HTTPRequest &request)
 			return it->second;
 	}
 	return "text/plain";
-}
-
-int ftStoi(const std::string &str)
-{
-	std::stringstream ss(str);
-	int requestBodySize;
-	ss >> requestBodySize;
-
-	return requestBodySize;
 }

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 15:28:01 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 13:53:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ struct ResponseData
     std::string method;
     std::vector<std::string> limitExcept;
     std::vector<std::string> cgiPath;
+    std::map<std::string, std::string> headers;
     std::string returnState;
     std::string redirect;
     Directive *location;

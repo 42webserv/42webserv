@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 19:53:58 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:36:59 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:20:17 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,13 @@ std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<
 			return it;
 	}
 	return directives.end();
+}
+
+int ftStoi(const std::string &str)
+{
+	std::stringstream ss(str);
+	int requestBodySize;
+	ss >> requestBodySize;
+
+	return requestBodySize;
 }

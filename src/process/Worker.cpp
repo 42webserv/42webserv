@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 11:25:19 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:13:53 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,24 +76,22 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 		{
 			std::cout << "max is zero, disconnection!" << std::endl;
 			socket.disconnectClient(event);
+			if (result)
+				delete result;
 		}
 		if (result)
 		{
 			this->requestHandler(*result, fd);
+			struct kevent eventToDelete;
+			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
 			if (udata->keepLive == true)
-				udata->max -= 1;
+				udata->max = udata->max - 1;
 		}
-		else
-			std::cout << "Failed to parse request" << std::endl;
 		if (udata->max == 0)
 		{
 			std::cout << "communication number of " << fd << " is zero, disconnection!" << std::endl;
 			socket.disconnectClient(event);
 		}
-		// if (!checkHeaderIsKeepLive(result) || responseUData->max == 0)
-		// socket.disconnectClient(event);
-		if (result)
-			delete result;
 	}
 }
 
@@ -262,8 +260,12 @@ void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 	{
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
+			std::cout << "here" << std::endl;
 			// cgi post method 실행
 			CGI cgi(request);
+			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
+			if (it != response->headers.end())
+				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
 			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
@@ -274,7 +276,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 			ftSend(response, response_header);
 			size_t contentIndex = 0;
 			std::string content;
-			size_t chunkSize = 1000;
+			size_t chunkSize = 500;
+			std::string chunkData;
 			size_t streamSize = (resource_content.length() / chunkSize * chunkSize == resource_content.length()) ? resource_content.length() / chunkSize : resource_content.length() / chunkSize + 1;
 			for (size_t i = 0; i < streamSize; i++)
 			{
@@ -283,7 +286,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 				else
 					content = resource_content.substr(contentIndex * chunkSize, chunkSize);
 				std::string chunkSizeHex = toHexString(content.length());
-				std::string chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
+				chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
 				ftSend(response, chunkData);
 				contentIndex++;
 			}
@@ -438,7 +441,7 @@ void Worker::postResponse(ResponseData *response)
 	{
 		size_t max_body_size = atoi(it->value.c_str());
 		if (max_body_size < response->contentLength)
-			return errorResponse(response, 400);
+			return errorResponse(response, 413);
 	}
 	writeFile(response->resourcePath, response->body);
 	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
@@ -631,8 +634,8 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 
 bool Worker::checkKeepLiveOptions(const HTTPRequest *request)
 {
-	// std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 익스텐션에서는 아래로 써야함.
-	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive");
+	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 이걸로
+																								 // std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
 	std::string timeout;
 	std::string max;
 	size_t timeoutIdx;

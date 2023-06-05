@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 16:36:05 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 13:52:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,16 +34,5 @@ bool isMethod(const std::string &method);
 bool writeFile(const std::string &path, const std::string &contents);
 std::string readFile(const std::string &path);
 const std::string getContentType(const HTTPRequest &request);
-
-// commonUtils.cpp로 옮길것
-int ftStoi(const std::string &str);
-
-template <typename T>
-std::string ftToString(T value)
-{
-	std::ostringstream oss;
-	oss << value;
-	return oss.str();
-}
 
 #endif
