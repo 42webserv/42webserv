@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 21:12:05 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 21:56:42 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
-	UData *uData = static_cast<UData *>(event.udata);
+	UData *udata = static_cast<UData *>(event.udata);
 	// uData->request.clear();
 	// if (!result)
 	// 	return;
@@ -69,10 +69,9 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	// 	return;
 	// if (result->port == -1)
 	// 	result->port = strtod(listen[0].value.c_str(), NULL);
-	udata = uData; // Worker data 변수에 저장
-	if (checkHeaderIsKeepLive(udata->result))
-		registerKeepAlive(udata->result, event, fd);
-	cookieCheck(udata->result);
+	if (checkHeaderIsKeepLive(udata))
+		registerKeepAlive(udata, fd);
+	cookieCheck(udata);
 	if (udata->max == 0)
 	{
 		std::cout << "max is zero, disconnection!" << std::endl;
@@ -82,7 +81,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	}
 	if (udata->result)
 	{
-		this->requestHandler(*udata->result, fd);
+		this->requestHandler(udata, fd);
 		if (udata->keepLive == true)
 			udata->max -= 1;
 	}
@@ -201,11 +200,12 @@ std::string toHexString(size_t value)
  * @param request request 를 파싱완료한 구조체
  * @param clientFd 서버의 fd
  */
-void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
+void Worker::requestHandler(UData *udata, const int &clientFd)
 {
+	const HTTPRequest &request = *udata->result;
 	Response res;
 	ResponseData *response = res.getResponseData(request, clientFd, config, this->server);
-
+	response->udata = udata;
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
@@ -239,7 +239,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 				errorResponse(response, 404);
 				return;
 			}
-			std::string response_header = generateHeader(resource_content, "text/html", 200, false);
+			std::string response_header = generateHeader(resource_content, "text/html", 200, false, udata);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
 			return;
@@ -262,7 +262,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 				resource_content = resource_content.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
 				return errorResponse(response, 404);
-			std::string response_header = generateHeader(resource_content, "text/html", 200, true);
+			std::string response_header = generateHeader(resource_content, "text/html", 200, true, udata);
 			ftSend(response, response_header);
 			size_t contentIndex = 0;
 			std::string content;
@@ -309,7 +309,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &clientFd)
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, false, udata);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -411,7 +411,7 @@ void Worker::getResponse(ResponseData *response)
 	std::string resource_content = readFile(response->resourcePath);
 	if (resource_content.empty())
 		return errorResponse(response, 404);
-	std::string response_header = generateHeader(resource_content, response->contentType, 200, false);
+	std::string response_header = generateHeader(resource_content, response->contentType, 200, false, response->udata);
 	ftSend(response, response_header);
 	ftSend(response, resource_content);
 }
@@ -435,7 +435,7 @@ void Worker::postResponse(ResponseData *response)
 	}
 	writeFile(response->resourcePath, response->body);
 	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
-	std::string response_header = generateHeader(body, response->contentType, 201, false);
+	std::string response_header = generateHeader(body, response->contentType, 201, false, response->udata);
 	ftSend(response, response_header);
 }
 
@@ -451,7 +451,7 @@ void Worker::putResponse(ResponseData *response)
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
+		std::string resource_header = generateHeader(resource_content, "text/html", 201, false, response->udata);
 		ftSend(response, resource_header);
 		ftSend(response, resource_content);
 	}
@@ -477,7 +477,7 @@ void Worker::deleteResponse(ResponseData *response)
 	{
 		// 삭제에 성공한 경우
 		std::string response_content = "Resource deleted successfully";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, false, response->udata);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -525,9 +525,8 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked, UData *udata)
 {
-	HTTPRequestParser parser;
 	std::ostringstream oss;
 
 	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
@@ -539,8 +538,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	if (udata->alreadySessionSend == true && udata->sessionID != "" && udata->wantToDeleteSessionInCookie == true)
 	{
 		std::string expireTime = getExpiryDate(-3600);
-		oss << "Set-Cookie: sessionid="
-			<< "deleted"
+		oss << "Set-Cookie: sessionid=deleted"
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		udata->alreadySessionSend = false;
 		udata->expireTime = "";
@@ -601,13 +599,14 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType, 200, false);
+	std::string response_header = generateHeader(tmp, contentType, 200, false, response->udata);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
 
-bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
+bool Worker::checkHeaderIsKeepLive(UData *udata)
 {
+	HTTPRequest *request = udata->result;
 	std::map<std::string, std::string>::const_iterator it = request->headers.find("Connection");
 	if (it != request->headers.end())
 	{
@@ -622,8 +621,9 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 	return false;
 }
 
-bool Worker::checkKeepLiveOptions(const HTTPRequest *request)
+bool Worker::checkKeepLiveOptions(UData *udata)
 {
+	HTTPRequest *request = udata->result;
 	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 이걸로
 																								 // std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
 	std::string timeout;
@@ -684,14 +684,12 @@ void Worker::deleteTimer(int fd)
 	// events.push_back(event);
 }
 
-void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int clientFd)
+void Worker::registerKeepAlive(UData *udata, int clientFd)
 {
-	if (event.udata == NULL)
-		return;
 	if (udata->keepLive == false)
 	{
 		udata->keepLive = true;
-		if (checkKeepLiveOptions(request))
+		if (checkKeepLiveOptions(udata))
 		{
 			if (udata->timeout > 0)
 				setTimer(clientFd, udata->timeout);
@@ -711,11 +709,12 @@ std::string Worker::getExpiryDate(int secondsToAdd)
 	return std::string(buffer);
 }
 
-void Worker::cookieCheck(HTTPRequest *result)
+void Worker::cookieCheck(UData *udata)
 {
-	if (result->headers.find("Cookie") != result->headers.end())
+	HTTPRequest *request = udata->result;
+	if (request->headers.find("Cookie") != request->headers.end())
 	{
-		std::string cookie = result->headers["Cookie"];
+		std::string cookie = request->headers["Cookie"];
 		if (cookie.find("sessionid="))
 		{
 			std::string cookieSessionId = cookie.substr(10, 42);

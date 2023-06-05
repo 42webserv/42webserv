@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 20:58:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 22:17:15 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,10 +142,8 @@ void Socket::receiveRequest(struct kevent &event)
         {
             buf[n] = '\0';
             udata->request.append(buf);
-            if (n < BUFFER_SIZE)
+            if (n < BUFFER_SIZE - 1)
                 break;
-            else
-                continue;
         }
     }
 }
