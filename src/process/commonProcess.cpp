@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonProcess.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 13:10:11 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/06 01:23:25 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,11 @@ void ftSend(const int &socket, const std::string &buffer)
 void ftSend(ResponseData *response, const std::string &contents)
 {
 	ftSend(response->clientFd, contents);
+}
+
+void ftSend(ResponseData &response, const std::string &contents)
+{
+	ftSend(response.clientFd, contents);
 }
 
 bool isDirectory(const std::string &path)
