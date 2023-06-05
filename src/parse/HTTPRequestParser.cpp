@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 16:17:21 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:24:29 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     chunked_data = "";
     state_ = METHOD;
     bufferIndex = 0;
-
-    if (data.length() > 500)
-        std::cout << "data: [" << data.substr(0, 500) << "]" << std::endl;
-    else
-        std::cout << "data: [" << data << "]" << std::endl;
 
     while (bufferIndex < buffer_.size() || pass_to_body_flag_)
     {
@@ -173,7 +168,6 @@ bool HTTPRequestParser::parseHTTPVersion()
     state_ = HEADER_NAME;
     if (buffer_.length() == bufferIndex)
     {
-        std::cout << "com1" << std::endl;
         state_ = COMPLETE;
     }
     return true;
