@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 15:45:39 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 17:29:55 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -323,6 +323,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		// std::cout << "response->contentLength : " << response->contentLength << std::endl;
 		std::string resourceContent;
+		if (invalidResponse(response))
+			return;
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
 			std::cout << "CGI HERE" << std::endl;
@@ -362,8 +364,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		else
 		{
 			const std::string clientMaxBodySize = "client_max_body_size";
-			if (invalidResponse(response))
-				return;
 
 			// TODO PUT도 해야 하나?
 			// check client_max_body_size
@@ -382,16 +382,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			ftSend(response, response_header);
 			return;
 		}
-
-		// body size가 0인지 확인. body size가 0인 경우 GET 메소드와 다르지 않기 때문에 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
-		// if (response->contentLength == 0)
-		// {
-		// 	getResponse(response);
-		// 	return;
-		// }
-		// 해당 서브젝트 수준에서는 리소스가 CGI가 아니라면 body가 있든 없든, query가 있든 없든 처리/응답에는 영향이 없습니다.
-		// std::cout << "POST HERE" << std::endl;
-		postResponse(response);
 	}
 	else if (response->method == HEAD)
 	{
