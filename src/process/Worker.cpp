@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 17:37:28 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 17:53:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -344,26 +344,33 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 				resourceContent = resourceContent.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
 				return errorResponse(response, 404);
-			std::string response_header = generateHeader(resourceContent, "text/html", 200, true);
+			std::string response_header = generateHeader(resourceContent, "text/html", 200, response->chunked);
 			ftSend(response, response_header);
-			size_t contentIndex = 0;
-			std::string content;
-			size_t chunkSize = 500;
-			std::string chunkData;
-			size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
-			for (size_t i = 0; i < streamSize; i++)
+			if (response->chunked)
 			{
-				if (i == streamSize - 1)
-					content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
-				else
-					content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
-				std::string chunkSizeHex = toHexString(content.length());
-				chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
-				ftSend(response, chunkData);
-				contentIndex++;
+				size_t contentIndex = 0;
+				std::string content;
+				size_t chunkSize = 500;
+				std::string chunkData;
+				size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
+				for (size_t i = 0; i < streamSize; i++)
+				{
+					if (i == streamSize - 1)
+						content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
+					else
+						content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
+					std::string chunkSizeHex = toHexString(content.length());
+					chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
+					ftSend(response, chunkData);
+					contentIndex++;
+				}
+				ftSend(response, "0\r\n\r\n");
 			}
-			ftSend(response, "0\r\n\r\n");
-			std::cout << "분할 응답 완료" << std::endl;
+			else
+			{
+				std::cout << "printEnvp" << std::endl;
+				ftSend(response, resourceContent);
+			}
 			return;
 		}
 		else
