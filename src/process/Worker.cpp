@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 20:42:29 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 21:05:31 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -325,7 +325,22 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		if (invalidResponse(response))
 			return;
 
+		const std::string clientMaxBodySize = "client_max_body_size";
+		// std::vector<Directive>::const_iterator bodySizeIterator = (findDirective(response->location->block, clientMaxBodySize) == response->location->block.end()) ? findDirective(response->server.locations, clientMaxBodySize) : findDirective(response->location->block, clientMaxBodySize);
+		// // if (bodySizeIterator == response->location->block.end())
+		// // bodySizeIterator = findDirective(response->server.locations, clientMaxBodySize);
+		// // std::cout << "bodySizeIterator->value : " << bodySizeIterator->value << std::endl;
+		// std::cout << "response->chunked : " << (response->chunked == true ? "true" : "false") << std::endl;
+		// if (bodySizeIterator != response->location->block.end())
+		// {
+		// 	std::cout << "here" << std::endl;
+		// 	size_t max_body_size = atoi(bodySizeIterator->value.c_str());
+		// 	if (max_body_size < response->contentLength)
+		// 		return errorResponse(response, 413);
+		// }
+
 		std::string resourceContent;
+		std::string responseHeader;
 
 		// cgi 세팅
 		CGI cgi(request);
@@ -344,45 +359,68 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 				resourceContent = resourceContent.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
 				return errorResponse(response, 404);
-			std::string response_header = generateHeader(resourceContent, "text/html", 200, response->chunked);
-			ftSend(response, response_header);
-			if (response->chunked)
-			{
-				size_t contentIndex = 0;
-				std::string content;
-				size_t chunkSize = 500;
-				std::string chunkData;
-				size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
-				for (size_t i = 0; i < streamSize; i++)
-				{
-					if (i == streamSize - 1)
-						content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
-					else
-						content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
-					chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
-					ftSend(response, chunkData);
-					contentIndex++;
-				}
-				ftSend(response, "0\r\n\r\n");
-			}
-			else
-				ftSend(response, resourceContent);
-			return;
+			responseHeader = generateHeader(resourceContent, "text/html", 200, response->chunked);
+			ftSend(response, responseHeader);
 		}
 		else
 		{
-			// TODO PUT도 해야 하나?
-			// check client_max_body_size
+			writeFile(response->resourcePath, response->body);
+			responseHeader = generateHeader(response->body, response->contentType, 201, response->chunked);
+			ftSend(response, responseHeader);
+			// return;
+		}
+		if (response->chunked)
+		{
+			size_t contentIndex = 0;
+			std::string content;
+			size_t chunkSize = 500;
+			std::string chunkData;
+			size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
+			for (size_t i = 0; i < streamSize; i++)
+			{
+				if (i == streamSize - 1)
+					content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
+				else
+					content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
+				chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
+				ftSend(response, chunkData);
+				contentIndex++;
+			}
+			ftSend(response, "0\r\n\r\n");
+		}
+		else
+		{
 			const std::string clientMaxBodySize = "client_max_body_size";
-			std::vector<Directive>::const_iterator bodySizeIterator = findDirective(response->location->block, clientMaxBodySize);
-			if (bodySizeIterator == response->location->block.end())
-				bodySizeIterator = findDirective(response->server.locations, clientMaxBodySize);
+			std::vector<Directive>::const_iterator bodySizeIterator = (findDirective(response->location->block, clientMaxBodySize) == response->location->block.end()) ? findDirective(response->server.locations, clientMaxBodySize) : findDirective(response->location->block, clientMaxBodySize);
+			// if (bodySizeIterator == response->location->block.end())
+			// bodySizeIterator = findDirective(response->server.locations, clientMaxBodySize);
+			// std::cout << "bodySizeIterator->value : " << bodySizeIterator->value << std::endl;
+			std::cout << "response->chunked : " << (response->chunked == true ? "true" : "false") << std::endl;
 			if (bodySizeIterator != response->location->block.end())
 			{
+				std::cout << "here" << std::endl;
 				size_t max_body_size = atoi(bodySizeIterator->value.c_str());
 				if (max_body_size < response->contentLength)
 					return errorResponse(response, 413);
 			}
+			ftSend(response, resourceContent);
+		}
+		return;
+
+		// else
+		{
+			// TODO PUT도 해야 하나?
+			// check client_max_body_size
+			// const std::string clientMaxBodySize = "client_max_body_size";
+			// std::vector<Directive>::const_iterator bodySizeIterator = findDirective(response->location->block, clientMaxBodySize);
+			// if (bodySizeIterator == response->location->block.end())
+			// 	bodySizeIterator = findDirective(response->server.locations, clientMaxBodySize);
+			// if (bodySizeIterator != response->location->block.end())
+			// {
+			// 	size_t max_body_size = atoi(bodySizeIterator->value.c_str());
+			// 	if (max_body_size < response->contentLength)
+			// 		return errorResponse(response, 413);
+			// }
 			writeFile(response->resourcePath, response->body);
 			std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
 			std::string response_header = generateHeader(body, response->contentType, 201, false);
