@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 11:41:54 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:26:32 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ class Server
 private:
     std::vector<int> validPorts;
 
-    void setUpServer(std::vector<Directive> &servrBlocks, const int &kq, std::vector<struct kevent> &events);
+    void setUpServer(std::vector<Directive> &servrBlocks, std::vector<struct kevent> &events);
     void setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &servrBlocks);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);
     void setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);
@@ -76,7 +76,7 @@ public:
     ~Server();
 
     void printServer();
-    void setServer(Config &config, const int &kq, std::vector<struct kevent> &events);
+    void setServer(Config &config, std::vector<struct kevent> &events);
     ServerInfo &findServer(const int &fd);
     Socket *findSocket(const int &fd);
 };

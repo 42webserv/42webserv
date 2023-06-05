@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:51:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 20:58:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include "Socket.hpp"
 #include "Server.hpp"
 
-Socket::Socket(std::vector<struct kevent> &events, const int &port, const int &kq) : kq(kq), _serverFd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
     struct linger linger;
@@ -62,12 +62,10 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port, const int &k
     }
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     events.push_back(event);
-    // kevent(kq, &event, 1, NULL, 0, NULL);
-    // (void)events;
     std::cout << "Server listening on port " << port << std::endl;
 }
 
-Socket::Socket(const Socket &ref) : kq(ref.kq), _serverFd(ref._serverFd)
+Socket::Socket(const Socket &ref) : _serverFd(ref._serverFd)
 {
     if (this == &ref)
         return;
@@ -108,7 +106,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
         stderrExit("fcntl() error");
 
     udata = new UData(clientFd, false, true); // 처음 udata 생성
-    EV_SET(&event, clientFd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, udata);
+    EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
 
     struct linger lingerOption;
     lingerOption.l_onoff = 1;   // SO_LINGER 활성화

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 15:13:53 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 20:52:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,15 +39,22 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 	// Server socket
 	if (fd == socket._serverFd)
 	{
+		std::cout << "eventFilterRead server " << fd << std::endl;
 		socket.connectClient(events);
 		return;
 	}
 	else
 	{
+		std::cout << "eventFilterRead client " << fd << std::endl;
 		// Client socket
 		socket.receiveRequest(event);
+		UData *uData = static_cast<UData *>(event.udata);
+		HTTPRequest *result = parser.parse(uData->request);
+		if (!result)
+			return;
+		uData->result = result;
 		struct kevent newEvent;
-		EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.udata);
+		EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, uData);
 		events.push_back(newEvent);
 	}
 }
@@ -55,43 +62,38 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
+	std::cout << "eventFilterWrite client " << fd << std::endl;
 	UData *uData = static_cast<UData *>(event.udata);
-
-	HTTPRequest *result = parser.parse(uData->request);
-	uData->request.clear();
-	if (!result)
-		return;
+	HTTPRequest *result = udata->result;
+	// uData->request.clear();
+	// if (!result)
+	// 	return;
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	if (result->method != HEAD && result->headers.size() == 0)
-		return;
-	if (result->port == -1)
-		result->port = strtod(listen[0].value.c_str(), NULL);
-	if (result != NULL)
+	// if (result->method != HEAD && result->headers.size() == 0)
+	// 	return;
+	// if (result->port == -1)
+	// 	result->port = strtod(listen[0].value.c_str(), NULL);
+	udata = uData; // Worker data 변수에 저장
+	if (checkHeaderIsKeepLive(result))
+		registerKeepAlive(result, event, fd);
+	cookieCheck(result);
+	if (udata->max == 0)
 	{
-		udata = uData; // Worker data 변수에 저장
-		if (checkHeaderIsKeepLive(result))
-			registerKeepAlive(result, event, fd);
-		cookieCheck(result);
-		if (udata->max == 0)
-		{
-			std::cout << "max is zero, disconnection!" << std::endl;
-			socket.disconnectClient(event);
-			if (result)
-				delete result;
-		}
+		std::cout << "max is zero, disconnection!" << std::endl;
+		socket.disconnectClient(event);
 		if (result)
-		{
-			this->requestHandler(*result, fd);
-			struct kevent eventToDelete;
-			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
-			if (udata->keepLive == true)
-				udata->max = udata->max - 1;
-		}
-		if (udata->max == 0)
-		{
-			std::cout << "communication number of " << fd << " is zero, disconnection!" << std::endl;
-			socket.disconnectClient(event);
-		}
+			delete result;
+	}
+	if (result)
+	{
+		this->requestHandler(*result, fd);
+		if (udata->keepLive == true)
+			udata->max -= 1;
+	}
+	if (udata->max == 0)
+	{
+		std::cout << "communication number of " << fd << " is zero, disconnection!" << std::endl;
+		socket.disconnectClient(event);
 	}
 }
 
@@ -99,20 +101,19 @@ void Worker::eventEOF(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
 
-	std::cout << "EOF on fd " << fd << std::endl;
 	if (fd == socket._serverFd)
 		stderrExit("Server socket EOF");
 	else
 	{
+		socket.disconnectClient(event);
 		if (event.filter == EVFILT_READ)
 		{
-			UData *uData = static_cast<UData *>(event.udata);
-			struct kevent newEvent;
-			EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD, 0, 0, uData);
-			events.push_back(newEvent);
+			std::cout << "EOF on fd " << fd << " is read" << std::endl;
 		}
 		else if (event.filter == EVFILT_WRITE)
-			socket.disconnectClient(event);
+		{
+			std::cout << "EOF on fd " << fd << " is write" << std::endl;
+		}
 	}
 }
 
@@ -153,14 +154,17 @@ void Worker::run()
 				eventEVError(*socket, event);
 			else if (event.flags & EV_EOF)
 				eventEOF(*socket, event);
-			else if (event.filter == EVFILT_READ)
-				eventFilterRead(*socket, event);
-			else if (event.filter == EVFILT_WRITE)
-				eventFilterWrite(*socket, event);
-			else if (event.filter == EVFILT_TIMER)
-				eventFilterTimer(*socket, event);
-			else if (event.filter == EVFILT_SIGNAL)
-				eventFilterSignal(event);
+			else
+			{
+				if (event.filter == EVFILT_READ)
+					eventFilterRead(*socket, event);
+				else if (event.filter == EVFILT_WRITE)
+					eventFilterWrite(*socket, event);
+				else if (event.filter == EVFILT_TIMER)
+					eventFilterTimer(*socket, event);
+				else if (event.filter == EVFILT_SIGNAL)
+					eventFilterSignal(event);
+			}
 		}
 	}
 }
@@ -684,14 +688,13 @@ void Worker::setTimer(int fd, int timeout)
 	struct kevent event;
 	int timer_interval_ms = timeout * 1000;
 	EV_SET(&event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, NULL);
-	events.push_back(event);
+	// events.push_back(event);
 }
 
 void Worker::deleteTimer(int fd)
 {
-	(void)fd;
-	// struct kevent event;
-	// EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	struct kevent event;
+	EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
 	// events.push_back(event);
 }
 

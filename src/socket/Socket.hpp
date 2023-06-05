@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:21:25 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 20:08:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,12 @@
 
 #include <arpa/inet.h>
 #include <map>
+#include <netinet/tcp.h>
 #include <stdexcept>
 #include <string>
 #include <sys/event.h>
 #include <vector>
-#include <netinet/tcp.h>
+#include "HTTPRequestParser.hpp"
 
 #define BUFFER_SIZE 1024
 
@@ -45,6 +46,7 @@ struct UData
         this->expireTime = "";
         this->wantToDeleteSessionInCookie = false;
         this->request = "";
+        this->result = NULL;
     };
     int fd;
     int max;
@@ -57,18 +59,18 @@ struct UData
     std::string expireTime;
     bool wantToDeleteSessionInCookie;
     std::string request; // recv로 받아야 할 문자열
+    HTTPRequest *result;
 };
 
 class Socket
 {
 private:
     struct sockaddr_in _serverAddr;
-    const int kq;
 
 public:
     const int _serverFd;
     std::vector<int> _clientFds;
-    Socket(std::vector<struct kevent> &events, const int &port, const int &kq);
+    Socket(std::vector<struct kevent> &events, const int &port);
     ~Socket();
     Socket &operator=(const Socket &ref);
     Socket(const Socket &ref);
