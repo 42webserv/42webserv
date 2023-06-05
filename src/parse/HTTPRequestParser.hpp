@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 11:00:53 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 17:43:47 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ struct HTTPRequest
     std::string addr;
     std::string name;
     std::string strPort;
+    bool chunked;
     //  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
 };
 

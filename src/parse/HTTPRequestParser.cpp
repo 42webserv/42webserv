@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 16:17:21 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 17:43:37 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
+        request->chunked = false;
         if (request->method == HEAD)
             return request;
         // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
@@ -95,6 +96,9 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->body = body_;
         request->addr = addr_;
         request->query = query_;
+        std::map<std::string, std::string>::iterator it = request->headers.find("Transfer-Encoding");
+        if (it != request->headers.end() && it->second == "chunked")
+            request->chunked = true;
         return request;
     }
     return NULL;
@@ -274,6 +278,7 @@ bool HTTPRequestParser::parseBody()
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
     {
+
         // chunked 인코딩이 적용된 경우
         while (buffer_.size() != bufferIndex)
         {
