@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 22:21:25 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 22:43:45 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,9 +61,8 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
 	UData *udata = static_cast<UData *>(event.udata);
-	// uData->request.clear();
-	// if (!result)
-	// 	return;
+
+	udata->request.clear();
 	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
 	// if (result->method != HEAD && result->headers.size() == 0)
 	// 	return;
@@ -438,7 +437,6 @@ void Worker::postResponse(ResponseData *response)
 
 void Worker::putResponse(ResponseData *response)
 {
-	// TODO 이거 경로 제대로 되게 해야 함. 임시임
 	if (response->body.length() > 10000)
 		response->body = response->body.substr(0, 10000);
 	if (writeFile(response->resourcePath, response->body))

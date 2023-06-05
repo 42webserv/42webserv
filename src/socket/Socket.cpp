@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 22:22:16 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 22:47:19 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,11 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
     if (setsockopt(_serverFd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) < 0)
         stderrExit("setsockopt() error");
 
-    memset(&event, 0, sizeof(struct kevent));
     memset(&_serverAddr, 0, sizeof(_serverAddr));
     _serverAddr.sin_family = AF_INET;
     _serverAddr.sin_addr.s_addr = INADDR_ANY;
     _serverAddr.sin_port = htons(port);
+
     // Bind the socket
     if (bind(_serverFd, (struct sockaddr *)&_serverAddr, sizeof(_serverAddr)) < 0)
         stderrExit("bind() error");
@@ -63,6 +63,7 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
         close(_serverFd);
         stderrExit("listen() error");
     }
+    memset(&event, 0, sizeof(struct kevent));
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     events.push_back(event);
     std::cout << "Server listening on port " << port << std::endl;
@@ -115,11 +116,10 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     lingerOption.l_onoff = 1;  // SO_LINGER 활성화
     lingerOption.l_linger = 0; // linger 시간을 10초로 설정
 
-    // TODO 일단 clientFD는 이 옵션 적용하지 않는 테스트
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
-    // if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
-    //     stderrExit("setsockopt SO_LINGER error");
+    if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
+        stderrExit("setsockopt SO_LINGER error");
 
     events.push_back(event);
     _clientFds.push_back(clientFd);
@@ -137,10 +137,7 @@ void Socket::receiveRequest(struct kevent &event)
     {
         n = recv(fd, buf, BUFFER_SIZE - 1, 0);
         if (n < 0)
-        {
-            std::cout << "recv error" << std::endl;
             break;
-        }
         else
         {
             buf[n] = '\0';
@@ -156,7 +153,8 @@ void Socket::disconnectClient(struct kevent &event)
     const int &clientFd = event.ident;
     UData *udata = static_cast<UData *>(event.udata);
 
-    std::cout << "Disconnect Client" << std::endl;
+    if (udata->result)
+        delete udata->result;
     if (udata)
         delete udata;
     event.udata = NULL;
