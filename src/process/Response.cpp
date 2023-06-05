@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/01 15:32:08 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/04 15:17:13 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->index = server.index;
     response->method = request.method;
     response->clientFd = client_fd;
+    response->headers = request.headers;
     response->root = getRootDirectory(request, server);
     response->location = findLocation(request, server.locations);
     if (response->location != NULL)
@@ -111,8 +112,8 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
         // location에 등록된 index 값으로 routes에서 지워준다. location index로 대체됨.
         if (!index.empty())
         {
-            //에러날경우있음 root/123/index일때 다 123/index가 다 지워짐
-            pos = routes.find(index); 
+            // 에러날경우있음 root/123/index일때 다 123/index가 다 지워짐
+            pos = routes.find(index);
             if (pos != std::string::npos)
                 routes = routes.substr(0, pos);
         }

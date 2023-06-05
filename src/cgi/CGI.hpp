@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/05/30 22:21:21 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 13:05:48 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ public:
 	CGI(const HTTPRequest &request);
 	~CGI(void);
 
+	void setEnvp(std::string key, std::string value);
 	std::string excuteCGI(const std::string &context);
 	// void deleteEnvp(char** envp) const; -> 수정 예정
 };

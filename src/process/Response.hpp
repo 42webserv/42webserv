@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/01 13:49:07 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/04 15:17:03 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ struct ResponseData
     std::string method;
     std::vector<std::string> limitExcept;
     std::vector<std::string> cgiPath;
+    std::map<std::string, std::string> headers;
     std::string returnState;
     std::string redirect;
     Directive *location;
