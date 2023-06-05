@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 17:29:55 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 17:37:28 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,18 +321,23 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	}
 	else if (response->method == POST)
 	{
-		// std::cout << "response->contentLength : " << response->contentLength << std::endl;
-		std::string resourceContent;
+		// 유효하지 않은 요청일 경우
 		if (invalidResponse(response))
 			return;
-		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
+
+		std::string resourceContent;
+
+		// cgi 세팅
+		CGI cgi(request);
+
+		// X-HEADER 세팅
+		std::map<std::string, std::string>::iterator XHeaderIterator = response->headers.find("X-Secret-Header-For-Test");
+		if (XHeaderIterator != response->headers.end())
+			cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", XHeaderIterator->second);
+
+		// cgi post method 실행
+		if (isCGIRequest(*response))
 		{
-			std::cout << "CGI HERE" << std::endl;
-			// cgi post method 실행
-			CGI cgi(request);
-			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
-			if (it != response->headers.end())
-				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
 			resourceContent = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
@@ -363,16 +368,16 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		}
 		else
 		{
-			const std::string clientMaxBodySize = "client_max_body_size";
 
 			// TODO PUT도 해야 하나?
 			// check client_max_body_size
-			std::vector<Directive>::const_iterator it = findDirective(response->location->block, clientMaxBodySize);
-			if (it == response->location->block.end())
-				it = findDirective(response->server.locations, clientMaxBodySize);
-			if (it != response->location->block.end())
+			const std::string clientMaxBodySize = "client_max_body_size";
+			std::vector<Directive>::const_iterator bodySizeIterator = findDirective(response->location->block, clientMaxBodySize);
+			if (bodySizeIterator == response->location->block.end())
+				bodySizeIterator = findDirective(response->server.locations, clientMaxBodySize);
+			if (bodySizeIterator != response->location->block.end())
 			{
-				size_t max_body_size = atoi(it->value.c_str());
+				size_t max_body_size = atoi(bodySizeIterator->value.c_str());
 				if (max_body_size < response->contentLength)
 					return errorResponse(response, 413);
 			}
