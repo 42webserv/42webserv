@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 13:18:16 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 13:41:02 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -503,7 +503,7 @@ void Worker::postResponse(ResponseData *response)
 	{
 		size_t max_body_size = atoi(it->value.c_str());
 		if (max_body_size < response->contentLength)
-			return errorResponse(response, 400);
+			return errorResponse(response, 413);
 	}
 	writeFile(response->resourcePath, response->body);
 	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
