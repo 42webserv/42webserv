@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 20:25:16 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/05 22:06:13 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
         stderrExit("setsockopt() error");
 
     linger.l_onoff = 1;
-    linger.l_linger = 10;
+    linger.l_linger = 0;
     // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
     if (setsockopt(_serverFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
         stderrExit("setsockopt() error");
@@ -96,8 +96,8 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
     EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
 
     struct linger lingerOption;
-    lingerOption.l_onoff = 1;   // SO_LINGER 활성화
-    lingerOption.l_linger = 10; // linger 시간을 10초로 설정
+    lingerOption.l_onoff = 1;  // SO_LINGER 활성화
+    lingerOption.l_linger = 0; // linger 시간을 10초로 설정
 
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
