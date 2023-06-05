@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 13:41:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:37:14 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -301,7 +301,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		{
 			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
+			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\n\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
@@ -329,7 +329,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
 			if (it != response->headers.end())
 				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
-			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
+			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 4);

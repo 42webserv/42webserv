@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 13:03:56 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:37:14 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ char **CGI::ENVPChangeStringArray()
 /**
  * cgi 실행
  */
-std::string CGI::excuteCGI(const std::string &program)
+std::string CGI::executeCGI(const std::string &program)
 {
 	char **envp;
 	FILE *files[2];
