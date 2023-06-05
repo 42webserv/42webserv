@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 13:49:47 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/05 21:02:53 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     reset();
     // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
-    buffer_ += data;
+    buffer_ = data;
     chunked_data = "";
     state_ = METHOD;
     bufferIndex = 0;
@@ -66,34 +66,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         }
     }
     if (state_ == COMPLETE)
-    {
-        HTTPRequest *request = new HTTPRequest;
-        request->method = method_;
-        request->path = path_;
-        request->http_version = http_version_;
-        if (request->method == HEAD)
-            return request;
-        // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-        if (headers_.size() == 0)
-            return request;
-        request->headers = headers_;
-        std::map<std::string, std::string>::iterator it = request->headers.find("Host");
-        if (it != headers_.end())
-        {
-            size_t pos = it->second.find(":");
-            request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
-            if (request->port == 0)
-                request->port = -1;
-            // std::cout << "request->port : " << request->port << std::endl;
-            request->strPort = it->second.substr(pos + 1, it->second.length());
-        }
-        else
-            request->port = -1;
-        request->body = body_;
-        request->addr = addr_;
-        request->query = query_;
-        return request;
-    }
+        return makeRequest();
     return NULL;
 }
 
@@ -363,6 +336,36 @@ void HTTPRequestParser::reset()
     port_.clear();
     path_.clear();
     http_version_.clear();
+}
+
+HTTPRequest *HTTPRequestParser::makeRequest()
+{
+    HTTPRequest *request = new HTTPRequest;
+    request->method = method_;
+    request->path = path_;
+    request->http_version = http_version_;
+    if (request->method == HEAD)
+        return request;
+    // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+    if (headers_.size() == 0)
+        return request;
+    request->headers = headers_;
+    std::map<std::string, std::string>::iterator it = request->headers.find("Host");
+    if (it != headers_.end())
+    {
+        size_t pos = it->second.find(":");
+        request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+        if (request->port == 0)
+            request->port = -1;
+        // std::cout << "request->port : " << request->port << std::endl;
+        request->strPort = it->second.substr(pos + 1, it->second.length());
+    }
+    else
+        request->port = -1;
+    request->body = body_;
+    request->addr = addr_;
+    request->query = query_;
+    return request;
 }
 
 /**
