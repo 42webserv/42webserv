@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 22:51:29 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 20:25:16 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,9 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
     // Create an AF_INET stream socket to receive incoming connections on
     if (_serverFd < 0)
         stderrExit("socket() error");
+
+    if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) < 0)
+        stderrExit("fcntl non-block failed\n");
 
     opt = 1;
     // Allow socket descriptor to be reuseable
@@ -56,7 +59,7 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
         stderrExit("bind() error");
 
     // Set the listen back log
-    if (listen(_serverFd, 3) < 0)
+    if (listen(_serverFd, SOMAXCONN) < 0)
     {
         close(_serverFd);
         stderrExit("listen() error");

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 13:41:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:47:17 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,7 +157,7 @@ bool Worker::eventEOF(int k, struct kevent &event)
 {
 	if (!hasClientFd(k))
 		return false;
-	std::cout << "client want to disconnect" << std::endl;
+	// std::cout << fd << " client want to disconnect" << std::endl;
 	sockets[k]->disconnectClient(fd, clients, event);
 	return true;
 }
@@ -299,7 +299,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response))
 		{
-			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
 			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\n\n");
@@ -323,7 +322,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
-			std::cout << "here" << std::endl;
 			// cgi post method 실행
 			CGI cgi(request);
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
@@ -374,7 +372,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	}
 	else if (response->method == PUT)
 	{
-		std::cout << "PUT HERE" << std::endl;
 		putResponse(response);
 	}
 	else if (response->method == OPTIONS)
