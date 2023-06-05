@@ -80,6 +80,9 @@ private:
 	bool invalidResponse(ResponseData *response);
 	bool hasClientFd(const int &k);
 	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
+	std::string extractSubstring(const std::string &A, const std::string &B, const std::string &C);
+	std::string extractSubstring(const std::string &A, const std::string &B);
+	void setResponse(ResponseData *response, const std::string &resource_content);
 
 public:
 	Worker(Master &master);

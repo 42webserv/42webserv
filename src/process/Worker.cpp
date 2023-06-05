@@ -299,7 +299,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response))
 		{
-			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
 			// response = cgi.executeCGI(getCGIPath(*response));
 			// std::cout << "**&*&&*&&&" << std::endl;
@@ -341,24 +340,38 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			if (it != response->headers.end())
 				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
 			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
-			std::size_t tmpIdx = resource_content.find("\r\n\r\n");
-			if (tmpIdx != std::string::npos)
-				resource_content = resource_content.substr(tmpIdx + 4);
+			// status code / content-type / charset / content, body
+			setResponse(response, resource_content);
+			// response = cgi.executeCGI(getCGIPath(*response));
+
+			// std::cout << "~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+			// std::cout << resource_content << std::endl;
+			// std::cout << "**&*&&*&&&" << std::endl;
+			// std::cout << "status code : " << response->statusCode << std::endl;
+			// std::cout << "----------------" << std::endl;
+			// std::cout << "resource content : " << response->body << std::endl;
+			// std::cout << "----------------" << std::endl;
+			// std::cout << "charset : " << response->charset << std::endl;
+			// std::cout << "**&*&&*&&&" << std::endl;
+
+			// std::size_t tmpIdx = resource_content.find("\r\n\r\n");
+			// if (tmpIdx != std::string::npos)
+			// resource_content = resource_content.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
 				return errorResponse(response, 404);
-			std::string response_header = generateHeader(resource_content, "text/html", 200, true);
+			std::string response_header = generateHeader(response->body, response->contentType, response->statusCode, true);
 			ftSend(response, response_header);
 			size_t contentIndex = 0;
 			std::string content;
 			size_t chunkSize = 500;
 			std::string chunkData;
-			size_t streamSize = (resource_content.length() / chunkSize * chunkSize == resource_content.length()) ? resource_content.length() / chunkSize : resource_content.length() / chunkSize + 1;
+			size_t streamSize = (response->body.length() / chunkSize * chunkSize == response->body.length()) ? response->body.length() / chunkSize : response->body.length() / chunkSize + 1;
 			for (size_t i = 0; i < streamSize; i++)
 			{
 				if (i == streamSize - 1)
-					content = resource_content.substr(contentIndex * chunkSize, resource_content.length() - contentIndex * chunkSize);
+					content = response->body.substr(contentIndex * chunkSize, response->body.length() - contentIndex * chunkSize);
 				else
-					content = resource_content.substr(contentIndex * chunkSize, chunkSize);
+					content = response->body.substr(contentIndex * chunkSize, chunkSize);
 				std::string chunkSizeHex = toHexString(content.length());
 				chunkData = chunkSizeHex + "\r\n" + content + "\r\n";
 				ftSend(response, chunkData);
@@ -878,4 +891,45 @@ bool Worker::hasClientFd(const int &k)
 	if (it == socket->_clientFds.end())
 		return false;
 	return true;
+}
+
+std::string Worker::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
+{
+	size_t start = A.find(B);
+	if (start == std::string::npos)
+	{
+		// B를 찾지 못한 경우
+		return "";
+	}
+
+	start += B.length();
+	size_t end = A.find(C, start);
+	if (end == std::string::npos)
+	{
+		// C를 찾지 못한 경우
+		return "";
+	}
+
+	return A.substr(start, end - start);
+}
+
+std::string Worker::extractSubstring(const std::string &A, const std::string &B)
+{
+	size_t start = A.find(B);
+	if (start == std::string::npos)
+	{
+		// B를 찾지 못한 경우
+		return "";
+	}
+
+	start += B.length();
+	return A.substr(start);
+}
+
+void Worker::setResponse(ResponseData *response, const std::string &resource_content)
+{
+	response->statusCode = ftStoi(extractSubstring(resource_content, "Status: ", " OK"));
+	response->contentType = extractSubstring(resource_content, "Content-Type: ", CRLF);
+	response->charset = extractSubstring(resource_content, "charset=", CRLF);
+	response->body = extractSubstring(resource_content, "\r\n\r\n");
 }
