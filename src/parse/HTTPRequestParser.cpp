@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 16:17:21 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 15:43:39 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,10 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     state_ = METHOD;
     bufferIndex = 0;
 
-    if (data.length() > 500)
-        std::cout << "data: [" << data.substr(0, 500) << "]" << std::endl;
-    else
-        std::cout << "data: [" << data << "]" << std::endl;
+    // if (data.length() > 500)
+    //     std::cout << "data: [" << data.substr(0, 500) << "]" << std::endl;
+    // else
+    //     std::cout << "data: [" << data << "]" << std::endl;
 
     while (bufferIndex < buffer_.size() || pass_to_body_flag_)
     {

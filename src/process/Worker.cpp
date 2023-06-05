@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 15:37:14 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/05 16:28:45 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -301,6 +301,15 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		{
 			std::cout << "GET HERE" << std::endl;
 			CGI cgi(request);
+			// response = cgi.executeCGI(getCGIPath(*response));
+			// std::cout << "**&*&&*&&&" << std::endl;
+			// std::cout << "status code : " << response->statusCode << std::endl;
+			// std::cout << "----------------" << std::endl;
+			// std::cout << "resource content : " << response->body << std::endl;
+			// std::cout << "----------------" << std::endl;
+			// std::cout << "charset : " << response->charset << std::endl;
+			// std::cout << "**&*&&*&&&" << std::endl;
+
 			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resource_content.find("\n\n");
 			if (tmpIdx != std::string::npos)
@@ -312,6 +321,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 				errorResponse(response, 404);
 				return;
 			}
+
+			// const std::string &content, const std::string &contentType, int statusCode, bool chunked
 			std::string response_header = generateHeader(resource_content, "text/html", 200, false);
 			ftSend(response, response_header);
 			ftSend(response, resource_content);
@@ -323,7 +334,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	{
 		if (isCGIRequest(*response)) // TODO CGI도 client_max_body_size 적용해야하나?
 		{
-			std::cout << "here" << std::endl;
+			// std::cout << "here" << std::endl;
 			// cgi post method 실행
 			CGI cgi(request);
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");

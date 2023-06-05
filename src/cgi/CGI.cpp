@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 15:37:14 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/05 16:28:56 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,7 @@ char **CGI::ENVPChangeStringArray()
 /**
  * cgi 실행
  */
+// ResponseData CGI::executeCGI(const std::string &program)
 std::string CGI::executeCGI(const std::string &program)
 {
 	char **envp;
@@ -122,6 +123,7 @@ std::string CGI::executeCGI(const std::string &program)
 	int fileFds[2];
 	int stdFds[2] = {dup(STDIN_FILENO), dup(STDOUT_FILENO)};
 	std::string body;
+	// std::string resource;
 
 	try
 	{
@@ -146,6 +148,7 @@ std::string CGI::executeCGI(const std::string &program)
 	fileFds[R] = fileno(files[R]);
 	fileFds[W] = fileno(files[W]);
 	write(fileFds[R], body_.c_str(), body_.size());
+	// write(fileFds[R], resource_.c_str(), resource_.size());
 	if (fileFds[R] == -1 || fileFds[W] == -1)
 		throw std::runtime_error("Error creating file descriptor");
 	lseek(fileFds[R], 0, SEEK_SET);
@@ -170,7 +173,14 @@ std::string CGI::executeCGI(const std::string &program)
 
 	if (pid == 0)
 		exit(EXIT_SUCCESS);
+
+
+	// std::cout << "&&&&&&" << std::endl;
+	// std::cout << resource << std::endl;
+	// std::cout << "&&&&&&" << std::endl;
+
 	return (body);
+	// return (resource);
 }
 
 void CGI::childProcess(const int fileFds[2], const std::string &program, char **envp)

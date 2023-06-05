@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 15:37:14 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/05 16:27:07 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include "Config.hpp"
 #include "HTTPRequestParser.hpp"
+#include "Response.hpp"
 
 #define R 0
 #define W 1
@@ -46,6 +47,7 @@ public:
 	~CGI(void);
 
 	void setEnvp(std::string key, std::string value);
+	// ResponseData executeCGI(const std::string &context);
 	std::string executeCGI(const std::string &context);
 	// void deleteEnvp(char** envp) const; -> 수정 예정
 };
