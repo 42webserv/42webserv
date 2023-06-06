@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 22:47:19 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 22:47:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,7 @@ void Socket::disconnectClient(struct kevent &event)
     const int &clientFd = event.ident;
     UData *udata = static_cast<UData *>(event.udata);
 
+    udata->request.clear();
     if (udata->result)
         delete udata->result;
     if (udata)
