@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:22:33 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:39:25 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,28 +77,6 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 				event_list.push_back(new_event);
 			}
 		}
-
-		// char buf[BUFFER_SIZE + 1];
-		// ssize_t n;
-		// struct kevent new_event;
-
-		// while (true)
-		// {
-		// 	n = recv(fd, buf, BUFFER_SIZE, 0);
-		// 	if (n < BUFFER_SIZE)
-		// 	{
-		// 		buf[n] = '\0';
-		// 		clients[fd] += buf;
-		// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		// 		event_list.push_back(new_event);
-		// 		std::cout << "read: " << clients[fd] << std::endl;
-		// 		break;
-		// 	}
-		// 	else
-		// 	{
-		// 		// buf[BUFFER_SIZE] = '\0';
-		// 		clients[fd] += buf;
-		// 	}
 	}
 	return true;
 }
@@ -282,12 +260,15 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		return;
 	}
 
+	// /cgi-bin/printEnvp -> /cgi-bin/printEnvp.py로 변경해줘야 404 안걸림
+	if (isCGIRequest(*response))
+		response->resourcePath = getCGIPath(*response);
+
 	if (checkHttpRequestClientMaxBodySize(k, request, response) == false || invalidResponse(response))
 	{
 		delete response;
 		return;
 	}
-	std::cout << "here " << std::endl;
 
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
@@ -790,10 +771,7 @@ bool Worker::invalidResponse(ResponseData *response)
 		else if (!response->redirect.empty())
 			redirection(response);
 		else
-		{
-			std::cout << "here" << std::endl;
 			errorResponse(response, 404);
-		}
 		return true;
 	}
 	return false;
