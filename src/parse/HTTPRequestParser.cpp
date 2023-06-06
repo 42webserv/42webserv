@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:34:10 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:40:08 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,7 +282,7 @@ bool HTTPRequestParser::parseBody()
                 buffer_.clear();
                 state_ = COMPLETE;
                 bodySize_ = body_.length();
-                headers_.insert(std::make_pair("content-length", std::to_string(bodySize_)));
+                headers_.insert(std::make_pair("content-length", Utils::ftToString(bodySize_)));
                 return true;
             }
 
@@ -317,15 +317,12 @@ bool HTTPRequestParser::parseBody()
         }
         else
         {
-            headers_.insert(std::make_pair("content-length", std::to_string(buffer_.length())));
+            headers_.insert(std::make_pair("content-length", Utils::ftToString(buffer_.length())));
             body_ = buffer_.substr(bufferIndex, buffer_.size());
             bodySize_ = body_.length();
             buffer_.clear();
-            // if (buffer_.empty())
-            // {
             state_ = COMPLETE;
             return true;
-            // }
         }
     }
 

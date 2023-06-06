@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 01:25:25 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:40:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,13 +41,5 @@ std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<
 
 // commonUtils.cpp로 옮길것
 int ftStoi(const std::string &str);
-
-template <typename T>
-std::string ftToString(T value)
-{
-	std::ostringstream oss;
-	oss << value;
-	return oss.str();
-}
 
 #endif
