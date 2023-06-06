@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 15:46:56 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:58:23 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,9 @@
 #include <string>
 #include <stdio.h>
 #include <sstream>
+#include "Response.hpp"
+
+struct ResponseData;
 
 class Utils
 {
@@ -38,6 +41,7 @@ public:
      */
     static size_t minPos(size_t p1, size_t p2, size_t p3);
     static std::string toHexString(size_t value);
+    static std::string errorPageGenerator(ResponseData *response, int errorCode);
 
     template <typename T>
     static std::string ftToString(T value)

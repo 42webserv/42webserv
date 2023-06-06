@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 16:46:05 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:57:45 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -467,18 +467,6 @@ std::string Worker::uploadPageGenerator(std::string executePath)
 }
 
 /**
- * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
- *
- * @param client_fd 브라우저 포트번호
- */
-std::string Worker::errorPageGenerator(ResponseData *response, int errorCode)
-{
-	std::stringstream broadHtml;
-	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<h1>" << errorCode << " " << response->statusCodeMap[errorCode] << ".</h1>\n</body>\n</html>";
-	return broadHtml.str();
-}
-
-/**
  * 모든 에러에 대한 에러 페이지를 띄워주는 함수
  *
  * @param client_fd 브라우저 포트번호
@@ -488,13 +476,13 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	std::string errorContent;
 	std::map<int, std::string>::iterator it = response->server.errorPage.find(errorCode);
 	if (it == response->server.errorPage.end())
-		errorContent = errorPageGenerator(response, errorCode);
+		errorContent = Utils::errorPageGenerator(response, errorCode);
 	else
 	{
-		const std::string errorPath = response->root + it->second;
+		const std::string errorPath = response->server.root + it->second;
 		errorContent = readFile(errorPath);
 		if (errorContent == "")
-			errorContent = errorPageGenerator(response, errorCode);
+			errorContent = Utils::errorPageGenerator(response, errorCode);
 	}
 	response->chunked = false;
 	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
