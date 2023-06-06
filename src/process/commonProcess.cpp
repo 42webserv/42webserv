@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 01:23:25 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 13:48:33 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,12 @@ bool isDirectory(const std::string &path)
 
 bool isFile(const std::string &path)
 {
-	return !isDirectory(path);
+	struct stat st;
+
+	stat(path.c_str(), &st);
+	if (S_ISREG(st.st_mode))
+		return true;
+	return false;
 }
 
 bool isMethod(const std::string &method)

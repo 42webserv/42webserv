@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 13:34:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 13:57:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,9 +285,14 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		delete response;
 		return;
 	}
-	(void)k;
-	if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
+	// (void)k;
+
+	if (checkHttpRequestClientMaxBodySize(k, request, response) == false || invalidResponse(response))
+	{
+		delete response;
 		return;
+	}
+
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
 	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
@@ -301,16 +306,9 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		std::string content;
 		std::string chunkData;
 
-		std::cout << "path : " << response->path << std::endl;
-		std::cout << "response->resourcePath : " << response->resourcePath << std::endl;
-		std::cout << "invalidResponse(response) : " << (invalidResponse(response) == true ? "true" : "false") << std::endl;
-		std::cout << "isFile(response->resourcePath) : " << (isFile(response->resourcePath) == true ? "true" : "false") << std::endl;
-		// invalidResponse(response);
-
 		if (isCGIRequest(*response))
 		{
 			CGI cgi(request);
-			std::cout << "getCGILocation : " << getCGIPath(*response) << std::endl;
 			resourceContent = cgi.excuteCGI(getCGIPath(*response));
 			std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
@@ -322,7 +320,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		else
 		{
 			resourceContent = readFile(response->resourcePath);
-			std::cout << "resourceContent : [" << resourceContent << "]" << std::endl;
 			ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked));
 		}
 		if (response->chunked)
@@ -343,7 +340,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			ftSend(response, resourceContent);
 	}
 	else if (response->method == POST)
-		return postResponse(response, request);
+		postResponse(response, request);
 	else if (response->method == HEAD)
 	{
 		// HEAD 메소드는 GET 메소드와 동일하지만, body가 없습니다.
@@ -539,7 +536,6 @@ void Worker::putResponse(ResponseData *response)
 	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::cout << "putResponse, response->resoursePath : " << response->resourcePath << std::endl;
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
@@ -879,7 +875,7 @@ void Worker::redirection(ResponseData *response)
 
 bool Worker::invalidResponse(ResponseData *response)
 {
-	if (!isFile(response->resourcePath))
+	if (response->method == "GET" && !isFile(response->resourcePath))
 	{
 		if (response->autoindex)
 			broad(response);
