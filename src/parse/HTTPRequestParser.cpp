@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 19:59:25 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 22:42:40 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "commonProcess.hpp"
 #include "HTTPRequestParser.hpp"
 
-HTTPRequestParser::HTTPRequestParser() : pass_to_body_flag_(false), state_(METHOD) {}
+HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 
 /**
  * HTTP 요청 메세지를 파싱해서 구조체에 담아 반환
@@ -25,48 +25,26 @@ HTTPRequestParser::HTTPRequestParser() : pass_to_body_flag_(false), state_(METHO
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     reset();
-    // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ = data;
     chunked_data = "";
     state_ = METHOD;
     bufferIndex = 0;
     bodySize_ = -1;
 
-    while (bufferIndex < buffer_.size() || pass_to_body_flag_)
+    try
     {
-        switch (state_)
-        {
-        case METHOD:
-            if (!parseMethod())
-                return NULL;
-            break;
-        case PATH:
-            if (!parsePath())
-                return NULL;
-            break;
-        case HTTP_VERSION:
-            if (!parseHTTPVersion())
-                return NULL;
-            break;
-        case HEADER_NAME:
-            if (!parseHeaderName())
-                return NULL;
-            break;
-        case HEADER_VALUE:
-            if (!parseHeaderValue())
-                return NULL;
-            break;
-        case BODY:
-            if (!parseBody())
-                return NULL;
-            break;
-        default:
-            return NULL;
-        }
+        parseStartLine();
+        parseHeaders();
+        parseBody();
     }
-    if (state_ == COMPLETE)
-        return makeRequest();
-    return NULL;
+    catch (std::exception &e)
+    {
+        // Parse error 말고 다른 에러 확인
+        if (!(dynamic_cast<ParseException *>(&e)))
+            std::cout << "Error: " << e.what() << std::endl;
+        return NULL;
+    }
+    return makeRequest();
 }
 
 /**
@@ -160,7 +138,6 @@ bool HTTPRequestParser::parseHeaderName()
     {
         state_ = needBody(method_) ? BODY : COMPLETE;
         buffer_.clear();
-        // return true; // 불완전한 요청도 받기
         return false; // 완전한 요청만 받기
     }
     current_header_name_ = buffer_.substr(bufferIndex, pos - bufferIndex);
@@ -208,12 +185,11 @@ bool HTTPRequestParser::parseHeaderValue()
         body_ = "";
         if (needBody(method_))
         {
-            pass_to_body_flag_ = true;
             state_ = BODY;
         }
         else
         {
-            buffer_ = "";
+            buffer_.clear();
             state_ = COMPLETE;
         }
     }
@@ -233,22 +209,148 @@ std::string sizeToString(size_t value)
 }
 
 /**
+ * HTTP 요청 메세지 파싱이 끝나면 사용한 버퍼를 모두 지워줌
+ */
+void HTTPRequestParser::reset()
+{
+    state_ = METHOD;
+    headers_.clear();
+    body_.clear();
+    buffer_.clear();
+    current_header_name_.clear();
+    query_.clear();
+    addr_.clear();
+    name_.clear();
+    port_ = "-1";
+    path_.clear();
+    http_version_.clear();
+}
+
+HTTPRequest *HTTPRequestParser::makeRequest()
+{
+    if (state_ != COMPLETE)
+        return NULL;
+    HTTPRequest *request = new HTTPRequest;
+    request->method = method_;
+    request->path = path_;
+    request->http_version = http_version_;
+    request->chunked = false;
+    if (request->method == HEAD)
+        return request;
+    // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+    if (headers_.size() == 0) // TODO 이상한 요청도 테스트 해봐야 할 듯
+        return request;
+    request->headers = headers_;
+    request->port = ftStoi(port_);
+    if (request->port < 1)
+    {
+        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
+        if (findHostIterator != headers_.end())
+        {
+            size_t pos = findHostIterator->second.find(":");
+            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
+        }
+    }
+    request->body = body_;
+    request->bodySize = bodySize_;
+    request->addr = addr_;
+    request->query = query_;
+    std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
+    if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == "chunked")
+        request->chunked = true;
+    return request;
+}
+
+/**
+ * HTTP 요청 구조체 출력
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return void
+ */
+void HTTPRequestParser::printResult(const HTTPRequest &result)
+{
+    std::cout << "Request method: " << result.method << std::endl;
+    std::cout << "Request path: " << result.path << std::endl;
+    std::cout << "Request port: [" << result.port << "]" << std::endl;
+    std::cout << "Request HTTP version: " << result.http_version << std::endl;
+
+    for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
+        std::cout << "Header: " << it->first << " = " << it->second << std::endl;
+
+    std::cout << "Body: " << result.body << std::endl;
+}
+
+int HTTPRequestParser::getPort(const HTTPRequest &result)
+{
+    return result.port;
+}
+
+void HTTPRequestParser::parseStartLine()
+{
+    bool isOK;
+    size_t pos = buffer_.find(CRLF);
+
+    if (pos == std::string::npos)
+        throw ParseException();
+    while (bufferIndex < pos)
+    {
+        isOK = false;
+        switch (state_)
+        {
+        case METHOD:
+            isOK = parseMethod();
+            break;
+        case PATH:
+            isOK = parsePath();
+            break;
+        case HTTP_VERSION:
+            isOK = parseHTTPVersion();
+            break;
+        default:
+            break;
+        }
+        if (!isOK)
+            throw ParseException();
+    }
+}
+void HTTPRequestParser::parseHeaders()
+{
+    bool isOK;
+    size_t pos = buffer_.find(CRLF2);
+
+    if (pos == std::string::npos)
+        throw ParseException();
+    while (bufferIndex < pos)
+    {
+        isOK = false;
+        switch (state_)
+        {
+        case HEADER_NAME:
+            isOK = parseHeaderName();
+            break;
+        case HEADER_VALUE:
+            isOK = parseHeaderValue();
+            break;
+        default:
+            break;
+        }
+        if (!isOK)
+            throw ParseException();
+    }
+}
+
+/**
  * HTTP 요청 메세지에서 HTTP 버전 파싱
  *
  * @return HTTP 버전이 존재한다면 구조체에 저장 후 true 반환, 존재하지 않는다면 false 반환
  */
 bool HTTPRequestParser::parseBody()
 {
-    if (!needBody(method_))
-    {
-        state_ = COMPLETE;
-        return true;
-    }
-    pass_to_body_flag_ = false;
+    if (state_ != BODY)
+        return false;
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
     {
-
         // chunked 인코딩이 적용된 경우
         while (buffer_.size() != bufferIndex)
         {
@@ -310,98 +412,21 @@ bool HTTPRequestParser::parseBody()
         }
         else
         {
-            headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
             body_ = buffer_.substr(bufferIndex, buffer_.size());
             bodySize_ = body_.length();
+            headers_.insert(std::make_pair("content-length", sizeToString(bodySize_)));
             buffer_.clear();
-            // if (buffer_.empty())
-            // {
             state_ = COMPLETE;
             return true;
-            // }
         }
     }
-
     if (body_.empty())
         return false;
-
     state_ = COMPLETE;
     return true;
 }
 
-/**
- * HTTP 요청 메세지 파싱이 끝나면 사용한 버퍼를 모두 지워줌
- */
-void HTTPRequestParser::reset()
+const char *HTTPRequestParser::ParseException::what() const throw()
 {
-    state_ = METHOD;
-    headers_.clear();
-    body_.clear();
-    buffer_.clear();
-    current_header_name_.clear();
-    query_.clear();
-    addr_.clear();
-    name_.clear();
-    port_ = "-1";
-    path_.clear();
-    http_version_.clear();
-}
-
-HTTPRequest *HTTPRequestParser::makeRequest()
-{
-    HTTPRequest *request = new HTTPRequest;
-    request->method = method_;
-    request->path = path_;
-    request->http_version = http_version_;
-    request->chunked = false;
-    if (request->method == HEAD)
-        return request;
-    // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-    if (headers_.size() == 0)
-        return request;
-    request->headers = headers_;
-    request->port = ftStoi(port_);
-    if (request->port < 1)
-    {
-        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
-        if (findHostIterator != headers_.end())
-        {
-            size_t pos = findHostIterator->second.find(":");
-            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
-            if (request->port == 0)
-                request->port = -1;
-        }
-    }
-    request->body = body_;
-    request->bodySize = bodySize_;
-    request->addr = addr_;
-    request->query = query_;
-    std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
-    if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == "chunked")
-        request->chunked = true;
-    return request;
-}
-
-/**
- * HTTP 요청 구조체 출력
- *
- * @param request 파싱된 HTTP 요청
- * @return void
- */
-void HTTPRequestParser::printResult(const HTTPRequest &result)
-{
-    std::cout << "Request method: " << result.method << std::endl;
-    std::cout << "Request path: " << result.path << std::endl;
-    std::cout << "Request port: [" << result.port << "]" << std::endl;
-    std::cout << "Request HTTP version: " << result.http_version << std::endl;
-
-    for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
-        std::cout << "Header: " << it->first << " = " << it->second << std::endl;
-
-    std::cout << "Body: " << result.body << std::endl;
-}
-
-int HTTPRequestParser::getPort(const HTTPRequest &result)
-{
-    return result.port;
+    return "HTTP Request Parse Exception";
 }

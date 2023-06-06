@@ -6,20 +6,21 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 19:51:10 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 22:42:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef HTTP_REQUEST_PARSER
 #define HTTP_REQUEST_PARSER
 
+#include <cstring>
+#include <exception>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <cstring>
 
 struct HTTPRequest
 {
@@ -51,7 +52,6 @@ private:
         BODY,
         COMPLETE
     };
-    bool pass_to_body_flag_;
     ParseState state_;
     std::string method_;
     std::string path_;
@@ -73,9 +73,16 @@ private:
     bool parseHTTPVersion();
     bool parseHeaderName();
     bool parseHeaderValue();
-    bool parseBody();
     void reset();
     HTTPRequest *makeRequest();
+    void parseStartLine();
+    void parseHeaders();
+    bool parseBody();
+    class ParseException : public std::exception
+    {
+    public:
+        const char *what() const throw();
+    };
 
 public:
     HTTPRequestParser();
