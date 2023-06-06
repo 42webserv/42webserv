@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 16:57:45 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 17:07:39 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,7 +145,7 @@ bool Worker::eventFilterTimer(int k, struct kevent &event)
 	if (!hasClientFd(k))
 		return false;
 	std::cout << fd << " is time over" << std::endl;
-	deleteTimer(fd);
+	Utils::deleteTimer(kq, fd);
 	sockets[k]->disconnectClient(fd, clients, event);
 	return true;
 }
@@ -625,21 +625,6 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 	return false;
 }
 
-void Worker::setTimer(int fd, int timeout)
-{
-	struct kevent timerEvent;
-	int timer_interval_ms = timeout * 1000;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
-}
-
-void Worker::deleteTimer(int fd)
-{
-	struct kevent timerEvent;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
-}
-
 void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
 {
 	if (event.udata == NULL)
@@ -651,7 +636,7 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		if (checkKeepLiveOptions(request, event))
 		{
 			if (uData->timeout > 0)
-				setTimer(client_fd, uData->timeout);
+				Utils::setTimer(kq, client_fd, uData->timeout);
 		}
 		Socket::enableKeepAlive(client_fd);
 	}

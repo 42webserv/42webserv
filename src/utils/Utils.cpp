@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 16:59:55 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 17:04:52 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,4 +52,19 @@ std::string Utils::errorPageGenerator(ResponseData *response, int errorCode)
     std::stringstream broadHtml;
     broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<h1>" << errorCode << " " << response->statusCodeMap[errorCode] << ".</h1>\n</body>\n</html>";
     return broadHtml.str();
+}
+
+void Utils::setTimer(const int kq, int fd, int timeout)
+{
+	struct kevent timerEvent;
+	int timer_interval_ms = timeout * 1000;
+	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
+	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+}
+
+void Utils::deleteTimer(const int kq, int fd)
+{
+    struct kevent timerEvent;
+    EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
+    kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
