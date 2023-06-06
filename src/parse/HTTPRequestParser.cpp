@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 09:49:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:13:07 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     state_ = METHOD;
     bufferIndex = 0;
     bodySize_ = -1;
-
-    // if (data.length() > 500)
-    //     std::cout << "data: [" << data.substr(0, 500) << "]" << std::endl;
-    // else
-    //     std::cout << "data: [" << data << "]" << std::endl;
 
     while (bufferIndex < buffer_.size() || pass_to_body_flag_)
     {
@@ -179,7 +174,6 @@ bool HTTPRequestParser::parseHTTPVersion()
     state_ = HEADER_NAME;
     if (buffer_.length() == bufferIndex)
     {
-        std::cout << "com1" << std::endl;
         state_ = COMPLETE;
     }
     return true;
