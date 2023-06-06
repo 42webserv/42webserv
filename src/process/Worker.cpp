@@ -6,7 +6,7 @@
 /*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 05:33:54 by yje              ###   ########.fr       */
+/*   Updated: 2023/06/06 09:33:04 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -556,8 +556,8 @@ void Worker::putResponse(ResponseData *response)
 
 void Worker::deleteResponse(ResponseData *response)
 {
-	std::string resourcePath = response->resourcePath;
-
+	// std::string resourcePath = response->resourcePath;
+	std::string resourcePath = response->path;
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
@@ -575,7 +575,7 @@ void Worker::deleteResponse(ResponseData *response)
 }
 
 /**
- * ㅕ
+ *
  *
  * @param client_fd 브라우저 포트번호
  */

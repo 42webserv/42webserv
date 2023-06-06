@@ -5,6 +5,8 @@ import os
 
 # 업로드된 파일이 저장된 디렉토리 경로
 upload_dir = "./src/cgi-bin/file"
+# upload_dir = "./assets/test"
+
 
 # Content-Type 헤더 출력
 print("Content-Type: text/html")
