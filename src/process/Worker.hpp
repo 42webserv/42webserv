@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 10:13:14 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:17:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 #include "Socket.hpp"
 
 #define BUFFER_SIZE 1024
+#define CHUNK_SIZE 500
 
 struct ResponseData;
 struct HTTPRequest;
@@ -55,8 +56,6 @@ private:
 	bool eventEOF(int k, struct kevent &event);
 	bool eventFilterTimer(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, const int &client_fd, int k);
-	void getResponse(ResponseData *response);
-	void postResponse(ResponseData *response, const HTTPRequest &request);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
 	std::string errorPageGenerator(int errorCode);
@@ -65,7 +64,6 @@ private:
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData &response);
-	std::string getCGILocation(ResponseData *response);
 	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
@@ -81,6 +79,7 @@ private:
 	bool invalidResponse(ResponseData *response);
 	bool hasClientFd(const int &k);
 	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
+	void sendResponse(ResponseData *response, const HTTPRequest &request);
 
 public:
 	Worker(Master &master);
