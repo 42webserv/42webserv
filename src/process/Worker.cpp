@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 10:19:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 12:52:10 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -466,7 +466,8 @@ void Worker::getResponse(ResponseData *response)
 void Worker::postResponse(ResponseData *response, const HTTPRequest &request)
 {
 	std::string resourceContent;
-	std::string responseHeader;
+	std::string content;
+	std::string chunkData;
 
 	// cgi 세팅
 	CGI cgi(request);
@@ -483,9 +484,6 @@ void Worker::postResponse(ResponseData *response, const HTTPRequest &request)
 		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 		if (tmpIdx != std::string::npos)
 			resourceContent = resourceContent.substr(tmpIdx + 4);
-		if (response->resourcePath.empty())
-			return errorResponse(response, 404);
-		std::cout << "resourceContentlength : " << resourceContent.length() << std::endl;
 		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked));
 	}
 	else
@@ -496,20 +494,15 @@ void Worker::postResponse(ResponseData *response, const HTTPRequest &request)
 	}
 	if (response->chunked)
 	{
-		size_t contentIndex = 0;
-		std::string content;
-		size_t chunkSize = 500;
-		std::string chunkData;
-		size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
-		for (size_t i = 0; i < streamSize; i++)
+		size_t streamSize = (resourceContent.length() / CHUNK_SIZE * CHUNK_SIZE == resourceContent.length()) ? resourceContent.length() / CHUNK_SIZE : resourceContent.length() / CHUNK_SIZE + 1;
+		for (size_t contentIndex = 0; contentIndex < streamSize; contentIndex++)
 		{
-			if (i == streamSize - 1)
-				content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
+			if (contentIndex == streamSize - 1)
+				content = resourceContent.substr(contentIndex * CHUNK_SIZE, resourceContent.length() - contentIndex * CHUNK_SIZE);
 			else
-				content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
+				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
 			chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
 			ftSend(response, chunkData);
-			contentIndex++;
 		}
 		ftSend(response, "0\r\n\r\n");
 	}

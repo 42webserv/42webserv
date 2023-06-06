@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 10:13:14 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 12:50:53 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 #include "Socket.hpp"
 
 #define BUFFER_SIZE 1024
+#define CHUNK_SIZE 500
 
 struct ResponseData;
 struct HTTPRequest;
