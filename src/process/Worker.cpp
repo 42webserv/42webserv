@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:48:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:23:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -389,8 +389,6 @@ bool Worker::isCGIRequest(ResponseData &response)
 		// ./src/cgi-bin/src/cgi-bin/upload.py
 		if (path == "upload") // uploadFile
 		{
-			// std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
-			// std::string uploadContent = uploadPageGenerator(getCGIPath(response)); // root + upload + .py
 			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			ftSend(response, response_header);

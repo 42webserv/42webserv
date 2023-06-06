@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/05 20:58:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:23:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
         index = 0;
     ServerInfo &server = serverManger.servers[index];
     ResponseData *response = new ResponseData();
+    initStatusCodeMap(response->statusCodeMap);
     response->server = server;
     response->index = server.index;
     response->method = request.method;
@@ -361,4 +362,66 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
         pos = path.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
     }
     return NULL;
+}
+
+void Response::initStatusCodeMap(std::map<int, std::string> &statusCodeMap)
+{
+    statusCodeMap[100] = "Continue";
+    statusCodeMap[101] = "Switching Protocols";
+    statusCodeMap[102] = "Processing";
+    statusCodeMap[103] = "Early Hints";
+    statusCodeMap[200] = "OK";
+    statusCodeMap[201] = "Created";
+    statusCodeMap[202] = "Accepted";
+    statusCodeMap[203] = "Non-Authoritative Information";
+    statusCodeMap[204] = "No Content";
+    statusCodeMap[205] = "Reset Content";
+    statusCodeMap[206] = "Partial Content";
+    statusCodeMap[207] = "Multi-Status";
+    statusCodeMap[208] = "Already Reported";
+    statusCodeMap[226] = "IM Used";
+    statusCodeMap[300] = "Multiple Choices";
+    statusCodeMap[301] = "Moved Permanently";
+    statusCodeMap[302] = "Found";
+    statusCodeMap[303] = "See Other";
+    statusCodeMap[304] = "Not Modified";
+    statusCodeMap[305] = "Use Proxy";
+    statusCodeMap[306] = "Switch Proxy";
+    statusCodeMap[307] = "Temporary Redirect";
+    statusCodeMap[308] = "Permanent Redirect";
+    statusCodeMap[400] = "Bad Request";
+    statusCodeMap[401] = "Unauthorized";
+    statusCodeMap[402] = "Payment Required";
+    statusCodeMap[403] = "Forbidden";
+    statusCodeMap[404] = "Not Found";
+    statusCodeMap[405] = "Method Not Allowed";
+    statusCodeMap[406] = "Not Acceptable";
+    statusCodeMap[407] = "Proxy Authentication Required";
+    statusCodeMap[408] = "Request Timeout";
+    statusCodeMap[409] = "Conflict";
+    statusCodeMap[410] = "Gone";
+    statusCodeMap[411] = "Length Required";
+    statusCodeMap[412] = "Precondition Failed";
+    statusCodeMap[413] = "Request Entity Too Large";
+    statusCodeMap[414] = "Request-URI Too Long";
+    statusCodeMap[415] = "Unsupported Media Type";
+    statusCodeMap[416] = "Requested Range Not Satisfiable";
+    statusCodeMap[417] = "Expectation Failed";
+    statusCodeMap[421] = "Misdirected Request";
+    statusCodeMap[426] = "Upgrade Required";
+    statusCodeMap[428] = "Precondition Required";
+    statusCodeMap[429] = "Too Many Requests";
+    statusCodeMap[431] = "Request Header Fields Too Large";
+    statusCodeMap[500] = "Internal Server Error";
+    statusCodeMap[501] = "Not Implemented";
+    statusCodeMap[502] = "Bad Gateway";
+    statusCodeMap[503] = "Service Unavailable";
+    statusCodeMap[504] = "Gateway Timeout";
+    statusCodeMap[505] = "HTTP Version Not Supported";
+    statusCodeMap[506] = "Variant Also Negotiates";
+    statusCodeMap[507] = "Insufficient Storage";
+    statusCodeMap[508] = "Loop Detected";
+    statusCodeMap[509] = "Bandwidth Limit Exceeded";
+    statusCodeMap[510] = "Not Extended";
+    statusCodeMap[511] = "Network Authentication Required";
 }
