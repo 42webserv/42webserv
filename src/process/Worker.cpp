@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 10:12:48 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:19:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,8 +286,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		return;
 	}
 	(void)k;
-	// if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
-	// 	return;
+	if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
+		return;
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
 	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
@@ -485,6 +485,7 @@ void Worker::postResponse(ResponseData *response, const HTTPRequest &request)
 			resourceContent = resourceContent.substr(tmpIdx + 4);
 		if (response->resourcePath.empty())
 			return errorResponse(response, 404);
+		std::cout << "resourceContentlength : " << resourceContent.length() << std::endl;
 		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked));
 	}
 	else
@@ -497,7 +498,7 @@ void Worker::postResponse(ResponseData *response, const HTTPRequest &request)
 	{
 		size_t contentIndex = 0;
 		std::string content;
-		size_t chunkSize = 1000;
+		size_t chunkSize = 500;
 		std::string chunkData;
 		size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
 		for (size_t i = 0; i < streamSize; i++)
