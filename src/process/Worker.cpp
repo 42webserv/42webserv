@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:51:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:27:26 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,13 +46,18 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 	{
 		// Client socket
 		socket.receiveRequest(event);
-		UData *uData = static_cast<UData *>(event.udata);
-		HTTPRequest *result = parser.parse(uData->request);
+		UData *udata = static_cast<UData *>(event.udata);
+		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
 			return;
-		uData->result = result;
+		if (result->port == -1)
+			result->port = strtod(listen[0].value.c_str(), NULL);
+		udata->request.clear();
+		udata->result = result;
+		std::cout << result->path << std::endl;
+		std::cout << result->body << std::endl;
 		struct kevent newEvent;
-		EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, uData);
+		EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, udata);
 		events.push_back(newEvent);
 	}
 }
@@ -62,12 +67,6 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	const int &fd = event.ident;
 	UData *udata = static_cast<UData *>(event.udata);
 
-	udata->request.clear();
-	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	// if (result->method != HEAD && result->headers.size() == 0)
-	// 	return;
-	// if (result->port == -1)
-	// 	result->port = strtod(listen[0].value.c_str(), NULL);
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
