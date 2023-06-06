@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 13:01:36 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:11:01 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ private:
 	bool eventFilterTimer(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, const int &client_fd, int k);
 	void getResponse(ResponseData *response);
-	void postResponse(ResponseData *response);
+	void postResponse(ResponseData *response, const HTTPRequest &request);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
 	std::string errorPageGenerator(int errorCode);
