@@ -6,12 +6,13 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 10:13:07 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:34:10 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "commonConfig.hpp"
 #include "commonProcess.hpp"
+#include "Utils.hpp"
 #include "HTTPRequestParser.hpp"
 
 HTTPRequestParser::HTTPRequestParser() : pass_to_body_flag_(false), state_(METHOD) {}
@@ -25,12 +26,7 @@ HTTPRequestParser::HTTPRequestParser() : pass_to_body_flag_(false), state_(METHO
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     reset();
-    // std::cout << "buffer_ : [" << buffer_ << "]" << std::endl;
     buffer_ += data;
-    chunked_data = "";
-    state_ = METHOD;
-    bufferIndex = 0;
-    bodySize_ = -1;
 
     while (bufferIndex < buffer_.size() || pass_to_body_flag_)
     {
@@ -84,7 +80,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
             request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
             if (request->port == 0)
                 request->port = -1;
-            // std::cout << "request->port : " << request->port << std::endl;
             request->strPort = findHostIterator->second.substr(pos + 1, findHostIterator->second.length());
         }
         else
@@ -144,11 +139,6 @@ bool HTTPRequestParser::parsePath()
     return true;
 }
 
-size_t minPos(size_t p1, size_t p2, size_t p3)
-{
-    return (p1 < p2 && p1 < p3 ? p1 : (p2 < p3 && p2 < p1 ? p2 : p3));
-}
-
 /**
  * HTTP 요청 메세지에서 HTTP 버전 파싱
  *
@@ -161,9 +151,10 @@ bool HTTPRequestParser::parseHTTPVersion()
     size_t pos3 = buffer_.find(CRLF, bufferIndex);
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
-    size_t pos = minPos(pos1, pos2, pos3);
+    size_t pos = Utils::minPos(pos1, pos2, pos3);
     http_version_ = buffer_.substr(bufferIndex, pos - bufferIndex);
     bufferIndex = pos;
+
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
     if (buffer_.find("\n", bufferIndex) == bufferIndex)
         bufferIndex++;
@@ -173,9 +164,7 @@ bool HTTPRequestParser::parseHTTPVersion()
         bufferIndex++;
     state_ = HEADER_NAME;
     if (buffer_.length() == bufferIndex)
-    {
         state_ = COMPLETE;
-    }
     return true;
 }
 
@@ -214,10 +203,11 @@ bool HTTPRequestParser::parseHeaderValue()
     size_t pos3 = buffer_.find(CRLF, bufferIndex);
     if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
         return false;
-    size_t pos = minPos(pos1, pos2, pos3);
+    size_t pos = Utils::minPos(pos1, pos2, pos3);
     std::string header_value = buffer_.substr(bufferIndex + 1, pos - bufferIndex - 1);
     headers_.insert(std::make_pair(current_header_name_, header_value));
     bufferIndex = pos;
+
     // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
     if (buffer_.find("\n", bufferIndex) == bufferIndex)
         bufferIndex++;
@@ -225,6 +215,7 @@ bool HTTPRequestParser::parseHeaderValue()
         bufferIndex += 2;
     else if (buffer_.find("\r", bufferIndex) == bufferIndex)
         bufferIndex++;
+
     if (current_header_name_ == "Host")
     {
         pos = header_value.find(":");
@@ -247,20 +238,10 @@ bool HTTPRequestParser::parseHeaderValue()
         }
     }
     else if (buffer_.size() == bufferIndex)
-    {
         state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
-    }
     else
         state_ = HEADER_NAME;
     return true;
-}
-
-std::string sizeToString(size_t value)
-{
-    char buffer[20];                                     // Choose an appropriate size for the buffer
-    std::memset(buffer, 0, sizeof(buffer));              // Clear the buffer
-    std::snprintf(buffer, sizeof(buffer), "%zu", value); // Use snprintf to format the value as a string
-    return buffer;
 }
 
 /**
@@ -301,7 +282,7 @@ bool HTTPRequestParser::parseBody()
                 buffer_.clear();
                 state_ = COMPLETE;
                 bodySize_ = body_.length();
-                headers_.insert(std::make_pair("content-length", sizeToString(bodySize_)));
+                headers_.insert(std::make_pair("content-length", std::to_string(bodySize_)));
                 return true;
             }
 
@@ -336,7 +317,7 @@ bool HTTPRequestParser::parseBody()
         }
         else
         {
-            headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
+            headers_.insert(std::make_pair("content-length", std::to_string(buffer_.length())));
             body_ = buffer_.substr(bufferIndex, buffer_.size());
             bodySize_ = body_.length();
             buffer_.clear();
@@ -371,6 +352,9 @@ void HTTPRequestParser::reset()
     port_.clear();
     path_.clear();
     http_version_.clear();
+    chunked_data = "";
+    bufferIndex = 0;
+    bodySize_ = -1;
 }
 
 /**
