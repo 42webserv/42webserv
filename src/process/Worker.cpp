@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 13:57:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 13:59:51 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -236,9 +236,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 		size_t requestBodySize;
 		ss >> requestBodySize;
 
-		if (invalidResponse(response))
-			return false;
-
 		size_t clientMaxBodySize = server.servers[k].clientMaxBodySize;
 		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(server.servers[k].locations, LOCATION_DIRECTIVE, request.path);
 		if (dir != server.servers[k].locations.end())
@@ -252,7 +249,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 		{
 			std::cout << "It have too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
-			delete response;
 			return false;
 		}
 	}
@@ -300,7 +296,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		responseUData->wantToDeleteSessionInCookie = true;
 
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (response->method == GET)
+	if (response->method == GET || response->method == HEAD)
 	{
 		std::string resourceContent;
 		std::string content;
@@ -341,12 +337,6 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	}
 	else if (response->method == POST)
 		postResponse(response, request);
-	else if (response->method == HEAD)
-	{
-		// HEAD 메소드는 GET 메소드와 동일하지만, body가 없습니다.
-		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
-		getResponse(response);
-	}
 	else if (response->method == PUT)
 	{
 		putResponse(response);
