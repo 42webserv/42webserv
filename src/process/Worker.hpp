@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/04 13:01:36 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 01:23:05 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ private:
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
 	std::string errorPageGenerator(int errorCode);
+	std::string uploadPageGenerator(std::string executePath);
 	void errorResponse(ResponseData *response, int errorCode);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked);
 	std::string generateErrorHeader(int status_code, const std::string &message);

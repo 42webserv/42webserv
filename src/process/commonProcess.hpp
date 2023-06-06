@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonProcess.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/03 13:51:30 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/06 01:25:25 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 #define OPTIONS "OPTIONS"
 
 void ftSend(const int &socket, const std::string &buffer);
+void ftSend(ResponseData &response, const std::string &contents);
 void ftSend(ResponseData *response, const std::string &response_header);
 bool isDirectory(const std::string &path);
 bool isFile(const std::string &path);

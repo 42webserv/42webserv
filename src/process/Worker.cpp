@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 19:47:17 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/06 09:33:04 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,8 +286,9 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		delete response;
 		return;
 	}
-	if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
-		return;
+	(void) k;
+	// if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
+	// 	return;
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
 	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
@@ -300,7 +301,10 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		if (isCGIRequest(*response))
 		{
 			CGI cgi(request);
-			std::string resource_content = cgi.excuteCGI(getCGIPath(*response));
+			// std::cout << "getCGILocation"<<getCGIPath(*response) << std::endl;
+			std::string cgiPath = getCGIPath(*response);;
+			// std::cout << "cgipath" << cgiPath << std::endl;
+			std::string resource_content = cgi.excuteCGI(cgiPath);
 			std::size_t tmpIdx = resource_content.find("\n\n");
 			if (tmpIdx != std::string::npos)
 				resource_content = resource_content.substr(tmpIdx + 2);
@@ -456,7 +460,25 @@ bool Worker::isCGIRequest(ResponseData &response)
 
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
+	{
+		// upload
+		std::string path;
+		size_t pos = response.path.rfind("/");// "./src/cgi-bin/upload.py" -> upload.py 추출
+		if (pos != std::string::npos)
+			path = response.path.substr(pos+1);
+		std::cout<<"path " << path << std::endl; //upload.py
+		// ./src/cgi-bin/src/cgi-bin/upload.py
+		if (path == "upload") //uploadFile
+		{
+			// std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
+			// std::string uploadContent = uploadPageGenerator(getCGIPath(response)); // root + upload + .py
+			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
+			std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
+			ftSend(response, response_header);
+			ftSend(response, uploadContent);
+		}
 		return true;
+	}
 
 	size_t pos = response.path.find(".", response.path.find_last_of("/"));
 	if (pos == std::string::npos)
@@ -534,8 +556,8 @@ void Worker::putResponse(ResponseData *response)
 
 void Worker::deleteResponse(ResponseData *response)
 {
-	std::string resourcePath = response->resourcePath;
-
+	// std::string resourcePath = response->resourcePath;
+	std::string resourcePath = response->path;
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
@@ -551,6 +573,19 @@ void Worker::deleteResponse(ResponseData *response)
 		ftSend(response, response_content);
 	}
 }
+
+/**
+ *
+ *
+ * @param client_fd 브라우저 포트번호
+ */
+std::string Worker::uploadPageGenerator(std::string executePath)
+{
+	std::stringstream broadHtml;
+	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
+	return broadHtml.str();
+}
+
 
 /**
  * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
