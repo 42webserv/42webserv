@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 19:41:26 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 14:39:29 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -903,37 +903,16 @@ std::string Worker::extractSubstring(const std::string &A, const std::string &B,
 {
 	size_t start = A.find(B);
 	if (start == std::string::npos)
-	{
-		// B를 찾지 못한 경우
 		return "";
-	}
-
 	start += B.length();
 	size_t end = A.find(C, start);
 	if (C == "\0")
 		return A.substr(start);
 	if (end == std::string::npos)
-	{
-		// return A.substr(start);
-		// C를 찾지 못한 경우
 		return "";
-	}
 
 	return A.substr(start, end - start);
 }
-
-// std::string Worker::extractSubstring(const std::string &A, const std::string &B)
-// {
-// 	size_t start = A.find(B);
-// 	if (start == std::string::npos)
-// 	{
-// 		// B를 찾지 못한 경우
-// 		return "";
-// 	}
-
-// 	start += B.length();
-// 	return A.substr(start);
-// }
 
 void Worker::setResponse(ResponseData *response, const std::string &resource_content)
 {

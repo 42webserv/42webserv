@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 16:28:56 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 14:39:32 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,7 +178,6 @@ std::string CGI::executeCGI(const std::string &program)
 	// std::cout << "&&&&&&" << std::endl;
 	// std::cout << resource << std::endl;
 	// std::cout << "&&&&&&" << std::endl;
-
 	return (body);
 	// return (resource);
 }

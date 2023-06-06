@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 16:27:07 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 14:34:40 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include "Config.hpp"
 #include "HTTPRequestParser.hpp"
-#include "Response.hpp"
 
 #define R 0
 #define W 1
