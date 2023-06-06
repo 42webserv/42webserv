@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 12:52:10 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 13:34:40 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,30 +297,50 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{
+		std::string resourceContent;
+		std::string content;
+		std::string chunkData;
+
+		std::cout << "path : " << response->path << std::endl;
+		std::cout << "response->resourcePath : " << response->resourcePath << std::endl;
+		std::cout << "invalidResponse(response) : " << (invalidResponse(response) == true ? "true" : "false") << std::endl;
+		std::cout << "isFile(response->resourcePath) : " << (isFile(response->resourcePath) == true ? "true" : "false") << std::endl;
+		// invalidResponse(response);
+
 		if (isCGIRequest(*response))
 		{
 			CGI cgi(request);
-			// std::cout << "getCGILocation"<<getCGIPath(*response) << std::endl;
-			std::string cgiPath = getCGIPath(*response);
-			;
-			// std::cout << "cgipath" << cgiPath << std::endl;
-			std::string resource_content = cgi.excuteCGI(cgiPath);
-			std::size_t tmpIdx = resource_content.find("\n\n");
+			std::cout << "getCGILocation : " << getCGIPath(*response) << std::endl;
+			resourceContent = cgi.excuteCGI(getCGIPath(*response));
+			std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 			if (tmpIdx != std::string::npos)
-				resource_content = resource_content.substr(tmpIdx + 2);
-			response->resourcePath = getCGILocation(response);
-			if (response->resourcePath.empty())
-			{
-				std::cout << "getCGILocation" << std::endl;
-				errorResponse(response, 404);
-				return;
-			}
-			std::string response_header = generateHeader(resource_content, "text/html", 200, false);
-			ftSend(response, response_header);
-			ftSend(response, resource_content);
+				resourceContent = resourceContent.substr(tmpIdx + 4);
+			ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked));
+			ftSend(response, resourceContent);
 			return;
 		}
-		getResponse(response);
+		else
+		{
+			resourceContent = readFile(response->resourcePath);
+			std::cout << "resourceContent : [" << resourceContent << "]" << std::endl;
+			ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked));
+		}
+		if (response->chunked)
+		{
+			size_t streamSize = (resourceContent.length() / CHUNK_SIZE * CHUNK_SIZE == resourceContent.length()) ? resourceContent.length() / CHUNK_SIZE : resourceContent.length() / CHUNK_SIZE + 1;
+			for (size_t contentIndex = 0; contentIndex < streamSize; contentIndex++)
+			{
+				if (contentIndex == streamSize - 1)
+					content = resourceContent.substr(contentIndex * CHUNK_SIZE, resourceContent.length() - contentIndex * CHUNK_SIZE);
+				else
+					content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
+				chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
+				ftSend(response, chunkData);
+			}
+			ftSend(response, "0\r\n\r\n");
+		}
+		else
+			ftSend(response, resourceContent);
 	}
 	else if (response->method == POST)
 		return postResponse(response, request);
