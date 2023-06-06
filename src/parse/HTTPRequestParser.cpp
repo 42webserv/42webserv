@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:40:08 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:56:21 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,12 +146,13 @@ bool HTTPRequestParser::parsePath()
  */
 bool HTTPRequestParser::parseHTTPVersion()
 {
-    size_t pos1 = buffer_.find("\r", bufferIndex);
-    size_t pos2 = buffer_.find("\n", bufferIndex);
-    size_t pos3 = buffer_.find(CRLF, bufferIndex);
-    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    if (Utils::minPos(buffer_.find("\r", bufferIndex),
+                      buffer_.find("\n", bufferIndex),
+                      buffer_.find(CRLF, bufferIndex)) == std::string::npos)
         return false;
-    size_t pos = Utils::minPos(pos1, pos2, pos3);
+    size_t pos = Utils::minPos(buffer_.find("\r", bufferIndex),
+                               buffer_.find("\n", bufferIndex),
+                               buffer_.find(CRLF, bufferIndex));
     http_version_ = buffer_.substr(bufferIndex, pos - bufferIndex);
     bufferIndex = pos;
 
@@ -198,13 +199,15 @@ bool HTTPRequestParser::parseHeaderName()
  */
 bool HTTPRequestParser::parseHeaderValue()
 {
-    size_t pos1 = buffer_.find("\r", bufferIndex);
-    size_t pos2 = buffer_.find("\n", bufferIndex);
-    size_t pos3 = buffer_.find(CRLF, bufferIndex);
-    if (pos1 == std::string::npos && pos2 == std::string::npos && pos3 == std::string::npos)
+    if (Utils::minPos(buffer_.find("\r", bufferIndex),
+                      buffer_.find("\n", bufferIndex),
+                      buffer_.find(CRLF, bufferIndex)) == std::string::npos)
         return false;
-    size_t pos = Utils::minPos(pos1, pos2, pos3);
-    std::string header_value = buffer_.substr(bufferIndex + 1, pos - bufferIndex - 1);
+    size_t pos = Utils::minPos(buffer_.find("\r", bufferIndex),
+                               buffer_.find("\n", bufferIndex),
+                               buffer_.find(CRLF, bufferIndex));
+    std::string header_value = buffer_.substr(bufferIndex + 1,
+                                              pos - bufferIndex - 1);
     headers_.insert(std::make_pair(current_header_name_, header_value));
     bufferIndex = pos;
 
