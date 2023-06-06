@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 19:00:26 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 20:09:05 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -318,10 +318,10 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	if (isCGIRequest(*response))
 	{
 		// 1
-		// resourceContent = cgi.executeCGI(getCGIPath(*response));
-		// setResponse(response, resourceContent);
+		resourceContent = cgi.executeCGI(getCGIPath(*response));
+		setResponse(response, resourceContent);
 		// 2
-		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
+		// setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		// 1, 2 임시로 남겨두기
 		resourceContent = response->body;
 		ftSend(response, generateHeader(response->body, response->contentType, response->statusCode, response->chunked));
@@ -806,8 +806,19 @@ std::string Worker::extractSubstring(const std::string &A, const std::string &B,
 
 void Worker::setResponse(ResponseData *response, const std::string &resourceContent)
 {
-	response->statusCode = ftStoi(extractSubstring(resourceContent, "Status: ", " OK"));
-	response->contentType = extractSubstring(resourceContent, "Content-Type: ", ";");
-	response->charset = extractSubstring(resourceContent, "charset=", CRLF);
-	response->body = extractSubstring(resourceContent, "\r\n\r\n", "\0");
+	//Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
+	if (extractSubstring(resourceContent, "Status: ", "\0") == "")
+	{
+		response->statusCode = 200;
+		response->contentType = "text/html";
+		response->charset = "utf-8";
+		response->body = resourceContent;
+	}
+	else
+	{
+		response->statusCode = ftStoi(extractSubstring(resourceContent, "Status: ", " OK"));
+		response->contentType = extractSubstring(resourceContent, "Content-Type: ", ";");
+		response->charset = extractSubstring(resourceContent, "charset=", CRLF);
+		response->body = extractSubstring(resourceContent, "\r\n\r\n", "\0");
+	}
 }
