@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 10:19:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 13:50:52 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -868,6 +868,8 @@ bool Worker::invalidResponse(ResponseData *response)
 {
 	if (!isFile(response->resourcePath))
 	{
+		if (response->method == POST || response->method == PUT)
+			return false;
 		if (response->autoindex)
 			broad(response);
 		else if (!response->redirect.empty())
