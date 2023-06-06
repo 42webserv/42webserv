@@ -6,10 +6,11 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 19:53:58 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 15:20:17 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:37:15 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "commonProcess.hpp"
 #include "commonUtils.hpp"
 
 std::string lower(const std::string &s)
@@ -58,4 +59,13 @@ int ftStoi(const std::string &str)
 	ss >> requestBodySize;
 
 	return requestBodySize;
+}
+
+bool needBody(const std::string &method)
+{
+	if (method.empty())
+		return false;
+	if (isEqual(method, POST) || isEqual(method, PUT))
+		return true;
+	return false;
 }

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 19:53:58 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 15:20:23 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:37:32 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,4 +30,5 @@ std::string ftToString(T value)
 	oss << value;
 	return oss.str();
 }
+bool needBody(const std::string &method);
 #endif
