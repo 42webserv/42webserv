@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 16:11:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 20:42:13 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@
 #include "Worker.hpp"
 #include "HTTPRequestParser.hpp"
 #include "CGI.hpp"
+
+struct ServerInfo;
 
 struct ResponseData
 {
