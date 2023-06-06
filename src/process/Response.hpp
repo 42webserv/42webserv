@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/05 21:54:55 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:23:51 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ struct ResponseData
     size_t contentLength;
     ServerInfo server;
     UData *udata;
+    bool chunked;
+    long long bodySize;
 };
 
 class Response

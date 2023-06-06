@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 13:52:44 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:36:47 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@
 #define OPTIONS "OPTIONS"
 
 void ftSend(const int &socket, const std::string &buffer);
-void ftSend(ResponseData *response, const std::string &response_header);
+void ftSend(const ResponseData &response, const std::string &contents);
+void ftSend(const ResponseData *response, const std::string &response_header);
 bool isDirectory(const std::string &path);
 bool isFile(const std::string &path);
 bool isMethod(const std::string &method);
