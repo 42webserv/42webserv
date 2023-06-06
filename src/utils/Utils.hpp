@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 17:04:44 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 17:20:08 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,9 @@ public:
     static std::string errorPageGenerator(ResponseData *response, int errorCode);
     static void setTimer(const int kq, int fd, int timeout);
     static void deleteTimer(const int kq, int fd);
+    static std::string getExpiryDate(int secondsToAdd);
 
+    static int ftStoi(const std::string &str);
     template <typename T>
     static std::string ftToString(T value)
     {

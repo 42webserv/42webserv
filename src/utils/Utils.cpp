@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 17:04:52 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 17:18:24 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,20 @@ std::string Utils::toHexString(size_t value)
 }
 
 /**
+ * 문자열로 이루어진 수를 int형 정수로 반환
+ *
+ * @param str 문자열
+ * @return int 형 정수
+ */
+int Utils::ftStoi(const std::string &str)
+{
+    std::stringstream ss(str);
+    int requestBodySize;
+    ss >> requestBodySize;
+    return requestBodySize;
+}
+
+/**
  * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
  *
  * @param response 응답을 위한 구조체
@@ -56,10 +70,10 @@ std::string Utils::errorPageGenerator(ResponseData *response, int errorCode)
 
 void Utils::setTimer(const int kq, int fd, int timeout)
 {
-	struct kevent timerEvent;
-	int timer_interval_ms = timeout * 1000;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+    struct kevent timerEvent;
+    int timer_interval_ms = timeout * 1000;
+    EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
+    kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 
 void Utils::deleteTimer(const int kq, int fd)
@@ -67,4 +81,15 @@ void Utils::deleteTimer(const int kq, int fd)
     struct kevent timerEvent;
     EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
     kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+}
+
+std::string Utils::getExpiryDate(int secondsToAdd)
+{
+    std::time_t now = std::time(0);
+    std::tm *expiration = std::localtime(&now);
+    expiration->tm_sec += secondsToAdd;
+    std::mktime(expiration);
+    char buffer[80];
+    std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
+    return std::string(buffer);
 }

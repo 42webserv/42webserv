@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:40:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 17:19:43 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,5 @@ const std::string getContentType(const HTTPRequest &request);
 bool isEqual(const std::string &s1, const std::string &s2);
 std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
 std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value);
-
-// commonUtils.cpp로 옮길것
-int ftStoi(const std::string &str);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 17:07:39 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 17:19:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -511,7 +511,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		responseUData->sessionID != "" &&
 		responseUData->wantToDeleteSessionInCookie == true)
 	{
-		std::string expireTime = getExpiryDate(-3600);
+		std::string expireTime = Utils::getExpiryDate(-3600);
 		oss << "Set-Cookie: sessionid="
 			<< "deleted"
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
@@ -522,7 +522,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	}
 	else if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
 	{
-		std::string expireTime = getExpiryDate(3600);
+		std::string expireTime = Utils::getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		responseUData->alreadySessionSend = true;
@@ -606,7 +606,7 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				timeout = options[i].substr(timeoutIdx + 8, options[i].length() - 1);
 				if (timeout.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				uData->timeout = ftStoi(timeout);
+				uData->timeout = Utils::ftStoi(timeout);
 				if (uData->timeout < 0)
 					return false;
 			}
@@ -615,7 +615,7 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				max = options[i].substr(maxIdx + 4, options[i].length() - 1);
 				if (max.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				uData->max = ftStoi(max);
+				uData->max = Utils::ftStoi(max);
 				if (uData->max < 0)
 					return false;
 			}
@@ -640,17 +640,6 @@ void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event,
 		}
 		Socket::enableKeepAlive(client_fd);
 	}
-}
-
-std::string Worker::getExpiryDate(int secondsToAdd)
-{
-	std::time_t now = std::time(0);
-	std::tm *expiration = std::localtime(&now);
-	expiration->tm_sec += secondsToAdd;
-	std::mktime(expiration);
-	char buffer[80];
-	std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
-	return std::string(buffer);
 }
 
 void Worker::cookieCheck(HTTPRequest *result)
@@ -706,7 +695,7 @@ std::string Worker::generateSessionID(int length)
 void Worker::redirection(ResponseData *response)
 {
 	std::ostringstream oss;
-	oss << "HTTP/1.1 " << response->returnState << " ok" << CRLF;
+	oss << "HTTP/1.1 " << response->returnState << " " << response->statusCodeMap[Utils::ftStoi(response->returnState)] << CRLF;
 	oss << "Location: " << response->redirect << CRLF;
 	oss << "Connection: close" << CRLF2;
 	ftSend(response->clientFd, oss.str());
