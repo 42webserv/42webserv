@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 14:23:51 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 18:50:58 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ private:
     void setUpCgiPath(ResponseData *respone);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
     std::string findMimeType(const std::string &path, Config &config);
-    std::string getPath(const HTTPRequest &request, ResponseData *response);
+    std::string getPath(const HTTPRequest &request, const ResponseData &response);
 
 public:
     /*
