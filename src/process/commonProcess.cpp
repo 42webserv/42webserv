@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 13:48:33 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:22:16 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,10 @@ void ftSend(ResponseData &response, const std::string &contents)
 	ftSend(response.clientFd, contents);
 }
 
+/**
+ * @brief Check if the path is a directory
+ * @param path
+ */
 bool isDirectory(const std::string &path)
 {
 	struct stat st;
@@ -50,6 +54,10 @@ bool isDirectory(const std::string &path)
 	return false;
 }
 
+/**
+ * @brief Check if the path is a file
+ * @param path
+ */
 bool isFile(const std::string &path)
 {
 	struct stat st;
