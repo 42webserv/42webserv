@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:17:04 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:48:21 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@
 #include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
+#include "Utils.hpp"
 
 #define BUFFER_SIZE 1024
 #define CHUNK_SIZE 500

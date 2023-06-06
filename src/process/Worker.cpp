@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:39:25 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 15:48:02 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -233,13 +233,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 	return true;
 }
 
-std::string toHexString(size_t value)
-{
-	std::stringstream ss;
-	ss << std::hex << value;
-	return ss.str();
-}
-
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -343,7 +336,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 				content = resourceContent.substr(contentIndex * CHUNK_SIZE, resourceContent.length() - contentIndex * CHUNK_SIZE);
 			else
 				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
-			chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
+			chunkData = Utils::toHexString(content.length()) + "\r\n" + content + "\r\n";
 			ftSend(response, chunkData);
 		}
 		ftSend(response, "0\r\n\r\n");
