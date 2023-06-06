@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 16:23:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:30:21 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -491,7 +491,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 		if (errorContent == "")
 			errorContent = errorPageGenerator(errorCode);
 	}
-	ftSend(response->clientFd, generateErrorHeader(errorCode, errorContent));
+	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, false));
 	ftSend(response->clientFd, errorContent);
 }
 
@@ -538,24 +538,6 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		oss << "Connection: keep-alive" << CRLF2;
 	else
 		oss << "Connection: close" << CRLF2;
-	return oss.str();
-}
-
-/**
- * response의 헤더에 적어줄 내용을 만듬
- *
- * @param request request 를 파싱완료한 구조체
- * @param content getResource함수에서 찾아온 내용을 가져옴
- * @return 최종완성된 헤더를 반환함
- */
-std::string Worker::generateErrorHeader(int status_code, const std::string &message)
-{
-	std::ostringstream oss;
-	oss << "HTTP/1.1 " << status_code << " OK" << CRLF;
-	oss << "Content-Length: " << message.length() << CRLF;
-	oss << "Content-Type: text/html" << CRLF;
-	;
-	oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
