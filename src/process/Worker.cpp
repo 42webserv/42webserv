@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 16:30:21 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 16:46:05 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,7 +281,8 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, response);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -314,7 +315,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 		if (tmpIdx != std::string::npos)
 			resourceContent = resourceContent.substr(tmpIdx + 4);
-		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked));
+		ftSend(response, generateHeader(resourceContent, "text/html", 200, response));
 	}
 	else
 	{
@@ -325,7 +326,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		}
 		else
 			resourceContent = readFile(response->resourcePath);
-		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked));
+		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
 	}
 	if (response->chunked)
 	{
@@ -390,7 +391,8 @@ bool Worker::isCGIRequest(ResponseData &response)
 		if (path == "upload") // uploadFile
 		{
 			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
-			std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
+			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
+			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			ftSend(response, response_header);
 			ftSend(response, uploadContent);
 		}
@@ -417,7 +419,9 @@ void Worker::putResponse(ResponseData *response)
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
+		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
+		response->chunked = false;
+		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
 		ftSend(response, resource_header);
 		ftSend(response, resource_content);
 	}
@@ -443,7 +447,8 @@ void Worker::deleteResponse(ResponseData *response)
 	{
 		// 삭제에 성공한 경우
 		std::string response_content = "Resource deleted successfully";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, response);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -466,10 +471,10 @@ std::string Worker::uploadPageGenerator(std::string executePath)
  *
  * @param client_fd 브라우저 포트번호
  */
-std::string Worker::errorPageGenerator(int errorCode)
+std::string Worker::errorPageGenerator(ResponseData *response, int errorCode)
 {
 	std::stringstream broadHtml;
-	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<h1>This is " << errorCode << " Page.</h1>\n</body>\n</html>";
+	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<h1>" << errorCode << " " << response->statusCodeMap[errorCode] << ".</h1>\n</body>\n</html>";
 	return broadHtml.str();
 }
 
@@ -483,15 +488,16 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	std::string errorContent;
 	std::map<int, std::string>::iterator it = response->server.errorPage.find(errorCode);
 	if (it == response->server.errorPage.end())
-		errorContent = errorPageGenerator(errorCode);
+		errorContent = errorPageGenerator(response, errorCode);
 	else
 	{
 		const std::string errorPath = response->root + it->second;
 		errorContent = readFile(errorPath);
 		if (errorContent == "")
-			errorContent = errorPageGenerator(errorCode);
+			errorContent = errorPageGenerator(response, errorCode);
 	}
-	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, false));
+	response->chunked = false;
+	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
 	ftSend(response->clientFd, errorContent);
 }
 
@@ -502,14 +508,14 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, ResponseData *response)
 {
 	HTTPRequestParser parser;
 	std::ostringstream oss;
 
 	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
-	if (chunked)
+	if (response->chunked)
 		oss << "Transfer-Encoding: chunked" << CRLF;
 	else
 		oss << "Content-Length: " << content.length() << CRLF;
@@ -562,7 +568,8 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType, 200, false);
+	// std::string response_header = generateHeader(tmp, contentType, 200, false);
+	std::string response_header = generateHeader(tmp, contentType, 200, response);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
