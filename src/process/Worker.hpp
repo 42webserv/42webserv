@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:31:22 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:51:47 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,11 @@
 #include "Signal.hpp"
 #include "Socket.hpp"
 
-class Master;
+#define BUFFER_SIZE 1024
+#define CHUNK_SIZE 500
+
 struct ResponseData;
+class Master;
 
 class Worker
 {
@@ -59,7 +62,6 @@ private:
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked, UData *udata);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(const ResponseData &response);
-	std::string getCGILocation(ResponseData *response);
 	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
 	void registerKeepAlive(UData *udata, int clientFd);
@@ -74,6 +76,7 @@ private:
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
 	bool checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response);
+	void sendResponse(ResponseData *response, const HTTPRequest &request);
 
 public:
 	Worker(Master &master);

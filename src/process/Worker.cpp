@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:37:01 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 14:51:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,9 +163,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		size_t requestBodySize;
 		ss >> requestBodySize;
 
-		if (invalidResponse(response))
-			return false;
-
 		size_t clientMaxBodySize = response->server.clientMaxBodySize;
 		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
 		if (dir != response->server.locations.end())
@@ -179,7 +176,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		{
 			std::cout << "It have too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
-			delete response;
 			return false;
 		}
 	}
@@ -213,49 +209,26 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		delete response;
 		return;
 	}
-	if (checkHttpRequestClientMaxBodySize(request, response) == false)
+
+	// /cgi-bin/printEnvp -> /cgi-bin/printEnvp.py로 변경해줘야 404 안걸림
+	if (isCGIRequest(*response))
+		response->resourcePath = getCGIPath(*response);
+
+	if (checkHttpRequestClientMaxBodySize(request, response) == false || invalidResponse(response))
+	{
+		delete response;
 		return;
+	}
+
 	if (response->path == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		udata->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete" && udata->alreadySessionSend == true && udata->sessionID != "")
+	else if (response->path == "/session/delete" && udata->alreadySessionSend == true &&
+			 udata->sessionID != "")
 		udata->wantToDeleteSessionInCookie = true;
 
-	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
-	if (response->method == GET)
-	{
-		if (isCGIRequest(*response))
-		{
-			CGI cgi(request);
-			// std::cout << "getCGILocation"<<getCGIPath(*response) << std::endl;
-			std::string cgiPath = getCGIPath(*response);
-			;
-			// std::cout << "cgipath" << cgiPath << std::endl;
-			std::string resource_content = cgi.excuteCGI(cgiPath);
-			std::size_t tmpIdx = resource_content.find("\n\n");
-			if (tmpIdx != std::string::npos)
-				resource_content = resource_content.substr(tmpIdx + 2);
-			response->resourcePath = getCGILocation(response);
-			if (response->resourcePath.empty())
-			{
-				std::cout << "getCGILocation" << std::endl;
-				errorResponse(response, 404);
-				return;
-			}
-			std::string response_header = generateHeader(resource_content, "text/html", 200, false, udata);
-			ftSend(response, response_header);
-			ftSend(response, resource_content);
-			return;
-		}
-		getResponse(response);
-	}
-	else if (response->method == POST)
-		return postResponse(response, request);
-	else if (response->method == HEAD)
-	{
-		// HEAD 메소드는 GET 메소드와 동일하지만, body가 없습니다.
-		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
-		getResponse(response);
-	}
+	// 메서드에 따른 응답처리
+	if (response->method == GET || response->method == POST || response->method == DELETE)
+		sendResponse(response, request);
 	else if (response->method == PUT)
 	{
 		putResponse(response);
@@ -278,35 +251,55 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	delete response;
 }
 
-/**
- * GET 요청 중 CGI일 경우, CGI 반환에 필요한 location을 찾아 경로 반환
- *
- * @param response 응답시 사용될 구조체
- * @return 경로 문자열
- */
-std::string Worker::getCGILocation(ResponseData *response)
+void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 {
-	std::vector<Directive> &locations = response->server.locations;
+	std::string resourceContent;
+	std::string content;
+	std::string chunkData;
 
-	for (size_t i = 0; i < locations.size(); ++i)
+	// cgi 세팅
+	CGI cgi(request);
+
+	// X-HEADER 세팅
+	std::map<std::string, std::string>::iterator XHeaderIterator = response->headers.find("X-Secret-Header-For-Test");
+	if (XHeaderIterator != response->headers.end())
+		cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", XHeaderIterator->second);
+
+	if (isCGIRequest(*response))
 	{
-		Directive &location = locations[i];
-		if (location.value == "/result")
-		{
-			std::string root = "";
-			std::string index = "";
-			for (size_t j = 0; j < location.block.size(); j++)
-			{
-				Directive &block = location.block[j];
-				if (block.name == "root")
-					root = block.value;
-				if (block.name == "index")
-					index = block.value;
-			}
-			return root + "/" + index;
-		}
+		resourceContent = cgi.excuteCGI(getCGIPath(*response));
+		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
+		if (tmpIdx != std::string::npos)
+			resourceContent = resourceContent.substr(tmpIdx + 4);
+		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked, response->udata));
 	}
-	return "";
+	else
+	{
+		if (response->method == POST)
+		{
+			resourceContent = response->body;
+			writeFile(response->resourcePath, resourceContent);
+		}
+		else
+			resourceContent = readFile(response->resourcePath);
+		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked, response->udata));
+	}
+	if (response->chunked)
+	{
+		size_t streamSize = (resourceContent.length() / CHUNK_SIZE * CHUNK_SIZE == resourceContent.length()) ? resourceContent.length() / CHUNK_SIZE : resourceContent.length() / CHUNK_SIZE + 1;
+		for (size_t contentIndex = 0; contentIndex < streamSize; contentIndex++)
+		{
+			if (contentIndex == streamSize - 1)
+				content = resourceContent.substr(contentIndex * CHUNK_SIZE, resourceContent.length() - contentIndex * CHUNK_SIZE);
+			else
+				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
+			chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
+			ftSend(response, chunkData);
+		}
+		ftSend(response, "0\r\n\r\n");
+	}
+	else
+		ftSend(response, resourceContent);
 }
 
 /**
@@ -372,79 +365,6 @@ bool Worker::isCGIRequest(const ResponseData &response)
 	return false;
 }
 
-/**
- * GET request일 경우, response에 보내줄 리소스를 찾고 담긴 내용을 가져옴. 파일이 존재하지않으면 에러페이지 반환
- *
- * @param response 응답시 사용될 구조체
- */
-void Worker::getResponse(ResponseData *response)
-{
-	if (invalidResponse(response))
-		return;
-
-	std::string resource_content = readFile(response->resourcePath);
-	if (resource_content.empty())
-		return errorResponse(response, 404);
-	std::string response_header = generateHeader(resource_content, response->contentType, 200, false, response->udata);
-	ftSend(response, response_header);
-	ftSend(response, resource_content);
-}
-
-void Worker::postResponse(ResponseData *response, const HTTPRequest &request)
-{
-	std::string resourceContent;
-	std::string responseHeader;
-
-	// cgi 세팅
-	CGI cgi(request);
-
-	// X-HEADER 세팅
-	std::map<std::string, std::string>::iterator XHeaderIterator = response->headers.find("X-Secret-Header-For-Test");
-	if (XHeaderIterator != response->headers.end())
-		cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", XHeaderIterator->second);
-
-	// cgi post method 실행
-	if (isCGIRequest(*response))
-	{
-		resourceContent = cgi.excuteCGI(getCGIPath(*response));
-		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
-		if (tmpIdx != std::string::npos)
-			resourceContent = resourceContent.substr(tmpIdx + 4);
-		if (response->resourcePath.empty())
-			return errorResponse(response, 404);
-		std::cout << "resourceContentlength : " << resourceContent.length() << std::endl;
-		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked, response->udata));
-	}
-	else
-	{
-		resourceContent = response->body;
-		writeFile(response->resourcePath, resourceContent);
-		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked, response->udata));
-	}
-	if (response->chunked)
-	{
-		size_t contentIndex = 0;
-		std::string content;
-		size_t chunkSize = 500;
-		std::string chunkData;
-		size_t streamSize = (resourceContent.length() / chunkSize * chunkSize == resourceContent.length()) ? resourceContent.length() / chunkSize : resourceContent.length() / chunkSize + 1;
-		for (size_t i = 0; i < streamSize; i++)
-		{
-			if (i == streamSize - 1)
-				content = resourceContent.substr(contentIndex * chunkSize, resourceContent.length() - contentIndex * chunkSize);
-			else
-				content = resourceContent.substr(contentIndex * chunkSize, chunkSize);
-			chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
-			ftSend(response, chunkData);
-			contentIndex++;
-		}
-		ftSend(response, "0\r\n\r\n");
-	}
-	else
-		ftSend(response, resourceContent);
-	return;
-}
-
 void Worker::putResponse(ResponseData *response)
 {
 	if (response->body.length() > 10000)
@@ -452,7 +372,6 @@ void Worker::putResponse(ResponseData *response)
 	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::cout << "putResponse, response->resoursePath : " << response->resourcePath << std::endl;
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
