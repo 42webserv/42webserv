@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 19:24:29 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:13:07 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     chunked_data = "";
     state_ = METHOD;
     bufferIndex = 0;
+    bodySize_ = -1;
 
     while (bufferIndex < buffer_.size() || pass_to_body_flag_)
     {
@@ -69,27 +70,32 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
         request->method = method_;
         request->path = path_;
         request->http_version = http_version_;
+        request->chunked = false;
         if (request->method == HEAD)
             return request;
         // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
         if (headers_.size() == 0)
             return request;
         request->headers = headers_;
-        std::map<std::string, std::string>::iterator it = request->headers.find("Host");
-        if (it != headers_.end())
+        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
+        if (findHostIterator != headers_.end())
         {
-            size_t pos = it->second.find(":");
-            request->port = strtod(it->second.substr(pos + 1, it->second.length()).c_str(), NULL);
+            size_t pos = findHostIterator->second.find(":");
+            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
             if (request->port == 0)
                 request->port = -1;
             // std::cout << "request->port : " << request->port << std::endl;
-            request->strPort = it->second.substr(pos + 1, it->second.length());
+            request->strPort = findHostIterator->second.substr(pos + 1, findHostIterator->second.length());
         }
         else
             request->port = -1;
         request->body = body_;
+        request->bodySize = bodySize_;
         request->addr = addr_;
         request->query = query_;
+        std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
+        if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == "chunked")
+            request->chunked = true;
         return request;
     }
     return NULL;
@@ -268,6 +274,7 @@ bool HTTPRequestParser::parseBody()
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
     {
+
         // chunked 인코딩이 적용된 경우
         while (buffer_.size() != bufferIndex)
         {
@@ -293,6 +300,8 @@ bool HTTPRequestParser::parseBody()
             {
                 buffer_.clear();
                 state_ = COMPLETE;
+                bodySize_ = body_.length();
+                headers_.insert(std::make_pair("content-length", sizeToString(bodySize_)));
                 return true;
             }
 
@@ -323,17 +332,19 @@ bool HTTPRequestParser::parseBody()
                 return false;
             body_ = buffer_.substr(bufferIndex, content_length);
             bufferIndex += content_length;
+            bodySize_ = content_length;
         }
         else
         {
             headers_.insert(std::make_pair("content-length", sizeToString(buffer_.length())));
             body_ = buffer_.substr(bufferIndex, buffer_.size());
-            if (buffer_.empty())
-            {
-                state_ = COMPLETE;
-                return true;
-            }
+            bodySize_ = body_.length();
             buffer_.clear();
+            // if (buffer_.empty())
+            // {
+            state_ = COMPLETE;
+            return true;
+            // }
         }
     }
 
