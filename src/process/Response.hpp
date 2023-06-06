@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 15:39:25 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 15:50:03 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ private:
     void setUpAutoindex(ResponseData *response);
     void setUpLimitExcept(ResponseData *response);
     void setUpReturnState(ResponseData *response);
-    void setUpCgiPath(ResponseData *respone);
+    void setUpCgiPath(ResponseData *response);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
     std::string findMimeType(const std::string &path, Config &config);
     std::string getPath(const HTTPRequest &request, ResponseData *response);

@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:39:26 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 15:58:17 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,6 +276,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			 responseUData->sessionID != "")
 		responseUData->wantToDeleteSessionInCookie = true;
 /////////////tttt
+/*
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{
@@ -291,13 +292,13 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			// std::cout << "charset : " << response->charset << std::endl;
 			// std::cout << "**&*&&*&&&" << std::endl;
 
-			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
-			// std::cout << resource_content << std::endl;
-			setResponse(response, resource_content);
+			std::string resourceContent = cgi.executeCGI(getCGIPath(*response));
+			// std::cout << resourceContent << std::endl;
+			setResponse(response, resourceContent);
 
-			// std::size_t tmpIdx = resource_content.find("\n\n");
+			// std::size_t tmpIdx = resourceContent.find("\n\n");
 			// if (tmpIdx != std::string::npos)
-				// resource_content = resource_content.substr(tmpIdx + 2);
+				// resourceContent = resourceContent.substr(tmpIdx + 2);
 			response->resourcePath = getCGILocation(response);
 			if (response->resourcePath.empty())
 			{
@@ -307,7 +308,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			}
 
 			// const std::string &content, const std::string &contentType, int statusCode, bool chunked
-			// std::string response_header = generateHeader(resource_content, "text/html", 200, false);
+			// std::string response_header = generateHeader(resourceContent, "text/html", 200, false);
 			std::string response_header = generateHeader(response->body, response->contentType, response->statusCode, false);
 
 			ftSend(response, response_header);
@@ -326,13 +327,13 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			std::map<std::string, std::string>::iterator it = response->headers.find("X-Secret-Header-For-Test");
 			if (it != response->headers.end())
 				cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", it->second);
-			std::string resource_content = cgi.executeCGI(getCGIPath(*response));
+			std::string resourceContent = cgi.executeCGI(getCGIPath(*response));
 			// status code / content-type / charset / content, body
-			setResponse(response, resource_content);
+			setResponse(response, resourceContent);
 			// response = cgi.executeCGI(getCGIPath(*response));
 
 			// std::cout << "~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-			// std::cout << resource_content << std::endl;
+			// std::cout << resourceContent << std::endl;
 			// std::cout << response->body << std::endl;
 			// std::cout << "**&*&&*&&&" << std::endl;
 			// std::cout << "status code : " << response->statusCode << std::endl;
@@ -342,9 +343,9 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 			// std::cout << "charset : " << response->charset << std::endl;
 			// std::cout << "**&*&&*&&&" << std::endl;
 
-			// std::size_t tmpIdx = resource_content.find("\r\n\r\n");
+			// std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 			// if (tmpIdx != std::string::npos)
-			// resource_content = resource_content.substr(tmpIdx + 4);
+			// resourceContent = resourceContent.substr(tmpIdx + 4);
 			if (response->resourcePath.empty())
 				return errorResponse(response, 404);
 			std::string response_header = generateHeader(response->body, response->contentType, response->statusCode, true);
@@ -384,6 +385,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
 		getResponse(response);
 	}
+//////tttt*/
 	// 메서드에 따른 응답처리
 	if (response->method == GET || response->method == POST || response->method == DELETE)
 		sendResponse(response, request);
@@ -426,11 +428,18 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 
 	if (isCGIRequest(*response))
 	{
-		resourceContent = cgi.excuteCGI(getCGIPath(*response));
-		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
-		if (tmpIdx != std::string::npos)
-			resourceContent = resourceContent.substr(tmpIdx + 4);
-		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked));
+		resourceContent = cgi.executeCGI(getCGIPath(*response));
+		setResponse(response, resourceContent);
+		resourceContent = response->body;
+		// std::string response_header = generateHeader(response->body, response->contentType, response->statusCode, true);
+		// std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
+		// if (tmpIdx != std::string::npos)
+		// 	resourceContent = resourceContent.substr(tmpIdx + 4);
+		// std::cout << "&&&&&&&&&&" << std::endl;
+		// std::cout << "response body : " << response->body << std::endl;
+		// std::cout << "code : " << response->statusCode << std::endl;
+		// std::cout << "type : " << response->contentType << std::endl;
+		ftSend(response, generateHeader(response->body, response->contentType, response->statusCode, response->chunked));
 	}
 	else
 	{
@@ -532,12 +541,12 @@ void Worker::putResponse(ResponseData *response)
 	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::string resource_content = readFile(response->resourcePath);
-		if (resource_content.empty())
+		std::string resourceContent = readFile(response->resourcePath);
+		if (resourceContent.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
+		std::string resource_header = generateHeader(resourceContent, "text/html", 201, false);
 		ftSend(response, resource_header);
-		ftSend(response, resource_content);
+		ftSend(response, resourceContent);
 	}
 	else
 	{
@@ -910,10 +919,11 @@ std::string Worker::extractSubstring(const std::string &A, const std::string &B,
 	return A.substr(start, end - start);
 }
 
-void Worker::setResponse(ResponseData *response, const std::string &resource_content)
+void Worker::setResponse(ResponseData *response, const std::string &resourceContent)
 {
-	response->statusCode = ftStoi(extractSubstring(resource_content, "Status: ", " OK"));
-	response->contentType = extractSubstring(resource_content, "Content-Type: ", CRLF);
-	response->charset = extractSubstring(resource_content, "charset=", CRLF);
-	response->body = extractSubstring(resource_content, "\r\n\r\n", "\0");
+	response->statusCode = ftStoi(extractSubstring(resourceContent, "Status: ", " OK"));
+	response->contentType = extractSubstring(resourceContent, "Content-Type: ", ";");
+	response->charset = extractSubstring(resourceContent, "charset=", CRLF);
+	response->body = extractSubstring(resourceContent, "\r\n\r\n", "\0");
+	// std::cout << response->body << std::endl;
 }
