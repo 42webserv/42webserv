@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 16:27:26 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 22:46:20 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,15 +47,12 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		// Client socket
 		socket.receiveRequest(event);
 		UData *udata = static_cast<UData *>(event.udata);
+		// Parse request
 		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
 			return;
-		if (result->port == -1)
-			result->port = strtod(listen[0].value.c_str(), NULL);
-		udata->request.clear();
 		udata->result = result;
-		std::cout << result->path << std::endl;
-		std::cout << result->body << std::endl;
+		// Add write event
 		struct kevent newEvent;
 		EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, udata);
 		events.push_back(newEvent);
@@ -70,16 +67,14 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
-	if (udata->max == 0)
+	if (udata->max == 0) // TODO 테스트해보기
 	{
 		std::cout << "max is zero, disconnection!" << std::endl;
 		socket.disconnectClient(event);
-		if (udata->result)
-			delete udata->result;
 	}
 	if (udata->result)
 	{
-		this->requestHandler(udata, fd);
+		requestHandler(udata, fd);
 		if (udata->keepLive == true)
 			udata->max -= 1;
 	}
@@ -226,7 +221,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == DELETE)
+	if (response->method == GET || response->method == POST || response->method == DELETE) // TODO DELETE도 처리해주나
 		sendResponse(response, request);
 	else if (response->method == PUT)
 	{
@@ -709,7 +704,7 @@ bool Worker::invalidResponse(ResponseData *response)
 {
 	if (!isFile(response->resourcePath))
 	{
-		if (response->method == POST || response->method == PUT)
+		if (needBody(response->method))
 			return false;
 		if (response->autoindex)
 			broad(response);
