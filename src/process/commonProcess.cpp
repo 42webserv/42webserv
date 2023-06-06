@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonProcess.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 01:23:25 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 13:39:41 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,10 @@ void ftSend(ResponseData &response, const std::string &contents)
 	ftSend(response.clientFd, contents);
 }
 
+/**
+ * @brief Check if the path is a directory
+ * @param path
+ */
 bool isDirectory(const std::string &path)
 {
 	struct stat st;
@@ -50,9 +54,18 @@ bool isDirectory(const std::string &path)
 	return false;
 }
 
+/**
+ * @brief Check if the path is a file
+ * @param path
+ */
 bool isFile(const std::string &path)
 {
-	return !isDirectory(path);
+	struct stat st;
+
+	stat(path.c_str(), &st);
+	if (S_ISREG(st.st_mode))
+		return true;
+	return false;
 }
 
 bool isMethod(const std::string &method)
