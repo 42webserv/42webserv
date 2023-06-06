@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:21:43 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:22:53 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 19:51:03 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &ref)
 		this->query = ref.query;
 		this->addr = ref.addr;
 		this->name = ref.name;
-		this->strPort = ref.strPort;
 		this->chunked = ref.chunked;
 		this->bodySize = ref.bodySize;
 	}

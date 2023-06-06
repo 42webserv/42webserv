@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 15:21:37 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 19:50:28 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	this->envp_["REQUEST_URI"] = request.path;	//
 	this->envp_["SCRIPT_NAME"] = "webserv/1.1"; //
 	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
-	this->envp_["SERVER_PORT"] = request.strPort; // 요청을 수신한 서버의 포트 번호.
+	this->envp_["SERVER_PORT"] = ftToString(request.port); // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
 };

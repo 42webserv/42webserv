@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:23:04 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/06 19:59:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,39 +66,6 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
     }
     if (state_ == COMPLETE)
         return makeRequest();
-    {
-        HTTPRequest *request = new HTTPRequest;
-        request->method = method_;
-        request->path = path_;
-        request->http_version = http_version_;
-        request->chunked = false;
-        if (request->method == HEAD)
-            return request;
-        // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-        if (headers_.size() == 0)
-            return request;
-        request->headers = headers_;
-        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
-        if (findHostIterator != headers_.end())
-        {
-            size_t pos = findHostIterator->second.find(":");
-            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
-            if (request->port == 0)
-                request->port = -1;
-            // std::cout << "request->port : " << request->port << std::endl;
-            request->strPort = findHostIterator->second.substr(pos + 1, findHostIterator->second.length());
-        }
-        else
-            request->port = -1;
-        request->body = body_;
-        request->bodySize = bodySize_;
-        request->addr = addr_;
-        request->query = query_;
-        std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
-        if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == "chunked")
-            request->chunked = true;
-        return request;
-    }
     return NULL;
 }
 
@@ -191,7 +158,7 @@ bool HTTPRequestParser::parseHeaderName()
     // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
     if (pos == std::string::npos)
     {
-        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
+        state_ = needBody(method_) ? BODY : COMPLETE;
         buffer_.clear();
         // return true; // 불완전한 요청도 받기
         return false; // 완전한 요청만 받기
@@ -230,13 +197,16 @@ bool HTTPRequestParser::parseHeaderValue()
     {
         pos = header_value.find(":");
         if (pos != std::string::npos)
+        {
             addr_ = header_value.substr(0, pos);
+            port_ = header_value.substr(pos + 1);
+        }
     }
     if (buffer_.substr(bufferIndex, 2) == CRLF)
     {
         bufferIndex += 2;
         body_ = "";
-        if (method_ == POST || method_ == PUT)
+        if (needBody(method_))
         {
             pass_to_body_flag_ = true;
             state_ = BODY;
@@ -248,9 +218,7 @@ bool HTTPRequestParser::parseHeaderValue()
         }
     }
     else if (buffer_.size() == bufferIndex)
-    {
-        state_ = (method_ == POST || method_ == PUT) ? BODY : COMPLETE;
-    }
+        state_ = needBody(method_) ? BODY : COMPLETE;
     else
         state_ = HEADER_NAME;
     return true;
@@ -271,6 +239,11 @@ std::string sizeToString(size_t value)
  */
 bool HTTPRequestParser::parseBody()
 {
+    if (!needBody(method_))
+    {
+        state_ = COMPLETE;
+        return true;
+    }
     pass_to_body_flag_ = false;
     std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
     if (it != headers_.end() && it->second == "chunked")
@@ -369,7 +342,7 @@ void HTTPRequestParser::reset()
     query_.clear();
     addr_.clear();
     name_.clear();
-    port_.clear();
+    port_ = "-1";
     path_.clear();
     http_version_.clear();
 }
@@ -387,18 +360,18 @@ HTTPRequest *HTTPRequestParser::makeRequest()
     if (headers_.size() == 0)
         return request;
     request->headers = headers_;
-    std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
-    if (findHostIterator != headers_.end())
+    request->port = ftStoi(port_);
+    if (request->port < 1)
     {
-        size_t pos = findHostIterator->second.find(":");
-        request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
-        if (request->port == 0)
-            request->port = -1;
-        // std::cout << "request->port : " << request->port << std::endl;
-        request->strPort = findHostIterator->second.substr(pos + 1, findHostIterator->second.length());
+        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
+        if (findHostIterator != headers_.end())
+        {
+            size_t pos = findHostIterator->second.find(":");
+            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
+            if (request->port == 0)
+                request->port = -1;
+        }
     }
-    else
-        request->port = -1;
     request->body = body_;
     request->bodySize = bodySize_;
     request->addr = addr_;
