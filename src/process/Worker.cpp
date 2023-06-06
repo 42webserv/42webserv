@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:39:29 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 15:39:26 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,28 +77,6 @@ bool Worker::eventFilterRead(int k, struct kevent &event)
 				event_list.push_back(new_event);
 			}
 		}
-
-		// char buf[BUFFER_SIZE + 1];
-		// ssize_t n;
-		// struct kevent new_event;
-
-		// while (true)
-		// {
-		// 	n = recv(fd, buf, BUFFER_SIZE, 0);
-		// 	if (n < BUFFER_SIZE)
-		// 	{
-		// 		buf[n] = '\0';
-		// 		clients[fd] += buf;
-		// 		EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		// 		event_list.push_back(new_event);
-		// 		std::cout << "read: " << clients[fd] << std::endl;
-		// 		break;
-		// 	}
-		// 	else
-		// 	{
-		// 		// buf[BUFFER_SIZE] = '\0';
-		// 		clients[fd] += buf;
-		// 	}
 	}
 	return true;
 }
@@ -157,7 +135,7 @@ bool Worker::eventEOF(int k, struct kevent &event)
 {
 	if (!hasClientFd(k))
 		return false;
-	std::cout << "client want to disconnect" << std::endl;
+	// std::cout << fd << " client want to disconnect" << std::endl;
 	sockets[k]->disconnectClient(fd, clients, event);
 	return true;
 }
@@ -236,11 +214,7 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 		size_t requestBodySize;
 		ss >> requestBodySize;
 
-		if (invalidResponse(response))
-			return false;
-
 		size_t clientMaxBodySize = server.servers[k].clientMaxBodySize;
-
 		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(server.servers[k].locations, LOCATION_DIRECTIVE, request.path);
 		if (dir != server.servers[k].locations.end())
 		{
@@ -253,7 +227,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 		{
 			std::cout << "It have too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
-			delete response;
 			return false;
 		}
 	}
@@ -286,14 +259,23 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		delete response;
 		return;
 	}
-	if (checkHttpRequestClientMaxBodySize(k, request, response) == false)
+
+	// /cgi-bin/printEnvp -> /cgi-bin/printEnvp.py로 변경해줘야 404 안걸림
+	if (isCGIRequest(*response))
+		response->resourcePath = getCGIPath(*response);
+
+	if (checkHttpRequestClientMaxBodySize(k, request, response) == false || invalidResponse(response))
+	{
+		delete response;
 		return;
+	}
+
 	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		responseUData->sessionID = generateSessionID(32);
 	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
 			 responseUData->sessionID != "")
 		responseUData->wantToDeleteSessionInCookie = true;
-
+/////////////tttt
 	// 현재 메서드와 limit을 비교후 바로 404 갈지 실행한지 분기
 	if (response->method == GET)
 	{
@@ -402,9 +384,12 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		// 따라서 GET 메소드 실행함수로 리다이렉션해도 상관없습니다.
 		getResponse(response);
 	}
+	// 메서드에 따른 응답처리
+	if (response->method == GET || response->method == POST || response->method == DELETE)
+		sendResponse(response, request);
+//////ttt
 	else if (response->method == PUT)
 	{
-		std::cout << "PUT HERE" << std::endl;
 		putResponse(response);
 	}
 	else if (response->method == OPTIONS)
@@ -425,34 +410,55 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	delete response;
 }
 
-/**
- * GET 요청 중 CGI일 경우, CGI 반환에 필요한 location을 찾아 경로 반환
- *
- * @param response 응답시 사용될 구조체
- * @return 경로 문자열
- */
-std::string Worker::getCGILocation(ResponseData *response)
+void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 {
-	std::vector<Directive> &locations = response->server.locations;
-	for (size_t i = 0; i < locations.size(); ++i)
+	std::string resourceContent;
+	std::string content;
+	std::string chunkData;
+
+	// cgi 세팅
+	CGI cgi(request);
+
+	// X-HEADER 세팅
+	std::map<std::string, std::string>::iterator XHeaderIterator = response->headers.find("X-Secret-Header-For-Test");
+	if (XHeaderIterator != response->headers.end())
+		cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", XHeaderIterator->second);
+
+	if (isCGIRequest(*response))
 	{
-		Directive &location = locations[i];
-		if (location.value == "/result")
-		{
-			std::string root = "";
-			std::string index = "";
-			for (size_t j = 0; j < location.block.size(); j++)
-			{
-				Directive &block = location.block[j];
-				if (block.name == "root")
-					root = block.value;
-				if (block.name == "index")
-					index = block.value;
-			}
-			return root + "/" + index;
-		}
+		resourceContent = cgi.excuteCGI(getCGIPath(*response));
+		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
+		if (tmpIdx != std::string::npos)
+			resourceContent = resourceContent.substr(tmpIdx + 4);
+		ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked));
 	}
-	return "";
+	else
+	{
+		if (response->method == POST)
+		{
+			resourceContent = response->body;
+			writeFile(response->resourcePath, resourceContent);
+		}
+		else
+			resourceContent = readFile(response->resourcePath);
+		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked));
+	}
+	if (response->chunked)
+	{
+		size_t streamSize = (resourceContent.length() / CHUNK_SIZE * CHUNK_SIZE == resourceContent.length()) ? resourceContent.length() / CHUNK_SIZE : resourceContent.length() / CHUNK_SIZE + 1;
+		for (size_t contentIndex = 0; contentIndex < streamSize; contentIndex++)
+		{
+			if (contentIndex == streamSize - 1)
+				content = resourceContent.substr(contentIndex * CHUNK_SIZE, resourceContent.length() - contentIndex * CHUNK_SIZE);
+			else
+				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
+			chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
+			ftSend(response, chunkData);
+		}
+		ftSend(response, "0\r\n\r\n");
+	}
+	else
+		ftSend(response, resourceContent);
 }
 
 /**
@@ -489,7 +495,25 @@ bool Worker::isCGIRequest(ResponseData &response)
 
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
+	{
+		// upload
+		std::string path;
+		size_t pos = response.path.rfind("/"); // "./src/cgi-bin/upload.py" -> upload.py 추출
+		if (pos != std::string::npos)
+			path = response.path.substr(pos + 1);
+		std::cout << "path " << path << std::endl; // upload.py
+		// ./src/cgi-bin/src/cgi-bin/upload.py
+		if (path == "upload") // uploadFile
+		{
+			// std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
+			// std::string uploadContent = uploadPageGenerator(getCGIPath(response)); // root + upload + .py
+			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
+			std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
+			ftSend(response, response_header);
+			ftSend(response, uploadContent);
+		}
 		return true;
+	}
 
 	size_t pos = response.path.find(".", response.path.find_last_of("/"));
 	if (pos == std::string::npos)
@@ -500,47 +524,6 @@ bool Worker::isCGIRequest(ResponseData &response)
 	return false;
 }
 
-/**
- * GET request일 경우, response에 보내줄 리소스를 찾고 담긴 내용을 가져옴. 파일이 존재하지않으면 에러페이지 반환
- *
- * @param response 응답시 사용될 구조체
- */
-void Worker::getResponse(ResponseData *response)
-{
-	if (invalidResponse(response))
-		return;
-
-	std::string resource_content = readFile(response->resourcePath);
-	if (resource_content.empty())
-		return errorResponse(response, 404);
-	std::string response_header = generateHeader(resource_content, response->contentType, 200, false);
-	ftSend(response, response_header);
-	ftSend(response, resource_content);
-}
-
-void Worker::postResponse(ResponseData *response)
-{
-	const std::string clientMaxBodySize = "client_max_body_size";
-	if (invalidResponse(response))
-		return;
-
-	// TODO PUT도 해야 하나?
-	// check client_max_body_size
-	std::vector<Directive>::const_iterator it = findDirective(response->location->block, clientMaxBodySize);
-	if (it == response->location->block.end())
-		it = findDirective(response->server.locations, clientMaxBodySize);
-	if (it != response->location->block.end())
-	{
-		size_t max_body_size = atoi(it->value.c_str());
-		if (max_body_size < response->contentLength)
-			return errorResponse(response, 413);
-	}
-	writeFile(response->resourcePath, response->body);
-	std::string body = ""; // POST는 생성된 내용을 반환하지 않아도 됨.
-	std::string response_header = generateHeader(body, response->contentType, 201, false);
-	ftSend(response, response_header);
-}
-
 void Worker::putResponse(ResponseData *response)
 {
 	// TODO 이거 경로 제대로 되게 해야 함. 임시임
@@ -549,7 +532,6 @@ void Worker::putResponse(ResponseData *response)
 	if (writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::cout << "putResponse, response->resoursePath : " << response->resourcePath << std::endl;
 		std::string resource_content = readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
@@ -567,8 +549,8 @@ void Worker::putResponse(ResponseData *response)
 
 void Worker::deleteResponse(ResponseData *response)
 {
-	std::string resourcePath = response->resourcePath;
-
+	// std::string resourcePath = response->resourcePath;
+	std::string resourcePath = response->path;
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
@@ -583,6 +565,18 @@ void Worker::deleteResponse(ResponseData *response)
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
+}
+
+/**
+ *
+ *
+ * @param client_fd 브라우저 포트번호
+ */
+std::string Worker::uploadPageGenerator(std::string executePath)
+{
+	std::stringstream broadHtml;
+	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
+	return broadHtml.str();
 }
 
 /**
@@ -879,6 +873,8 @@ bool Worker::invalidResponse(ResponseData *response)
 {
 	if (!isFile(response->resourcePath))
 	{
+		if (response->method == POST || response->method == PUT)
+			return false;
 		if (response->autoindex)
 			broad(response);
 		else if (!response->redirect.empty())

@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:23:38 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/06 15:40:14 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 #include "Socket.hpp"
 
 #define BUFFER_SIZE 1024
+#define CHUNK_SIZE 500
 
 struct ResponseData;
 struct HTTPRequest;
@@ -55,16 +56,14 @@ private:
 	bool eventEOF(int k, struct kevent &event);
 	bool eventFilterTimer(int k, struct kevent &event);
 	void requestHandler(const HTTPRequest &request, const int &client_fd, int k);
-	void getResponse(ResponseData *response);
-	void postResponse(ResponseData *response);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
 	std::string errorPageGenerator(int errorCode);
+	std::string uploadPageGenerator(std::string executePath);
 	void errorResponse(ResponseData *response, int errorCode);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked);
 	std::string generateErrorHeader(int status_code, const std::string &message);
 	bool isCGIRequest(ResponseData &response);
-	std::string getCGILocation(ResponseData *response);
 	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
 	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
@@ -82,6 +81,7 @@ private:
 	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
 	std::string extractSubstring(const std::string &A, const std::string &B, const std::string &C);
 	void setResponse(ResponseData *response, const std::string &resource_content);
+	void sendResponse(ResponseData *response, const HTTPRequest &request);
 
 public:
 	Worker(Master &master);
