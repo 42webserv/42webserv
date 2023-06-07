@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:08:49 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:22:52 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,7 +167,7 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		}
 		if (requestBodySize > clientMaxBodySize)
 		{
-			std::cout << "It have too big body than client_max_body_size" << std::endl;
+			std::cout << "It has too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
 			return false;
 		}
