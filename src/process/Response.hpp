@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 18:50:58 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:09:12 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ private:
     void setUpReturnState(ResponseData *response);
     void setUpCgiPath(ResponseData *respone);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
-    std::string findMimeType(const std::string &path, Config &config);
+    std::string findMimeType(const std::string &path, const Config &config);
     std::string getPath(const HTTPRequest &request, const ResponseData &response);
 
 public:
@@ -74,7 +74,7 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
-    ResponseData *getResponseData(const HTTPRequest &request, const int &clientFd, Config &config, Server &serverManger);
+    ResponseData *getResponseData(const HTTPRequest &request, const int &clientFd, const Config &config, Server &serverManger);
 };
 
 /*

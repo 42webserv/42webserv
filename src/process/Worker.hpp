@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:51:47 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:08:20 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,11 +39,10 @@ class Worker
 private:
 	const int &kq;
 	const Signal signal;
+	const Config &config;
 	std::vector<struct kevent> &events;
-	Config &config;
 	Server &server;
 	HTTPRequestParser parser;
-	std::vector<Directive> listen;
 
 	void eventEOF(Socket &socket, struct kevent &event);
 	void eventFilterRead(Socket &socket, struct kevent &event);

@@ -6,14 +6,14 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 22:46:20 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:13:45 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
 #include "Worker.hpp"
 
-Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), events(master.getEvents()), config(master.getConfig()), server(master.getServer()) {}
+Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
 
 Worker::~Worker() {}
 
@@ -112,7 +112,6 @@ void Worker::run()
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
-	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
 	while (true)
 	{
 		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), NULL);

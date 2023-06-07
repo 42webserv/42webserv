@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 18:50:53 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:11:24 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ int Response::getSuitableServer(int port, Server &serverManager)
  * @param serverManger 서버 관리 클래스
  * @return 전부 채워진 ResponseDate구조체
  */
-ResponseData *Response::getResponseData(const HTTPRequest &request, const int &clientFd, Config &config, Server &serverManger)
+ResponseData *Response::getResponseData(const HTTPRequest &request, const int &clientFd, const Config &config, Server &serverManger)
 {
     int index = getSuitableServer(request.port, serverManger);
     if (index < 0)
@@ -143,7 +143,7 @@ std::string Response::getPath(const HTTPRequest &request, const ResponseData &re
     return (path);
 }
 
-std::string Response::findMimeType(const std::string &path, Config &config)
+std::string Response::findMimeType(const std::string &path, const Config &config)
 {
     MimeTypesParser mime(config);
     std::istringstream iss(path);
