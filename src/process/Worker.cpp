@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:08:49 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:31:49 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == DELETE) // TODO DELETE도 처리해주나
+	if (response->method == GET || response->method == POST || response->method == HEAD) // TODO DELETE도 처리해주나
 		sendResponse(response, request);
 	else if (response->method == PUT)
 	{
@@ -333,7 +333,7 @@ bool Worker::isCGIRequest(ResponseData &response)
 		// ./src/cgi-bin/src/cgi-bin/upload.py
 		if (path == "upload") // uploadFile
 		{
-			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
+			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			ftSend(response, response_header);
@@ -394,18 +394,6 @@ void Worker::deleteResponse(ResponseData *response)
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
-}
-
-/**
- *
- *
- * @param client_fd 브라우저 포트번호
- */
-std::string Worker::uploadPageGenerator(std::string executePath)
-{
-	std::stringstream broadHtml;
-	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
-	return broadHtml.str();
 }
 
 /**

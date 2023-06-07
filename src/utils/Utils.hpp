@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 15:06:34 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:31:23 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ public:
     static void deleteTimer(const int kq, int fd);
     static std::string getExpiryDate(int secondsToAdd);
     static bool needBody(const std::string &method);
+    static std::string uploadPageGenerator(std::string executePath);
 
     static int ftStoi(const std::string &str);
     template <typename T>

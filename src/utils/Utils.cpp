@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 14:50:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:31:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,6 +93,7 @@ std::string Utils::getExpiryDate(int secondsToAdd)
     std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
     return std::string(buffer);
 }
+
 bool Utils::needBody(const std::string &method)
 {
     if (method.empty())
@@ -100,4 +101,16 @@ bool Utils::needBody(const std::string &method)
     if (isEqual(method, POST) || isEqual(method, PUT))
         return true;
     return false;
+}
+
+/**
+ *
+ *
+ * @param client_fd 브라우저 포트번호
+ */
+std::string Utils::uploadPageGenerator(std::string executePath)
+{
+    std::stringstream broadHtml;
+    broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
+    return broadHtml.str();
 }
