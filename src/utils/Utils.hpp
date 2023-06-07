@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 15:06:34 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:50:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,8 +42,7 @@ public:
     static size_t minPos(size_t p1, size_t p2, size_t p3);
     static std::string toHexString(size_t value);
     static std::string errorPageGenerator(ResponseData *response, int errorCode);
-    static void setTimer(const int kq, int fd, int timeout);
-    static void deleteTimer(const int kq, int fd);
+    static void setTimer(const int &kq, const int &fd, const int &timeout);
     static std::string getExpiryDate(int secondsToAdd);
     static bool needBody(const std::string &method);
 

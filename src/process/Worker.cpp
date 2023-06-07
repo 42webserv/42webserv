@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:22:52 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:40:32 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,6 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 	const int &fd = event.ident;
 
 	std::cout << fd << " is time over" << std::endl;
-	Utils::deleteTimer(kq, fd);
 	socket.disconnectClient(event);
 }
 
