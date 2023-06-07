@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:04:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:12:28 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,9 @@ public:
     static std::string uploadPageGenerator(std::string executePath);
     static std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
     static std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value);
+    static const std::string getContentType(const HTTPRequest &request);
+    static std::string lower(const std::string &s);
+    static bool isEqual(const std::string &s1, const std::string &s2);
 
     static int ftStoi(const std::string &str);
     template <typename T>

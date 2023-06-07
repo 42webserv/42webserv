@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/07 15:04:12 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:10:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 		this->envp_["CONTENT_LENGTH"] = Utils::ftToString(request.body.length());
 	// this->envp_["CONTENT_LENGTH"] = tempStr;
 	// this->envp_["CONTENT_LENGTH"] = Utils::ftToString(request.body.length());
-	this->envp_["CONTENT_TYPE"] = getContentType(request);
+	this->envp_["CONTENT_TYPE"] = Utils::getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
 	this->envp_["PATH_INFO"] = request.path;
 	// this->envp_["PATH_TRANSLATED"] = request.path;

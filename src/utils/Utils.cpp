@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:04:17 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:12:23 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,15 +94,6 @@ std::string Utils::getExpiryDate(int secondsToAdd)
     return std::string(buffer);
 }
 
-bool Utils::needBody(const std::string &method)
-{
-    if (method.empty())
-        return false;
-    if (isEqual(method, POST) || isEqual(method, PUT))
-        return true;
-    return false;
-}
-
 /**
  *
  *
@@ -133,4 +124,50 @@ std::vector<Directive>::const_iterator Utils::findDirectiveNameValue(const std::
             return it;
     }
     return directives.end();
+}
+
+/**
+ * HTTP 요청 메세지에서 Content-Type 헤더의 값을 반환
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return 문자열의 Content-Type 값 혹은 기본값
+ */
+const std::string Utils::getContentType(const HTTPRequest &request)
+{
+    const std::map<std::string, std::string> &headers = request.headers;
+
+    for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+    {
+        if (Utils::isEqual(it->first, "Content-Type"))
+            return it->second;
+    }
+    return "text/plain";
+}
+
+bool Utils::needBody(const std::string &method)
+{
+    if (method.empty())
+        return false;
+    if (Utils::isEqual(method, POST) || Utils::isEqual(method, PUT))
+        return true;
+    return false;
+}
+
+std::string Utils::lower(const std::string &s)
+{
+    std::string lowerS = s;
+
+    for (size_t i = 0; i < lowerS.size(); i++)
+    {
+        lowerS[i] = std::tolower(lowerS[i]);
+    }
+    return lowerS;
+}
+
+bool Utils::isEqual(const std::string &s1, const std::string &s2)
+{
+    std::string lowerS1 = lower(s1);
+    std::string lowerS2 = lower(s2);
+
+    return lowerS1 == lowerS2;
 }
