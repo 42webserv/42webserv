@@ -6,12 +6,11 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:22:07 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "commonConfig.hpp"
-#include "commonProcess.hpp"
 #include "Utils.hpp"
 #include "HTTPRequestParser.hpp"
 

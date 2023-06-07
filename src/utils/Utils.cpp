@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:20:20 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:25:27 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -230,4 +230,31 @@ bool Utils::isMethod(const std::string &method)
         if (method == methods[i])
             return true;
     return false;
+}
+
+/**
+ * @brief Send response to client
+ * @param socket
+ * @param buffer
+ */
+void Utils::ftSend(const int &socket, const std::string &buffer)
+{
+    if (buffer.empty())
+        return;
+    send(socket, buffer.c_str(), buffer.length(), 0);
+}
+
+/**
+ * @brief Send response to client
+ * @param response
+ * @param contents
+ */
+void Utils::ftSend(const ResponseData *response, const std::string &contents)
+{
+    Utils::ftSend(response->clientFd, contents);
+}
+
+void Utils::ftSend(const ResponseData &response, const std::string &contents)
+{
+    Utils::ftSend(response.clientFd, contents);
 }

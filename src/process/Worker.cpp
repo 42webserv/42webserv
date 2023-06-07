@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:21:45 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:27:19 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,8 +226,8 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
 		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		std::string response_header = generateHeader(response_content, "text/html", 200, response);
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		Utils::ftSend(response, response_header);
+		Utils::ftSend(response, response_content);
 	}
 	else if (response->method == DELETE)
 	{
@@ -258,7 +258,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 		if (tmpIdx != std::string::npos)
 			resourceContent = resourceContent.substr(tmpIdx + 4);
-		ftSend(response, generateHeader(resourceContent, "text/html", 200, response));
+		Utils::ftSend(response, generateHeader(resourceContent, "text/html", 200, response));
 	}
 	else
 	{
@@ -269,7 +269,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		}
 		else
 			resourceContent = Utils::readFile(response->resourcePath);
-		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
+		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
 	}
 	if (response->chunked)
 	{
@@ -281,12 +281,12 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 			else
 				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
 			chunkData = Utils::toHexString(content.length()) + "\r\n" + content + "\r\n";
-			ftSend(response, chunkData);
+			Utils::ftSend(response, chunkData);
 		}
-		ftSend(response, "0\r\n\r\n");
+		Utils::ftSend(response, "0\r\n\r\n");
 	}
 	else
-		ftSend(response, resourceContent);
+		Utils::ftSend(response, resourceContent);
 }
 
 /**
@@ -336,8 +336,8 @@ bool Worker::isCGIRequest(ResponseData &response)
 			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
-			ftSend(response, response_header);
-			ftSend(response, uploadContent);
+			Utils::ftSend(response, response_header);
+			Utils::ftSend(response, uploadContent);
 		}
 		return true;
 	}
@@ -364,8 +364,8 @@ void Worker::putResponse(ResponseData *response)
 		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
 		response->chunked = false;
 		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
-		ftSend(response, resource_header);
-		ftSend(response, resource_content);
+		Utils::ftSend(response, resource_header);
+		Utils::ftSend(response, resource_content);
 	}
 	else
 	{
@@ -391,8 +391,8 @@ void Worker::deleteResponse(ResponseData *response)
 		std::string response_content = "Resource deleted successfully";
 		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		std::string response_header = generateHeader(response_content, "text/html", 200, response);
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		Utils::ftSend(response, response_header);
+		Utils::ftSend(response, response_content);
 	}
 }
 
@@ -416,8 +416,8 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 			errorContent = Utils::errorPageGenerator(response, errorCode);
 	}
 	response->chunked = false;
-	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
-	ftSend(response->clientFd, errorContent);
+	Utils::ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
+	Utils::ftSend(response->clientFd, errorContent);
 }
 
 /**
@@ -487,8 +487,8 @@ void Worker::broad(ResponseData *response)
 	std::string contentType = mime.getMimeType("html");
 	// std::string response_header = generateHeader(tmp, contentType, 200, false);
 	std::string response_header = generateHeader(tmp, contentType, 200, response);
-	ftSend(response, response_header);
-	ftSend(response, tmp); // 완성된 html 을 body로 보냄
+	Utils::ftSend(response, response_header);
+	Utils::ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
 
 bool Worker::checkHeaderIsKeepLive(UData *udata)
@@ -627,7 +627,7 @@ void Worker::redirection(ResponseData *response)
 	oss << "HTTP/1.1 " << response->returnState << " " << response->statusCodeMap[Utils::ftStoi(response->returnState)] << CRLF;
 	oss << "Location: " << response->redirect << CRLF;
 	oss << "Connection: close" << CRLF2;
-	ftSend(response->clientFd, oss.str());
+	Utils::ftSend(response->clientFd, oss.str());
 	return;
 }
 

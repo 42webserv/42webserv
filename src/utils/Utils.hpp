@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:20:43 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:24:47 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,18 @@
 #include <string>
 #include <stdio.h>
 #include <sstream>
+#include <algorithm>
 #include "Response.hpp"
+
+#define GET "GET"
+#define HEAD "HEAD"
+#define POST "POST"
+#define PUT "PUT"
+#define PATCH "PATCH"
+#define DELETE "DELETE"
+#define CONNECT "CONNECT"
+#define TRACE "TRACE"
+#define OPTIONS "OPTIONS"
 
 struct ResponseData;
 
@@ -57,6 +68,10 @@ public:
     static bool isDirectory(const std::string &path);
     static bool isFile(const std::string &path);
     static bool isMethod(const std::string &method);
+
+    static void ftSend(const int &socket, const std::string &buffer);
+    static void ftSend(const ResponseData &response, const std::string &contents);
+    static void ftSend(const ResponseData *response, const std::string &contents);
 
     static int ftStoi(const std::string &str);
     template <typename T>

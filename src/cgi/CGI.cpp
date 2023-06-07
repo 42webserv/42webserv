@@ -6,12 +6,11 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/07 17:10:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGI.hpp"
-#include "commonProcess.hpp"
 
 // CGI 환경변수 세팅
 CGI::CGI(const HTTPRequest &request) : body_(request.body)

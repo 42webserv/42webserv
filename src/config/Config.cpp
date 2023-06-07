@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/06/07 17:21:39 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 #include <stack>
 #include <sys/stat.h>
 #include "CheckConfigValid.hpp"
-#include "commonProcess.hpp"
 #include "Utils.hpp"
 #include "commonConfig.hpp"
 #include "Config.hpp"
