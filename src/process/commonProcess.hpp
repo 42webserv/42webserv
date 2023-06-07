@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:16:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:20:30 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,5 @@ struct ResponseData;
 void ftSend(const int &socket, const std::string &buffer);
 void ftSend(const ResponseData &response, const std::string &contents);
 void ftSend(const ResponseData *response, const std::string &contents);
-bool isDirectory(const std::string &path);
-bool isFile(const std::string &path);
-bool isMethod(const std::string &method);
 
 #endif

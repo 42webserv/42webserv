@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:18:18 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:21:45 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -633,7 +633,7 @@ void Worker::redirection(ResponseData *response)
 
 bool Worker::invalidResponse(ResponseData *response)
 {
-	if (!isFile(response->resourcePath))
+	if (!Utils::isFile(response->resourcePath))
 	{
 		if (Utils::needBody(response->method))
 

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:16:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:20:43 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,9 @@ public:
     static bool isEqual(const std::string &s1, const std::string &s2);
     static bool writeFile(const std::string &path, const std::string &contents);
     static std::string readFile(const std::string &path);
+    static bool isDirectory(const std::string &path);
+    static bool isFile(const std::string &path);
+    static bool isMethod(const std::string &method);
 
     static int ftStoi(const std::string &str);
     template <typename T>

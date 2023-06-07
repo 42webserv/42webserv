@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:15:22 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:20:20 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,4 +192,42 @@ std::string Utils::readFile(const std::string &path)
     std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
     return contents;
+}
+
+/**
+ * @brief Check if the path is a directory
+ * @param path
+ */
+bool Utils::isDirectory(const std::string &path)
+{
+    struct stat st;
+
+    stat(path.c_str(), &st);
+    if (S_ISDIR(st.st_mode))
+        return true;
+    return false;
+}
+
+/**
+ * @brief Check if the path is a file
+ * @param path
+ */
+bool Utils::isFile(const std::string &path)
+{
+    struct stat st;
+
+    stat(path.c_str(), &st);
+    if (S_ISREG(st.st_mode))
+        return true;
+    return false;
+}
+
+bool Utils::isMethod(const std::string &method)
+{
+    const std::string methods[] = {GET, HEAD, POST, PUT, PATCH, DELETE, CONNECT, TRACE, OPTIONS};
+
+    for (size_t i = 0; i < sizeof(methods) / sizeof(methods[0]); i++)
+        if (method == methods[i])
+            return true;
+    return false;
 }

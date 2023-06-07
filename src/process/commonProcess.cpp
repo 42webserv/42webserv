@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:15:22 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:20:25 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,40 +40,4 @@ void ftSend(const ResponseData &response, const std::string &contents)
 	ftSend(response.clientFd, contents);
 }
 
-/**
- * @brief Check if the path is a directory
- * @param path
- */
-bool isDirectory(const std::string &path)
-{
-	struct stat st;
 
-	stat(path.c_str(), &st);
-	if (S_ISDIR(st.st_mode))
-		return true;
-	return false;
-}
-
-/**
- * @brief Check if the path is a file
- * @param path
- */
-bool isFile(const std::string &path)
-{
-	struct stat st;
-
-	stat(path.c_str(), &st);
-	if (S_ISREG(st.st_mode))
-		return true;
-	return false;
-}
-
-bool isMethod(const std::string &method)
-{
-	const std::string methods[] = {GET, HEAD, POST, PUT, PATCH, DELETE, CONNECT, TRACE, OPTIONS};
-
-	for (size_t i = 0; i < sizeof(methods) / sizeof(methods[0]); i++)
-		if (method == methods[i])
-			return true;
-	return false;
-}
