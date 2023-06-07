@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:07:47 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:47:11 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,10 @@
 #include "commonProcess.hpp"
 #include "Utils.hpp"
 #include "HTTPRequestParser.hpp"
+
+#define TRANSFER_ENCODING "Transfer-Encoding"
+#define CONTENT_LENGTH "Content-Length"
+#define CHUNKED "chunked"
 
 HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 
@@ -207,9 +211,6 @@ HTTPRequest *HTTPRequestParser::makeRequest()
     request->chunked = false;
     if (request->method == HEAD)
         return request;
-    // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-    if (headers_.size() == 0) // TODO 이상한 요청도 테스트 해봐야 할 듯
-        return request;
     request->headers = headers_;
     request->port = Utils::ftStoi(port_);
     if (request->port < 1)
@@ -294,80 +295,74 @@ bool HTTPRequestParser::parseBody()
 {
     if (state_ != BODY)
         return false;
-    std::map<std::string, std::string>::iterator it = headers_.find("Transfer-Encoding");
-    if (it != headers_.end() && it->second == "chunked")
+    checkHeaders();
+    for (std::map<std::string, std::string>::iterator it = headers_.begin(); it != headers_.end(); it++)
     {
-        // chunked 인코딩이 적용된 경우
-        while (buffer_.size() != bufferIndex)
+        const std::pair<std::string, std::string> &header = *it;
+        if (isEqual(header.first, TRANSFER_ENCODING))
         {
-            size_t pos = buffer_.find(CRLF, bufferIndex); // 청크의 크기를 나타내는 줄바꿈 위치 찾기
-            if (pos == std::string::npos)
-                return false;
-            std::string chunk_size_str = buffer_.substr(bufferIndex, pos - bufferIndex); // 청크의 크기를 나타내는 문자열
-            bufferIndex = pos + 2;
-
-            if (chunk_size_str.empty())
-                break; // 마지막 청크를 나타내는 빈 문자열인 경우 종료
-
-            if (buffer_.length() > 2 && buffer_.substr(buffer_.length() - 6, 2) != "\n0")
-                return false;
-
-            // chunk_size_str을 숫자로 변환
-            std::istringstream iss(chunk_size_str);
-            size_t chunk_size;
-            if (!(iss >> std::hex >> chunk_size))
-                return false;
-
-            if (chunk_size == 0)
+            if (isEqual(header.second, CHUNKED))
             {
-                buffer_.clear();
-                state_ = COMPLETE;
-                bodySize_ = body_.length();
-                headers_.insert(std::make_pair("content-length", Utils::ftToString(bodySize_)));
-                return true;
+                // chunked 인코딩이 적용된 경우
+                while (buffer_.size() != bufferIndex)
+                {
+                    size_t pos = buffer_.find(CRLF, bufferIndex); // 청크의 크기를 나타내는 줄바꿈 위치 찾기
+                    if (pos == std::string::npos)
+                        return false;
+                    std::string chunk_size_str = buffer_.substr(bufferIndex, pos - bufferIndex); // 청크의 크기를 나타내는 문자열
+                    bufferIndex = pos + 2;
+
+                    if (chunk_size_str.empty())
+                        break; // 마지막 청크를 나타내는 빈 문자열인 경우 종료
+
+                    if (buffer_.length() > 2 && buffer_.substr(buffer_.length() - 6, 2) != "\n0")
+                        return false;
+
+                    // chunk_size_str을 숫자로 변환
+                    std::istringstream iss(chunk_size_str);
+                    size_t chunk_size;
+                    if (!(iss >> std::hex >> chunk_size))
+                        return false;
+
+                    if (chunk_size == 0)
+                    {
+                        buffer_.clear();
+                        state_ = COMPLETE;
+                        bodySize_ = body_.length();
+                        headers_.insert(std::make_pair("content-length", Utils::ftToString(bodySize_)));
+                        return true;
+                    }
+
+                    if (buffer_.size() < chunk_size + 2)
+                        return false;
+
+                    std::string chunk_data = buffer_.substr(bufferIndex, chunk_size); // 청크의 데이터 추출
+                    bufferIndex += chunk_size + 2;
+                    body_ += chunk_data; // body에 청크 데이터 추가
+
+                    if (buffer_.size() == 0)
+                        return false;
+                }
             }
-
-            if (buffer_.size() < chunk_size + 2)
-                return false;
-
-            std::string chunk_data = buffer_.substr(bufferIndex, chunk_size); // 청크의 데이터 추출
-            bufferIndex += chunk_size + 2;
-            body_ += chunk_data; // body에 청크 데이터 추가
-
-            if (buffer_.size() == 0)
-                return false;
         }
-    }
-    else
-    {
-        // chunked 인코딩이 적용되지 않은 경우
-        std::map<std::string, std::string>::iterator contentLengthIt = headers_.find("content-length");
-        if (contentLengthIt != headers_.end())
+        else if (isEqual(header.first, CONTENT_LENGTH))
         {
-            int content_length = Utils::ftStoi(contentLengthIt->second);
-            if (buffer_.empty())
-            {
-                state_ = COMPLETE;
-                return true;
-            }
-            if (buffer_.size() < static_cast<size_t>(content_length))
-                return false;
-            body_ = buffer_.substr(bufferIndex, content_length);
-            bufferIndex += content_length;
-            bodySize_ = content_length;
-        }
-        else
-        {
-            body_ = buffer_.substr(bufferIndex, buffer_.size());
+            int contentLength = Utils::ftStoi(header.second);
+
+            body_ = buffer_.substr(bufferIndex, contentLength);
             bodySize_ = body_.length();
-            headers_.insert(std::make_pair("content-length", Utils::ftToString(bodySize_)));
-            buffer_.clear();
-            state_ = COMPLETE;
-            return true;
+            if (bodySize_ != contentLength)
+                throw ParseException();
+            bufferIndex += bodySize_;
+            // TODO Bad request로 빠져야 함
+            // body_ = buffer_.substr(bufferIndex, buffer_.size());
+            // bodySize_ = body_.length();
+            // headers_.insert(std::make_pair("content-length", Utils::ftToString(bodySize_)));
+            // buffer_.clear();
+            // state_ = COMPLETE;
+            // return true;
         }
     }
-    if (body_.empty())
-        return false;
     state_ = COMPLETE;
     return true;
 }
@@ -382,12 +377,38 @@ void HTTPRequestParser::reset()
     query_.clear();
     addr_.clear();
     name_.clear();
-    port_.clear();
+    port_ = "-1";
     path_.clear();
     http_version_.clear();
     chunked_data = "";
     bufferIndex = 0;
     bodySize_ = -1;
+}
+
+void HTTPRequestParser::checkHeaders()
+{
+    if (headers_.size() == 0)
+        throw ParseException();
+    for (std::map<std::string, std::string>::iterator it = headers_.begin(); it != headers_.end(); it++)
+    {
+        const std::pair<std::string, std::string> &header = *it;
+        if (header.second.empty())
+            throw ParseException();
+        if (isEqual(header.first, TRANSFER_ENCODING))
+        {
+            if (isEqual(header.second, CHUNKED))
+            {
+                const std::string &body = buffer_.substr(bufferIndex, buffer_.size() - bufferIndex);
+                if (body.length() < 1)
+                    throw ParseException();
+            }
+        }
+        else if (isEqual(header.first, CONTENT_LENGTH))
+        {
+            if (Utils::ftStoi(header.second) < 1)
+                throw ParseException();
+        }
+    }
 }
 
 /**
@@ -407,11 +428,6 @@ void HTTPRequestParser::printResult(const HTTPRequest &result)
         std::cout << "Header: " << it->first << " = " << it->second << std::endl;
 
     std::cout << "Body: " << result.body << std::endl;
-}
-
-int HTTPRequestParser::getPort(const HTTPRequest &result)
-{
-    return result.port;
 }
 
 const char *HTTPRequestParser::ParseException::what() const throw()

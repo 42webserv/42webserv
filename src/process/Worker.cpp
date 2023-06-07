@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:40:32 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:48:09 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -423,7 +423,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	{
 		const std::string errorPath = response->server.root + it->second;
 		errorContent = readFile(errorPath);
-		if (errorContent == "")
+		if (errorContent.empty())
 			errorContent = Utils::errorPageGenerator(response, errorCode);
 	}
 	response->chunked = false;
