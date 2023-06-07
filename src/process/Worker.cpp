@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 11:13:00 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 11:16:10 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -376,7 +376,7 @@ void Worker::putResponse(ResponseData *response)
 		std::string resourceContent = readFile(response->resourcePath);
 		if (resourceContent.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resource_content, "text/html", 201, false, response->udata);
+		std::string resource_header = generateHeader(resourceContent, "text/html", 201, false, response->udata);
 		ftSend(response, resource_header);
 		ftSend(response, resourceContent);
 	}
@@ -724,14 +724,14 @@ bool Worker::invalidResponse(ResponseData *response)
 	return false;
 }
 
-bool Worker::hasClientFd(const int &k)
-{
-	Socket *socket = sockets[k];
-	std::vector<int>::iterator it = std::find(socket->_clientFds.begin(), socket->_clientFds.end(), fd);
-	if (it == socket->_clientFds.end())
-		return false;
-	return true;
-}
+// bool Worker::hasClientFd(const int &k)
+// {
+// 	Socket *socket = sockets[k];
+// 	std::vector<int>::iterator it = std::find(socket->_clientFds.begin(), socket->_clientFds.end(), fd);
+// 	if (it == socket->_clientFds.end())
+// 		return false;
+// 	return true;
+// }
 
 std::string Worker::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
 {
