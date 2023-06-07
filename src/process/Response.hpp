@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 11:13:13 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 15:21:29 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include "Server.hpp"
 #include "Worker.hpp"
 
+struct ServerInfo;
+
 struct ResponseData
 {
     int clientFd;
@@ -27,6 +29,7 @@ struct ResponseData
     std::string resourcePath;
     std::string contentType;
     std::string method;
+    std::map<int, std::string> statusCodeMap;
     std::vector<std::string> limitExcept;
     std::vector<std::string> cgiPath;
     std::map<std::string, std::string> headers;
@@ -49,6 +52,7 @@ struct ResponseData
 class Response
 {
 private:
+    void initStatusCodeMap(std::map<int, std::string> &statusCodeMap);
     int getSuitableServer(int port, Server &serverManager);
     std::string getRootDirectory(const HTTPRequest &request, const ServerInfo &server);
     std::string delQuery(std::string path);

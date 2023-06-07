@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/06/02 19:55:19 by sunhwang         ###   ########.fr        #
+#    Updated: 2023/06/07 15:03:56 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,7 +33,7 @@ SRC_ERROR	= commonError
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
 SRC_PROCESS	= commonProcess Master Worker Response
 SRC_SOCKET	= Socket
-SRC_UTILS	= commonUtils Signal
+SRC_UTILS	= Signal Utils
 SRC_CGI		= CGI
 SRC_SERVER	= Server ServerInfo
 

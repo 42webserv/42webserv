@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/07 11:13:53 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 15:22:15 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,24 @@ CGI::~CGI() {}
 
 void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인해서 받아오기
 {
-	if (ftToString(request.body.length()) == "0")
+	// std::map<std::string, std::string> HTTPRequest.headers;//HTTPRequestParser확인하기
+	// const std::string &method = request.method;
+	//  std::size_t content_length = request.getContentLength(); // contentlength
+	//  if (method == "POST" && content_length > 0)
+	//  {
+	//  	headers["CONTENT_LENGTH"] = toString(content_length);
+	//  }
+	// tostring 수정 과정
+	// this->envp_["AUTH_TYPE"] = "";
+	// char tempBuf[20];
+	// std::sprintf(tempBuf, "%lu", request.body.length());
+	// std::string tempStr(tempBuf);
+	if (Utils::ftToString(request.body.length()) == "0")
 		this->envp_["CONTENT_LENGTH"] = "-1";
 	else
-		this->envp_["CONTENT_LENGTH"] = ftToString(request.body.length());
+		this->envp_["CONTENT_LENGTH"] = Utils::ftToString(request.body.length());
+	// this->envp_["CONTENT_LENGTH"] = tempStr;
+	// this->envp_["CONTENT_LENGTH"] = Utils::ftToString(request.body.length());
 	this->envp_["CONTENT_TYPE"] = getContentType(request);
 	this->envp_["GATEWAY_INTERFACE"] = "CGI/1.1";
 	this->envp_["PATH_INFO"] = request.path;
@@ -42,7 +56,7 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	this->envp_["REQUEST_URI"] = request.path;	//
 	this->envp_["SCRIPT_NAME"] = "webserv/1.1"; //
 	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
-	this->envp_["SERVER_PORT"] = ftToString(request.port); // 요청을 수신한 서버의 포트 번호.
+	this->envp_["SERVER_PORT"] = Utils::ftToString(request.port); // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
 };

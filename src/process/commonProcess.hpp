@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonProcess.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 14:36:47 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:11:20 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,14 +26,19 @@
 #define TRACE "TRACE"
 #define OPTIONS "OPTIONS"
 
+struct ResponseData;
+
 void ftSend(const int &socket, const std::string &buffer);
 void ftSend(const ResponseData &response, const std::string &contents);
-void ftSend(const ResponseData *response, const std::string &response_header);
+void ftSend(const ResponseData *response, const std::string &contents);
 bool isDirectory(const std::string &path);
 bool isFile(const std::string &path);
 bool isMethod(const std::string &method);
 bool writeFile(const std::string &path, const std::string &contents);
 std::string readFile(const std::string &path);
 const std::string getContentType(const HTTPRequest &request);
+bool isEqual(const std::string &s1, const std::string &s2);
+std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
+std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value);
 
 #endif

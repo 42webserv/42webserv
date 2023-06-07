@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 14:49:18 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 15:24:32 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 	const int &fd = event.ident;
 
 	std::cout << fd << " is time over" << std::endl;
-	deleteTimer(fd);
+	Utils::deleteTimer(kq, fd);
 	socket.disconnectClient(event);
 }
 
@@ -175,13 +175,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 	return true;
 }
 
-std::string toHexString(size_t value)
-{
-	std::stringstream ss;
-	ss << std::hex << value;
-	return ss.str();
-}
-
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -231,7 +224,8 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false, udata);
+		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, response);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -262,8 +256,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	{
 		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		resourceContent = response->body;
-		std::cout << "body size : " << response->bodySize << std::endl;
-		ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response->chunked, response->udata));
+		ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
 	}
 	else
 	{
@@ -274,7 +267,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		}
 		else
 			resourceContent = readFile(response->resourcePath);
-		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked, response->udata));
+		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
 	}
 	if (response->chunked)
 	{
@@ -285,7 +278,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 				content = resourceContent.substr(contentIndex * CHUNK_SIZE, resourceContent.length() - contentIndex * CHUNK_SIZE);
 			else
 				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
-			chunkData = toHexString(content.length()) + "\r\n" + content + "\r\n";
+			chunkData = Utils::toHexString(content.length()) + "\r\n" + content + "\r\n";
 			ftSend(response, chunkData);
 		}
 		ftSend(response, "0\r\n\r\n");
@@ -318,7 +311,7 @@ std::string Worker::getCGIPath(ResponseData &response)
 	return "";
 }
 
-bool Worker::isCGIRequest(const ResponseData &response)
+bool Worker::isCGIRequest(ResponseData &response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
@@ -338,10 +331,9 @@ bool Worker::isCGIRequest(const ResponseData &response)
 		// ./src/cgi-bin/src/cgi-bin/upload.py
 		if (path == "upload") // uploadFile
 		{
-			// std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
-			// std::string uploadContent = uploadPageGenerator(getCGIPath(response)); // root + upload + .py
 			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
-			std::string response_header = generateHeader(uploadContent, "text/html", 200, false, response.udata);
+			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
+			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			ftSend(response, response_header);
 			ftSend(response, uploadContent);
 		}
@@ -367,7 +359,9 @@ void Worker::putResponse(ResponseData *response)
 		std::string resourceContent = readFile(response->resourcePath);
 		if (resourceContent.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resourceContent, "text/html", 201, false, response->udata);
+		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
+		response->chunked = false;
+		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
 		ftSend(response, resource_header);
 		ftSend(response, resourceContent);
 	}
@@ -393,7 +387,8 @@ void Worker::deleteResponse(ResponseData *response)
 	{
 		// 삭제에 성공한 경우
 		std::string response_content = "Resource deleted successfully";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false, response->udata);
+		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, response);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -412,18 +407,6 @@ std::string Worker::uploadPageGenerator(std::string executePath)
 }
 
 /**
- * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
- *
- * @param errorCode 에러 코드
- */
-std::string Worker::errorPageGenerator(int errorCode)
-{
-	std::stringstream broadHtml;
-	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<h1>This is " << errorCode << " Page.</h1>\n</body>\n</html>";
-	return broadHtml.str();
-}
-
-/**
  * 모든 에러에 대한 에러 페이지를 띄워주는 함수
  *
  * @param response 응답에 사용될 구조체
@@ -434,15 +417,16 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	std::string errorContent;
 	std::map<int, std::string>::iterator it = response->server.errorPage.find(errorCode);
 	if (it == response->server.errorPage.end())
-		errorContent = errorPageGenerator(errorCode);
+		errorContent = Utils::errorPageGenerator(response, errorCode);
 	else
 	{
-		const std::string errorPath = response->root + it->second;
+		const std::string errorPath = response->server.root + it->second;
 		errorContent = readFile(errorPath);
 		if (errorContent == "")
-			errorContent = errorPageGenerator(errorCode);
+			errorContent = Utils::errorPageGenerator(response, errorCode);
 	}
-	ftSend(response->clientFd, generateErrorHeader(errorCode, errorContent));
+	response->chunked = false;
+	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
 	ftSend(response->clientFd, errorContent);
 }
 
@@ -453,20 +437,22 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked, UData *udata)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, ResponseData *response)
 {
 	std::ostringstream oss;
 
+	UData *udata = response->udata;
 	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
-	if (chunked)
+	if (response->chunked)
 		oss << "Transfer-Encoding: chunked" << CRLF;
 	else
 		oss << "Content-Length: " << content.length() << CRLF;
 	if (udata->alreadySessionSend == true && udata->sessionID != "" && udata->wantToDeleteSessionInCookie == true)
 	{
-		std::string expireTime = getExpiryDate(-3600);
-		oss << "Set-Cookie: sessionid=deleted"
+		std::string expireTime = Utils::getExpiryDate(-3600);
+		oss << "Set-Cookie: sessionid="
+			<< "deleted"
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		udata->alreadySessionSend = false;
 		udata->expireTime = "";
@@ -475,7 +461,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	}
 	else if (udata->alreadySessionSend == false && udata->sessionID != "")
 	{
-		std::string expireTime = getExpiryDate(3600);
+		std::string expireTime = Utils::getExpiryDate(3600);
 		oss << "Set-Cookie: sessionid=" << udata->sessionID
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
 		udata->alreadySessionSend = true;
@@ -485,24 +471,6 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		oss << "Connection: keep-alive" << CRLF2;
 	else
 		oss << "Connection: close" << CRLF2;
-	return oss.str();
-}
-
-/**
- * response의 헤더에 적어줄 내용을 만듬
- *
- * @param request request 를 파싱완료한 구조체
- * @param content getResource함수에서 찾아온 내용을 가져옴
- * @return 최종완성된 헤더를 반환함
- */
-std::string Worker::generateErrorHeader(int status_code, const std::string &message)
-{
-	std::ostringstream oss;
-	oss << "HTTP/1.1 " << status_code << " OK" << CRLF;
-	oss << "Content-Length: " << message.length() << CRLF;
-	oss << "Content-Type: text/html" << CRLF;
-	;
-	oss << "Connection: close" << CRLF2;
 	return oss.str();
 }
 
@@ -527,7 +495,8 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType, 200, false, response->udata);
+	// std::string response_header = generateHeader(tmp, contentType, 200, false);
+	std::string response_header = generateHeader(tmp, contentType, 200, response);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
@@ -578,7 +547,7 @@ bool Worker::checkKeepLiveOptions(UData *udata)
 				timeout = options[i].substr(timeoutIdx + 8, options[i].length() - 1);
 				if (timeout.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				udata->timeout = ftStoi(timeout.c_str());
+				udata->timeout = Utils::ftStoi(timeout);
 				if (udata->timeout < 0)
 					return false;
 			}
@@ -587,7 +556,7 @@ bool Worker::checkKeepLiveOptions(UData *udata)
 				max = options[i].substr(maxIdx + 4, options[i].length() - 1);
 				if (max.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				udata->max = ftStoi(max.c_str());
+				udata->max = Utils::ftStoi(max);
 				if (udata->max < 0)
 					return false;
 			}
@@ -595,21 +564,6 @@ bool Worker::checkKeepLiveOptions(UData *udata)
 		return true;
 	}
 	return false;
-}
-
-void Worker::setTimer(int fd, int timeout)
-{
-	struct kevent event;
-	int timer_interval_ms = timeout * 1000;
-	EV_SET(&event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, NULL);
-	// events.push_back(event);
-}
-
-void Worker::deleteTimer(int fd)
-{
-	struct kevent event;
-	EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-	// events.push_back(event);
 }
 
 void Worker::registerKeepAlive(UData *udata, int clientFd)
@@ -620,21 +574,10 @@ void Worker::registerKeepAlive(UData *udata, int clientFd)
 		if (checkKeepLiveOptions(udata))
 		{
 			if (udata->timeout > 0)
-				setTimer(clientFd, udata->timeout);
+				Utils::setTimer(kq, clientFd, udata->timeout);
 		}
 		Socket::enableKeepAlive(clientFd);
 	}
-}
-
-std::string Worker::getExpiryDate(int secondsToAdd)
-{
-	std::time_t now = std::time(0);
-	std::tm *expiration = std::localtime(&now);
-	expiration->tm_sec += secondsToAdd;
-	std::mktime(expiration);
-	char buffer[80];
-	std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
-	return std::string(buffer);
 }
 
 void Worker::cookieCheck(UData *udata)
@@ -691,7 +634,7 @@ std::string Worker::generateSessionID(int length)
 void Worker::redirection(ResponseData *response)
 {
 	std::ostringstream oss;
-	oss << "HTTP/1.1 " << response->returnState << " ok" << CRLF;
+	oss << "HTTP/1.1 " << response->returnState << " " << response->statusCodeMap[Utils::ftStoi(response->returnState)] << CRLF;
 	oss << "Location: " << response->redirect << CRLF;
 	oss << "Connection: close" << CRLF2;
 	ftSend(response->clientFd, oss.str());
@@ -702,7 +645,8 @@ bool Worker::invalidResponse(ResponseData *response)
 {
 	if (!isFile(response->resourcePath))
 	{
-		if (needBody(response->method))
+		if (Utils::needBody(response->method))
+
 			return false;
 		if (response->autoindex)
 			broad(response);
@@ -716,26 +660,13 @@ bool Worker::invalidResponse(ResponseData *response)
 }
 
 //문자열 A에서 문자열 B와 C 사이의 문자열 추출
-std::string Worker::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
-{
-	size_t start = A.find(B);
-	if (start == std::string::npos)
-		return "";
-	start += B.length();
-	size_t end = A.find(C, start);
-	if (C == "\0")
-		return A.substr(start);
-	if (end == std::string::npos)
-		return "";
 
-	return A.substr(start, end - start);
-}
 
 //Response의 statusCode, contentType, charset, body 세팅
 void Worker::setResponse(ResponseData *response, const std::string &resourceContent)
 {
 	//Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
-	if (extractSubstring(resourceContent, "Status: ", "\0") == "")
+	if (Utils::extractSubstring(resourceContent, "Status: ", "\0") == "")
 	{
 		response->statusCode = 200;
 		response->contentType = "text/html";
@@ -744,9 +675,9 @@ void Worker::setResponse(ResponseData *response, const std::string &resourceCont
 	}
 	else
 	{
-		response->statusCode = ftStoi(extractSubstring(resourceContent, "Status: ", " OK"));
-		response->contentType = extractSubstring(resourceContent, "Content-Type: ", ";");
-		response->charset = extractSubstring(resourceContent, "charset=", CRLF);
-		response->body = extractSubstring(resourceContent, "\r\n\r\n", "\0");
+		response->statusCode = ftStoi(Utils::extractSubstring(resourceContent, "Status: ", " OK"));
+		response->contentType = Utils::extractSubstring(resourceContent, "Content-Type: ", ";");
+		response->charset = Utils::extractSubstring(resourceContent, "charset=", CRLF);
+		response->body = Utils::extractSubstring(resourceContent, "\r\n\r\n", "\0");
 	}
 }
