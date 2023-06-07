@@ -6,21 +6,18 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 20:42:13 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 14:31:22 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef Response_HPP
 #define Response_HPP
 
-#include "Master.hpp"
-#include "Signal.hpp"
-#include "Socket.hpp"
 #include "Config.hpp"
+#include "HTTPRequestParser.hpp"
+#include "MimeTypesParser.hpp"
 #include "Server.hpp"
 #include "Worker.hpp"
-#include "HTTPRequestParser.hpp"
-#include "CGI.hpp"
 
 struct ServerInfo;
 
@@ -45,6 +42,7 @@ struct ResponseData
     std::string body;
     size_t contentLength;
     ServerInfo server;
+    UData *udata;
     bool chunked;
     long long bodySize;
 };
@@ -63,8 +61,8 @@ private:
     void setUpReturnState(ResponseData *response);
     void setUpCgiPath(ResponseData *respone);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
-    std::string findMimeType(const std::string &path, Config &config);
-    std::string getPath(const HTTPRequest &request, ResponseData *response);
+    std::string findMimeType(const std::string &path, const Config &config);
+    std::string getPath(const HTTPRequest &request, const ResponseData &response);
 
 public:
     /*
@@ -80,7 +78,7 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
-    ResponseData *getResponseData(const HTTPRequest &request, const int &client_fd, Config &config, Server &serverManger);
+    ResponseData *getResponseData(const HTTPRequest &request, const int &clientFd, const Config &config, Server &serverManger);
 };
 
 /*

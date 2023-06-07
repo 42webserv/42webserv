@@ -6,10 +6,11 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/28 19:09:51 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/28 21:27:12 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/03 00:34:22 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <unistd.h>
 #include "Server.hpp"
 
 ServerInfo &ServerInfo::operator=(const ServerInfo &ref)
@@ -27,4 +28,15 @@ ServerInfo &ServerInfo::operator=(const ServerInfo &ref)
 		this->errorPage = ref.errorPage;
 	}
 	return (*this);
+}
+
+void ServerInfo::closeSockets() const
+{
+	for (std::vector<Socket *>::const_iterator it = this->sockets.begin(); it != this->sockets.end(); it++)
+	{
+		const Socket *socket = *it;
+		socket->closeClients();
+		close(socket->_serverFd);
+		delete socket;
+	}
 }

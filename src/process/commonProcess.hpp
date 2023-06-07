@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 17:19:43 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 14:43:13 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,11 @@
 #define TRACE "TRACE"
 #define OPTIONS "OPTIONS"
 
+struct ResponseData;
+
 void ftSend(const int &socket, const std::string &buffer);
+void ftSend(const ResponseData &response, const std::string &contents);
+void ftSend(const ResponseData *response, const std::string &response_header);
 void ftSend(ResponseData &response, const std::string &contents);
 void ftSend(ResponseData *response, const std::string &response_header);
 bool isDirectory(const std::string &path);

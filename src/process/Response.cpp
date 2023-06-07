@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 16:23:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 14:31:16 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,12 @@ int Response::getSuitableServer(int port, Server &serverManager)
  * ResponseDate구조체를 얻어옴. 만약 location과 일치한다면 location을 우선으로 가져옴
  *
  * @param request request 를 파싱완료한 구조체
- * @param client_fd 웹 소켓
+ * @param clientFd 웹 소켓
  * @param config conf 파일을 파싱한 클래스
  * @param serverManger 서버 관리 클래스
  * @return 전부 채워진 ResponseDate구조체
  */
-ResponseData *Response::getResponseData(const HTTPRequest &request, const int &client_fd, Config &config, Server &serverManger)
+ResponseData *Response::getResponseData(const HTTPRequest &request, const int &clientFd, const Config &config, Server &serverManger)
 {
     int index = getSuitableServer(request.port, serverManger);
     if (index < 0)
@@ -67,7 +67,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->server = server;
     response->index = server.index;
     response->method = request.method;
-    response->clientFd = client_fd;
+    response->clientFd = clientFd;
     response->headers = request.headers;
     response->chunked = request.chunked;
     response->bodySize = request.bodySize;
@@ -85,7 +85,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     if (response->limitExcept.size() < 1)
         response->limitExcept = server.limitExcepts;
     // 경로에서 확장자 찾아준 뒤, Content-Type 찾기
-    response->path = getPath(request, response);
+    response->path = getPath(request, *response);
     response->contentType = findMimeType(response->path, config);
     response->body = request.body;
     response->contentLength = response->body.length();
@@ -97,21 +97,21 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
  * url에는 location의 path가 들어올 수도 location의 path 이후 서브 경로가 들어올 수 있다.
  * 또한 url에는 index 값이 포함되어 들어올 수 있다. 마지막에 확장자가 없는 파일도 들어올 수 있다.
  */
-std::string Response::getPath(const HTTPRequest &request, ResponseData *response)
+std::string Response::getPath(const HTTPRequest &request, const ResponseData &response)
 {
     // 요청으로 들어온 경로
     std::string routes = request.path;
     // 반환될 변수. 첫 부분은 location에 등록된 root
-    std::string path = response->root;
+    std::string path = response.root;
     // location에 등록된 index
-    std::string index = response->index;
+    std::string index = response.index;
     bool i = false;
     {
         // location에 등록된 root 값으로 routes에서 지워준다. location root로 대체됨.
-        size_t pos = routes.find(response->location->value);
+        size_t pos = routes.find(response.location->value);
         if (pos != std::string::npos)
             // routes = routes.substr(pos, response->location->value.length() - pos);
-            routes = routes.substr(pos + response->location->value.length());
+            routes = routes.substr(pos + response.location->value.length());
         // location에 등록된 index 값으로 routes에서 지워준다. location index로 대체됨.
         if (!index.empty())
         {
@@ -134,7 +134,7 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
             }
         }
     }
-    if (routes.compare(0, response->location->value.length(), response->location->value) != 0)
+    if (routes.compare(0, response.location->value.length(), response.location->value) != 0)
     {
         if (routes != "/")
             path += routes;
@@ -144,7 +144,7 @@ std::string Response::getPath(const HTTPRequest &request, ResponseData *response
     return (path);
 }
 
-std::string Response::findMimeType(const std::string &path, Config &config)
+std::string Response::findMimeType(const std::string &path, const Config &config)
 {
     MimeTypesParser mime(config);
     std::istringstream iss(path);

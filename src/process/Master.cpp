@@ -3,14 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Master.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:06 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 19:48:13 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:26:42 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
 #include <unistd.h>
 #include "Master.hpp"
 
@@ -24,13 +23,12 @@ Master::Master(int argc, char const *argv[]) : kq(kqueue())
 	this->config.parsedConfig(argc, argv);
 
 	// Set the server
-	this->server.setServer(this->config);
+	this->server.setServer(this->config, this->events);
 	// this->server.printServer();
 }
 
 Master::~Master()
 {
-	// delete config;
 	close(kq);
 }
 
@@ -47,4 +45,10 @@ Config &Master::getConfig()
 Server &Master::getServer()
 {
 	return server;
+}
+
+Worker Master::create()
+{
+	Worker worker(*this);
+	return worker;
 }

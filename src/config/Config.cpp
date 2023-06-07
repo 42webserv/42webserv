@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/06/04 00:48:17 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:10:17 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,12 @@
 
 Config::Config()
 {
-	this->_directives = std::vector<Directive>();
 	this->_setRelation();
 }
 
 Config::~Config()
 {
+	// TODO clearBlock을 만들고 재귀로 돌면서 가장 안쪽 블록부터 지워나가기
 	for (size_t i = 0; i < this->_directives.size(); i++)
 		this->_directives[i].block.clear();
 	this->_directives.clear();
@@ -207,14 +207,12 @@ const std::vector<Directive> &Config::getDirectives() const
  *	directives : 찾을 Directive vector
  *	dirName :	찾을 Directive의 name
  */
-void Config::getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName)
+void Config::getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName) const
 {
 	for (size_t i = 0; i < directives.size(); i++)
 	{
 		if (directives[i].name == dirName)
-		{
 			newDirectives.push_back(directives[i]);
-		}
 		if (directives[i].block.empty())
 			continue;
 		this->getAllDirectives(newDirectives, directives[i].block, dirName);

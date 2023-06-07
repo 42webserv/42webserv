@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/29 19:53:21 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:37:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,13 @@
 #include <unistd.h>
 #include <vector>
 #include "commonError.hpp"
+#include "Server.hpp"
 #include "Signal.hpp"
 
-Signal::Signal(std::vector<struct kevent> &event_list)
+Signal::Signal(std::vector<struct kevent> &events)
 {
-	const unsigned int sigs[MAX_SIGNAL] = {SIGTERM, SIGINT, SIGQUIT, SIGHUP, SIGUSR1, SIGUSR2, SIGWINCH};
+	// const unsigned int sigs[MAX_SIGNAL] = {SIGTERM, SIGINT, SIGQUIT, SIGHUP, SIGUSR1, SIGUSR2, SIGWINCH};
+	const unsigned int sigs[MAX_SIGNAL] = {SIGTERM, SIGINT, SIGQUIT};
 	struct kevent event;
 
 	for (size_t i = 0; i < MAX_SIGNAL; i++)
@@ -27,7 +29,7 @@ Signal::Signal(std::vector<struct kevent> &event_list)
 		signals[i] = sigs[i];
 		signal(signals[i], SIG_IGN);
 		EV_SET(&event, signals[i], EVFILT_SIGNAL, EV_ADD, 0, 0, NULL);
-		event_list.push_back(event);
+		events.push_back(event);
 	}
 }
 
@@ -37,36 +39,35 @@ Signal::~Signal()
 		signal(signals[i], SIG_DFL);
 }
 
-void Signal::handleEvent(const struct kevent &event, std::vector<Socket *> &sockets) const
+void Signal::handleEvent(const int &signal, const std::vector<ServerInfo> &servers) const
 {
-	int sig = event.ident;
-	// TODO 디버깅으로 돌리면 종료되지 않음. 왜 그런지 확인 필요
 	for (size_t i = 0; i < MAX_SIGNAL; i++)
 	{
 		// TERM, INT: 빠른 종료
-		if (sig == SIGTERM || sig == SIGINT)
+		if (signal == SIGTERM || signal == SIGINT)
 		{
-			for (size_t i = 0; i < sockets.size(); i++)
-				delete sockets[i];
+			for (std::vector<ServerInfo>::const_iterator it = servers.begin(); it != servers.end(); it++)
+			{
+				const ServerInfo &server = *it;
+				server.closeSockets();
+			}
 			exit(EXIT_SUCCESS);
 		}
 		// QUIT: 정상적인 종료
-		else if (sig == SIGQUIT)
+		else if (signal == SIGQUIT)
 		{
-			// for // 모든 애들 소멸하도록 고쳐야함
-			for (size_t i = 0; i < sockets.size(); i++)
-				delete sockets[i];
+			for (std::vector<ServerInfo>::const_iterator it = servers.begin(); it != servers.end(); it++)
+			{
+				const ServerInfo &server = *it;
+				server.closeSockets();
+			}
 			exit(EXIT_SUCCESS);
 		}
-		// 미구현 목록
+		// Nginx 미구현 목록
 		// HUP: 구성 변경, 변경된 시간대 따라잡기(FreeBSD와 Linux만), 새 구성으로 새 worker processes 시작, 이전 worker processes 정상적인 종료
 		// USR1: 로그 파일 다시 열기
 		// USR2: 실행 파일 업그레이드
 		// WINCH: worker processes의 정상적인 종료
-
-		// else if (sig == SIGUSR1)
-		// else if (sig == SIGUSR2)
-		// else if (sig == SIGWINCH)
 	}
 }
 

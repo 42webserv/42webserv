@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Master.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/23 20:31:14 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 18:49:21 by yje              ###   ########.fr       */
+/*   Updated: 2023/06/03 11:58:56 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@
 #include <sys/event.h>
 #include <vector>
 #include "Config.hpp"
-#include "Config.hpp"
-#include "server/Server.hpp"
+#include "Server.hpp"
+#include "Worker.hpp"
 
 class Master
 {
@@ -33,6 +33,7 @@ public:
 	std::vector<struct kevent> &getEvents();
 	Config &getConfig();
 	Server &getServer();
+	Worker create();
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 17:20:08 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 14:49:54 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ public:
     static void setTimer(const int kq, int fd, int timeout);
     static void deleteTimer(const int kq, int fd);
     static std::string getExpiryDate(int secondsToAdd);
+    static bool needBody(const std::string &method);
 
     static int ftStoi(const std::string &str);
     template <typename T>

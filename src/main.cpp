@@ -3,21 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/14 09:57:38 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/13 13:25:43 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/02 22:07:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "DefaultConfig.hpp"
 #include "Master.hpp"
-#include "Worker.hpp"
-#include "server/Server.hpp"
-#include "Config.hpp"
-#include "CGI.hpp"
-#include "CheckConfigValid.hpp"
-#include "MimeTypesParser.hpp"
 
 void leaks()
 {
@@ -28,7 +21,7 @@ int main(int argc, char const *argv[])
 {
     // atexit(leaks);
     Master master(argc, argv);
-    Worker worker(master);
+    Worker worker = master.create();
     worker.run();
     return 0;
 }

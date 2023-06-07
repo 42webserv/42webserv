@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/06 17:18:24 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 14:50:02 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,4 +92,12 @@ std::string Utils::getExpiryDate(int secondsToAdd)
     char buffer[80];
     std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
     return std::string(buffer);
+}
+bool Utils::needBody(const std::string &method)
+{
+    if (method.empty())
+        return false;
+    if (isEqual(method, POST) || isEqual(method, PUT))
+        return true;
+    return false;
 }

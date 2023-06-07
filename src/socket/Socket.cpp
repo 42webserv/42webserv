@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/05 22:06:13 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/06 22:47:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,12 @@
 #include "Socket.hpp"
 #include "Server.hpp"
 
-Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int kq)
-    : kq(kq), _serverFd(socket(AF_INET, SOCK_STREAM, 0))
+Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
     struct linger linger;
     int opt;
 
-    this->_port = port;
     // Create an AF_INET stream socket to receive incoming connections on
     if (_serverFd < 0)
         stderrExit("socket() error");
@@ -50,11 +48,12 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
     if (setsockopt(_serverFd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) < 0)
         stderrExit("setsockopt() error");
 
-    // Bind the socket
-    std::memset(&_serverAddr, 0, sizeof(_serverAddr));
+    memset(&_serverAddr, 0, sizeof(_serverAddr));
     _serverAddr.sin_family = AF_INET;
     _serverAddr.sin_addr.s_addr = INADDR_ANY;
-    _serverAddr.sin_port = htons(this->_port);
+    _serverAddr.sin_port = htons(port);
+
+    // Bind the socket
     if (bind(_serverFd, (struct sockaddr *)&_serverAddr, sizeof(_serverAddr)) < 0)
         stderrExit("bind() error");
 
@@ -64,36 +63,54 @@ Socket::Socket(std::vector<struct kevent> &eventList, const int port, const int 
         close(_serverFd);
         stderrExit("listen() error");
     }
+    memset(&event, 0, sizeof(struct kevent));
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-    eventList.push_back(event);
-    _clientFds.push_back(_serverFd);
-    std::cout << "Server listening on port " << this->_port << std::endl;
+    events.push_back(event);
+    std::cout << "Server listening on port " << port << std::endl;
+}
+
+Socket::Socket(const Socket &ref) : _serverFd(ref._serverFd)
+{
+    if (this == &ref)
+        return;
+    *this = ref;
+}
+
+Socket &Socket::operator=(const Socket &ref)
+{
+    if (this != &ref)
+    {
+        this->_serverAddr = ref._serverAddr;
+        this->_clientFds = ref._clientFds;
+    }
+    return *this;
 }
 
 Socket::~Socket()
 {
     for (std::vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
         close(*it);
+    _clientFds.clear();
     close(_serverFd);
 }
 
-int Socket::handleEvent(std::vector<struct kevent> &eventList)
+void Socket::connectClient(std::vector<struct kevent> &events)
 {
     socklen_t addrlen = sizeof(_serverAddr);
-    struct sockaddr_in client_addr;
-    struct kevent new_event;
+    struct sockaddr_in clientAddr;
+    struct kevent event;
+    UData *udata;
 
     // Accept incoming connection
-    int client_fd = accept(_serverFd, (struct sockaddr *)&client_addr, &addrlen);
-    if (client_fd < 0)
+    int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &addrlen);
+    if (clientFd < 0)
         stderrExit("accept() error");
 
-    // std::cout << "Accept new client:" << client_fd << std::endl;
-    int flags = fcntl(client_fd, F_GETFL, 0);
-    if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) < 0)
+    if (fcntl(clientFd, F_SETFL, O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
-    UData *uData = new UData(client_fd, false, true);
-    EV_SET(&new_event, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, uData);
+
+    udata = new UData(clientFd, false, true); // 처음 udata 생성
+    EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
 
     struct linger lingerOption;
     lingerOption.l_onoff = 1;  // SO_LINGER 활성화
@@ -101,28 +118,49 @@ int Socket::handleEvent(std::vector<struct kevent> &eventList)
 
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
-    if (setsockopt(client_fd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
+    if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
         stderrExit("setsockopt SO_LINGER error");
 
-    eventList.push_back(new_event);
-    _clientFds.push_back(client_fd);
-    return client_fd;
+    events.push_back(event);
+    _clientFds.push_back(clientFd);
 }
 
-void Socket::disconnectClient(int client_fd, std::map<int, std::string> &clients, struct kevent &event)
+void Socket::receiveRequest(struct kevent &event)
 {
-    if (event.udata)
-        delete static_cast<UData *>(event.udata);
+    const int &fd = event.ident;
+    UData *udata = static_cast<UData *>(event.udata);
+    char buf[BUFFER_SIZE];
+    ssize_t n;
+
+    memset(buf, 0, BUFFER_SIZE);
+    while (true)
+    {
+        n = recv(fd, buf, BUFFER_SIZE - 1, 0);
+        if (n < 0)
+            break;
+        else
+        {
+            buf[n] = '\0';
+            udata->request.append(buf);
+            if (n < BUFFER_SIZE - 1)
+                break;
+        }
+    }
+}
+
+void Socket::disconnectClient(struct kevent &event)
+{
+    const int &clientFd = event.ident;
+    UData *udata = static_cast<UData *>(event.udata);
+
+    udata->request.clear();
+    if (udata->result)
+        delete udata->result;
+    if (udata)
+        delete udata;
     event.udata = NULL;
-    EV_SET(&event, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
-    kevent(kq, &event, 1, NULL, 0, NULL);
-    EV_SET(&event, client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
-    kevent(kq, &event, 1, NULL, 0, NULL);
-    // std::cout << "close client_fd: " << client_fd << std::endl;
-    // shutdown(client_fd, SHUT_RDWR);
-    close(client_fd);
-    clients.erase(client_fd);
-    _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), client_fd), _clientFds.end());
+    _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), clientFd), _clientFds.end());
+    close(clientFd);
 }
 
 int Socket::enableKeepAlive(int socketFd)
@@ -139,14 +177,11 @@ int Socket::enableKeepAlive(int socketFd)
     return 0;
 }
 
-bool Socket::findClientFd(int client_fd)
+void Socket::closeClients() const
 {
-    std::vector<int>::iterator it;
-
-    for (it = _clientFds.begin(); it != _clientFds.end(); ++it)
+    for (std::vector<int>::const_iterator it = this->_clientFds.begin(); it != this->_clientFds.end(); it++)
     {
-        if (*it == client_fd)
-            return true;
+        const int &clientFd = *it;
+        close(clientFd);
     }
-    return false;
 }
