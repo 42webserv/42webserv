@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 11:16:10 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 14:06:00 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -733,6 +733,7 @@ bool Worker::invalidResponse(ResponseData *response)
 // 	return true;
 // }
 
+//문자열 A에서 문자열 B와 C 사이의 문자열 추출
 std::string Worker::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
 {
 	size_t start = A.find(B);
@@ -748,6 +749,7 @@ std::string Worker::extractSubstring(const std::string &A, const std::string &B,
 	return A.substr(start, end - start);
 }
 
+//Response의 statusCode, contentType, charset, body 세팅
 void Worker::setResponse(ResponseData *response, const std::string &resourceContent)
 {
 	//Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
