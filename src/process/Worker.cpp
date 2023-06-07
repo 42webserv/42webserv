@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:37:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 20:01:41 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
+		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
 	}
@@ -204,10 +205,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		delete response;
 		return;
 	}
-
-	if (response->path == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+	if (response->location->value == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		udata->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete" && udata->alreadySessionSend == true &&
+	else if (response->location->value == "/session/delete" && udata->alreadySessionSend == true &&
 			 udata->sessionID != "")
 		udata->wantToDeleteSessionInCookie = true;
 
@@ -584,9 +584,9 @@ void Worker::cookieCheck(UData *udata)
 				udata->sesssionValid = false;
 		}
 		udata->sesssionValid = isCookieValid(udata->expireTime);
-		if (udata->sesssionValid)
+		if (udata->sesssionValid && udata->alreadySessionSend)
 			std::cout << "session is valid" << std::endl;
-		else
+		else if (udata->alreadySessionSend)
 			std::cout << "session is invalid" << std::endl;
 	}
 	else
