@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:01:25 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:04:17 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,16 @@ std::string Utils::uploadPageGenerator(std::string executePath)
     std::stringstream broadHtml;
     broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
     return broadHtml.str();
+}
+
+std::vector<Directive>::const_iterator Utils::findDirective(const std::vector<Directive> &directives, const std::string &name)
+{
+    for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
+    {
+        if (isEqual(it->name, name))
+            return it;
+    }
+    return directives.end();
 }
 
 std::vector<Directive>::const_iterator Utils::findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value)

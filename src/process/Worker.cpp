@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:02:29 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:05:55 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		if (dir != response->server.locations.end())
 		{
 			std::vector<Directive>::const_iterator dirr;
-			dirr = findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
+			dirr = Utils::findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
 			if (dirr != dir->block.end())
 				clientMaxBodySize = atoi(dirr->value.c_str());
 		}

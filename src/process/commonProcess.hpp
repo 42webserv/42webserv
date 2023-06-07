@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:01:39 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:05:08 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,5 @@ bool writeFile(const std::string &path, const std::string &contents);
 std::string readFile(const std::string &path);
 const std::string getContentType(const HTTPRequest &request);
 bool isEqual(const std::string &s1, const std::string &s2);
-std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
 
 #endif

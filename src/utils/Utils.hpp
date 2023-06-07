@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:02:23 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:04:46 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ public:
     static std::string getExpiryDate(int secondsToAdd);
     static bool needBody(const std::string &method);
     static std::string uploadPageGenerator(std::string executePath);
+    static std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
     static std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value);
 
     static int ftStoi(const std::string &str);

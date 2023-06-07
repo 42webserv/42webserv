@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:01:33 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:05:01 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,14 +135,4 @@ bool isEqual(const std::string &s1, const std::string &s2)
 	std::string lowerS2 = lower(s2);
 
 	return lowerS1 == lowerS2;
-}
-
-std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name)
-{
-	for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
-	{
-		if (isEqual(it->name, name))
-			return it;
-	}
-	return directives.end();
 }
