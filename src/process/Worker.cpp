@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:05:55 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:18:18 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,10 +265,10 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		if (response->method == POST)
 		{
 			resourceContent = response->body;
-			writeFile(response->resourcePath, resourceContent);
+			Utils::writeFile(response->resourcePath, resourceContent);
 		}
 		else
-			resourceContent = readFile(response->resourcePath);
+			resourceContent = Utils::readFile(response->resourcePath);
 		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
 	}
 	if (response->chunked)
@@ -355,10 +355,10 @@ void Worker::putResponse(ResponseData *response)
 {
 	if (response->body.length() > 10000)
 		response->body = response->body.substr(0, 10000);
-	if (writeFile(response->resourcePath, response->body))
+	if (Utils::writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::string resource_content = readFile(response->resourcePath);
+		std::string resource_content = Utils::readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
 		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
@@ -411,7 +411,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	else
 	{
 		const std::string errorPath = response->server.root + it->second;
-		errorContent = readFile(errorPath);
+		errorContent = Utils::readFile(errorPath);
 		if (errorContent == "")
 			errorContent = Utils::errorPageGenerator(response, errorCode);
 	}

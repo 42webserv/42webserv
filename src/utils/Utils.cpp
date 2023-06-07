@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:12:23 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:15:22 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,4 +170,26 @@ bool Utils::isEqual(const std::string &s1, const std::string &s2)
     std::string lowerS2 = lower(s2);
 
     return lowerS1 == lowerS2;
+}
+
+bool Utils::writeFile(const std::string &path, const std::string &contents)
+{
+    std::ofstream file(path.c_str(), std::ios::out | std::ios::trunc);
+
+    if (!file.is_open())
+        return false;
+    file << contents;
+    file.close();
+    return true;
+}
+
+std::string Utils::readFile(const std::string &path)
+{
+    std::ifstream file(path.c_str());
+
+    if (!file.is_open())
+        return "";
+    std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    return contents;
 }
