@@ -1,0 +1,8 @@
+# common
+.vscode
+out
+.DS_Store
+thunder-tests/
+
+# NAME
+webserv
