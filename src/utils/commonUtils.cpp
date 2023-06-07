@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonUtils.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/02 19:53:58 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:37:15 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:02:23 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,16 +37,6 @@ std::vector<Directive>::const_iterator findDirective(const std::vector<Directive
 	for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
 	{
 		if (isEqual(it->name, name))
-			return it;
-	}
-	return directives.end();
-}
-
-std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value)
-{
-	for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
-	{
-		if (isEqual(it->name, name) && isEqual(it->value, value))
 			return it;
 	}
 	return directives.end();
