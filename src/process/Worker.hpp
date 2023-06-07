@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 14:02:56 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 14:50:32 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,6 @@ private:
 	void cookieCheck(UData *udata);
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
-	// bool hasClientFd(const int &k);
 	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
 	std::string extractSubstring(const std::string &A, const std::string &B, const std::string &C);
 	void setResponse(ResponseData *response, const std::string &resourceContent);
