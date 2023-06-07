@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:20:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:04:49 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:11:33 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,21 +31,6 @@ void ftSend(const int &socket, const std::string &buffer)
  * @param contents
  */
 void ftSend(const ResponseData *response, const std::string &contents)
-{
-	ftSend(response->clientFd, contents);
-}
-
-void ftSend(const ResponseData &response, const std::string &contents)
-{
-	ftSend(response.clientFd, contents);
-}
-
-/**
- * @brief Send response to client
- * @param response
- * @param contents
- */
-void ftSend(ResponseData *response, const std::string &contents)
 {
 	ftSend(response->clientFd, contents);
 }
