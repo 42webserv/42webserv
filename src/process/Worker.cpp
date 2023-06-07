@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:24:32 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 15:41:22 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == DELETE) // TODO DELETE도 처리해주나
+	if (response->method == GET || response->method == POST || response->method == HEAD) // TODO DELETE도 처리해주나
 		sendResponse(response, request);
 	else if (response->method == PUT)
 	{
@@ -361,7 +361,7 @@ void Worker::putResponse(ResponseData *response)
 			return errorResponse(response, 404);
 		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
 		response->chunked = false;
-		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
+		std::string resource_header = generateHeader(resourceContent, "text/html", 201, response);
 		ftSend(response, resource_header);
 		ftSend(response, resourceContent);
 	}
@@ -675,7 +675,7 @@ void Worker::setResponse(ResponseData *response, const std::string &resourceCont
 	}
 	else
 	{
-		response->statusCode = ftStoi(Utils::extractSubstring(resourceContent, "Status: ", " OK"));
+		response->statusCode = Utils::ftStoi(Utils::extractSubstring(resourceContent, "Status: ", " OK"));
 		response->contentType = Utils::extractSubstring(resourceContent, "Content-Type: ", ";");
 		response->charset = Utils::extractSubstring(resourceContent, "charset=", CRLF);
 		response->body = Utils::extractSubstring(resourceContent, "\r\n\r\n", "\0");
