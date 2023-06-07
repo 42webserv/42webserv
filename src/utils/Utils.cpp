@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:25:27 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:37:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,18 +68,11 @@ std::string Utils::errorPageGenerator(ResponseData *response, int errorCode)
     return broadHtml.str();
 }
 
-void Utils::setTimer(const int kq, int fd, int timeout)
+void Utils::setTimer(const int &kq, const int &fd, const int &timeout)
 {
     struct kevent timerEvent;
     int timer_interval_ms = timeout * 1000;
-    EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
-    kevent(kq, &timerEvent, 1, NULL, 0, NULL);
-}
-
-void Utils::deleteTimer(const int kq, int fd)
-{
-    struct kevent timerEvent;
-    EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
+    EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, 0);
     kevent(kq, &timerEvent, 1, NULL, 0, NULL);
 }
 

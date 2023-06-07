@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:39:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "commonConfig.hpp"
 #include "commonError.hpp"
 #include "HTTPRequestParser.hpp"
+#include "MimeTypesParser.hpp"
 #include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
@@ -62,8 +63,6 @@ private:
 	void registerKeepAlive(UData *udata, int clientFd);
 	bool checkHeaderIsKeepLive(UData *udata);
 	bool checkKeepLiveOptions(UData *udata);
-	void setTimer(int fd, int timeout);
-	void deleteTimer(int fd);
 	std::string generateSessionID(int length);
 	std::string getExpiryDate(int secondsToAdd);
 	bool isCookieValid(const std::string &expireTime);
