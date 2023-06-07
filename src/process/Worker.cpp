@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 14:14:24 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 14:49:18 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,6 +262,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	{
 		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		resourceContent = response->body;
+		std::cout << "body size : " << response->bodySize << std::endl;
 		ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response->chunked, response->udata));
 	}
 	else
@@ -713,15 +714,6 @@ bool Worker::invalidResponse(ResponseData *response)
 	}
 	return false;
 }
-
-// bool Worker::hasClientFd(const int &k)
-// {
-// 	Socket *socket = sockets[k];
-// 	std::vector<int>::iterator it = std::find(socket->_clientFds.begin(), socket->_clientFds.end(), fd);
-// 	if (it == socket->_clientFds.end())
-// 		return false;
-// 	return true;
-// }
 
 //문자열 A에서 문자열 B와 C 사이의 문자열 추출
 std::string Worker::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
