@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 14:54:45 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:04:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,6 +194,137 @@ bool HTTPRequestParser::parseHeaderValue()
     else
         state_ = HEADER_NAME;
     return true;
+}
+
+/**
+ * HTTP 요청 메세지 파싱이 끝나면 사용한 버퍼를 모두 지워줌
+ */
+void HTTPRequestParser::reset()
+{
+    state_ = METHOD;
+    headers_.clear();
+    body_.clear();
+    buffer_.clear();
+    current_header_name_.clear();
+    query_.clear();
+    addr_.clear();
+    name_.clear();
+    port_ = "-1";
+    path_.clear();
+    http_version_.clear();
+}
+
+HTTPRequest *HTTPRequestParser::makeRequest()
+{
+    if (state_ != COMPLETE)
+        return NULL;
+    HTTPRequest *request = new HTTPRequest;
+    request->method = method_;
+    request->path = path_;
+    request->http_version = http_version_;
+    request->chunked = false;
+    if (request->method == HEAD)
+        return request;
+    // header가 존재하지 않는 경우 다시 요청 다시 받기 위함
+    if (headers_.size() == 0) // TODO 이상한 요청도 테스트 해봐야 할 듯
+        return request;
+    request->headers = headers_;
+    request->port = ftStoi(port_);
+    if (request->port < 1)
+    {
+        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find("Host");
+        if (findHostIterator != headers_.end())
+        {
+            size_t pos = findHostIterator->second.find(":");
+            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.length()).c_str(), NULL);
+        }
+    }
+    request->body = body_;
+    request->bodySize = bodySize_;
+    request->addr = addr_;
+    request->query = query_;
+    std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
+    if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == "chunked")
+        request->chunked = true;
+    return request;
+}
+
+/**
+ * HTTP 요청 구조체 출력
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return void
+ */
+void HTTPRequestParser::printResult(const HTTPRequest &result)
+{
+    std::cout << "Request method: " << result.method << std::endl;
+    std::cout << "Request path: " << result.path << std::endl;
+    std::cout << "Request port: [" << result.port << "]" << std::endl;
+    std::cout << "Request HTTP version: " << result.http_version << std::endl;
+
+    for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
+        std::cout << "Header: " << it->first << " = " << it->second << std::endl;
+
+    std::cout << "Body: " << result.body << std::endl;
+}
+
+int HTTPRequestParser::getPort(const HTTPRequest &result)
+{
+    return result.port;
+}
+
+void HTTPRequestParser::parseStartLine()
+{
+    bool isOK;
+    size_t pos = buffer_.find(CRLF);
+
+    if (pos == std::string::npos)
+        throw ParseException();
+    while (bufferIndex < pos)
+    {
+        isOK = false;
+        switch (state_)
+        {
+        case METHOD:
+            isOK = parseMethod();
+            break;
+        case PATH:
+            isOK = parsePath();
+            break;
+        case HTTP_VERSION:
+            isOK = parseHTTPVersion();
+            break;
+        default:
+            break;
+        }
+        if (!isOK)
+            throw ParseException();
+    }
+}
+void HTTPRequestParser::parseHeaders()
+{
+    bool isOK;
+    size_t pos = buffer_.find(CRLF2);
+
+    if (pos == std::string::npos)
+        throw ParseException();
+    while (bufferIndex < pos)
+    {
+        isOK = false;
+        switch (state_)
+        {
+        case HEADER_NAME:
+            isOK = parseHeaderName();
+            break;
+        case HEADER_VALUE:
+            isOK = parseHeaderValue();
+            break;
+        default:
+            break;
+        }
+        if (!isOK)
+            throw ParseException();
+    }
 }
 
 /**
