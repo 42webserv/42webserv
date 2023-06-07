@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 16:12:19 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:10:31 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ public:
     ~Config();
     void parsedConfig(int argc, char const **argv);
     void printDirectives(std::vector<Directive> directives, size_t tab);
-    void getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName);
+    void getAllDirectives(std::vector<Directive> &newDirectives, const std::vector<Directive> &directives, const std::string dirName) const;
     const std::vector<Directive> &getDirectives() const;
     static std::vector<std::string> split(std::string input, char delimiter);
 };

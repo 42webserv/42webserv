@@ -6,7 +6,7 @@
 #    By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/05/30 20:05:01 by sunhwang         ###   ########.fr        #
+#    Updated: 2023/06/02 19:55:19 by sunhwang         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,7 +33,7 @@ SRC_ERROR	= commonError
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
 SRC_PROCESS	= commonProcess Master Worker Response
 SRC_SOCKET	= Socket
-SRC_UTILS	= Signal
+SRC_UTILS	= commonUtils Signal
 SRC_CGI		= CGI
 SRC_SERVER	= Server ServerInfo
 

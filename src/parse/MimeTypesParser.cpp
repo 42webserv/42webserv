@@ -5,7 +5,7 @@
  *
  * @param config
  */
-MimeTypesParser::MimeTypesParser(Config &config)
+MimeTypesParser::MimeTypesParser(const Config &config)
 {
     config.getAllDirectives(this->includes, config.getDirectives(), "types");
     parseMimeTypes();

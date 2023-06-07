@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 15:44:36 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 11:10:52 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "CGI.hpp"
+#include "commonConfig.hpp"
 #include "commonError.hpp"
-#include "Config.hpp"
+#include "commonProcess.hpp"
+#include "commonUtils.hpp"
 #include "HTTPRequestParser.hpp"
-#include "Master.hpp"
-#include "MimeTypesParser.hpp"
-#include "Response.hpp"
 #include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
@@ -33,54 +32,53 @@
 #define CHUNK_SIZE 500
 
 struct ResponseData;
-struct HTTPRequest;
+class Master;
 
 class Worker
 {
 private:
-	const int kq;
+	const int &kq;
 	const Signal signal;
-	std::vector<Socket *> sockets;
-	std::vector<struct kevent> &event_list;
-	std::map<int, std::string> clients;
-	int fd;
-	Config config;
-	Server server;
+	const Config &config;
+	std::vector<struct kevent> &events;
+	Server &server;
 	HTTPRequestParser parser;
-	UData *responseUData;
-	std::vector<Directive> listen;
 
-	void eventEVError(int k, struct kevent &event);
-	bool eventFilterRead(int k, struct kevent &event);
-	bool eventFilterWrite(int k, struct kevent &event);
-	bool eventEOF(int k, struct kevent &event);
-	bool eventFilterTimer(int k, struct kevent &event);
-	void requestHandler(const HTTPRequest &request, const int &client_fd, int k);
+	void eventEOF(Socket &socket, struct kevent &event);
+	void eventFilterRead(Socket &socket, struct kevent &event);
+	void eventFilterTimer(Socket &socket, struct kevent &event);
+	void eventFilterWrite(Socket &socket, struct kevent &event);
+	void eventEVError(Socket &socket, struct kevent &event);
+	void eventFilterSignal(struct kevent &event);
+	void requestHandler(UData *udata, const int &clientFd);
+	void getResponse(ResponseData *response);
+	void postResponse(ResponseData *response, const HTTPRequest &request);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
 	std::string errorPageGenerator(int errorCode);
 	std::string uploadPageGenerator(std::string executePath);
 	void errorResponse(ResponseData *response, int errorCode);
-	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked);
+	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked, UData *udata);
 	std::string generateErrorHeader(int status_code, const std::string &message);
-	bool isCGIRequest(ResponseData &response);
+	bool isCGIRequest(const ResponseData &response);
 	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
-	void registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd);
-	bool checkHeaderIsKeepLive(const HTTPRequest *request);
-	bool checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event);
+	void registerKeepAlive(UData *udata, int clientFd);
+	bool checkHeaderIsKeepLive(UData *udata);
+	bool checkKeepLiveOptions(UData *udata);
 	void setTimer(int fd, int timeout);
 	void deleteTimer(int fd);
 	std::string generateSessionID(int length);
 	std::string getExpiryDate(int secondsToAdd);
 	bool isCookieValid(const std::string &expireTime);
-	void cookieCheck(HTTPRequest *result);
+	void cookieCheck(UData *udata);
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
 	bool hasClientFd(const int &k);
 	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
 	std::string extractSubstring(const std::string &A, const std::string &B, const std::string &C);
 	void setResponse(ResponseData *response, const std::string &resourceContent);
+	bool checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response);
 	void sendResponse(ResponseData *response, const HTTPRequest &request);
 
 public:

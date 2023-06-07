@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   commonConfig.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:12:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 16:24:33 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/02 19:53:12 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,5 +96,8 @@
 
 // directive values
 #define DEFALUT_DIRECTIVE_VALUE_FAIL "fail"
+
+// Default values
+#define DEFAULT_CLIENT_MAX_BODY_SIZE 1000000
 
 #endif

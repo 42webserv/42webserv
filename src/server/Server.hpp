@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:10 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/29 13:01:40 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:26:32 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@
 struct ServerInfo
 {
     std::vector<int> ports;
-    // Socket *socket;
     std::vector<Socket *> sockets;
     size_t clientMaxBodySize;
     std::string serverName;
@@ -34,6 +33,7 @@ struct ServerInfo
     std::vector<Directive> locations;
     std::map<int, std::string> errorPage;
     ServerInfo &operator=(const ServerInfo &ref);
+    void closeSockets() const;
 };
 
 class Server
@@ -41,10 +41,7 @@ class Server
 private:
     std::vector<int> validPorts;
 
-    /*
-     * Add it if you feel necessary additional member functions.
-     */
-    void setUpServer(std::vector<Directive> &servrBlocks);
+    void setUpServer(std::vector<Directive> &servrBlocks, std::vector<struct kevent> &events);
     void setUpIndex(ServerInfo &tmpServ, std::vector<Directive> &servrBlocks);
     void setUpErrorPage(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);
     void setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBlocks);
@@ -79,7 +76,9 @@ public:
     ~Server();
 
     void printServer();
-    void setServer(Config &config);
+    void setServer(Config &config, std::vector<struct kevent> &events);
+    ServerInfo &findServer(const int &fd);
+    Socket *findSocket(const int &fd);
 };
 
 /*

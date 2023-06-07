@@ -6,205 +6,147 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 20:09:05 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 11:13:00 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "commonConfig.hpp"
-#include "commonProcess.hpp"
+#include "Master.hpp"
 #include "Worker.hpp"
 
-Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), event_list(master.getEvents()), config(master.getConfig()), server(master.getServer())
+Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
+
+Worker::~Worker() {}
+
+void Worker::eventEVError(Socket &socket, struct kevent &event)
 {
-	// Create sockets
-	for (size_t i = 0; i < server.servers.size(); i++)
+	const int &fd = event.ident;
+
+	if (fd == socket._serverFd)
+		stderrExit("Server socket error"); // 서버 소켓 에러
+	else
+		socket.disconnectClient(event);
+}
+
+void Worker::eventFilterSignal(struct kevent &event)
+{
+	signal.handleEvent(event.ident, server.servers);
+}
+
+void Worker::eventFilterRead(Socket &socket, struct kevent &event)
+{
+	const int &fd = event.ident;
+
+	// Server socket
+	if (fd == socket._serverFd)
 	{
-		for (size_t j = 0; j < server.servers[i].ports.size(); j++)
-		{
-			Socket *socket = new Socket(master.getEvents(), server.servers[i].ports[j], kq);
-			sockets.push_back(socket);
-		}
+		socket.connectClient(events);
+		return;
 	}
-}
-
-Worker::~Worker()
-{
-	for (size_t i = 0; i < sockets.size(); i++)
-		delete (sockets[i]);
-}
-
-void Worker::eventEVError(int k, struct kevent &event)
-{
-	// 서버 소켓 에러
-	if (fd == sockets[k]->_serverFd)
-		stderrExit("Server socket error");
 	else
 	{
-		// 클라이언트 소켓 에러 아니면 다른 에러
-		if (clients.find(fd) != clients.end())
-		{
-			sockets[k]->disconnectClient(fd, clients, event);
-		}
+		// Client socket
+		socket.receiveRequest(event);
+		UData *udata = static_cast<UData *>(event.udata);
+		// Parse request
+		HTTPRequest *result = parser.parse(udata->request);
+		if (!result)
+			return;
+		udata->result = result;
+		// Add write event
+		struct kevent newEvent;
+		EV_SET(&newEvent, fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, udata);
+		events.push_back(newEvent);
 	}
 }
 
-bool Worker::eventFilterRead(int k, struct kevent &event)
+void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
-	if (fd == sockets[k]->_serverFd)
+	const int &fd = event.ident;
+	UData *udata = static_cast<UData *>(event.udata);
+
+	if (checkHeaderIsKeepLive(udata))
+		registerKeepAlive(udata, fd);
+	cookieCheck(udata);
+	if (udata->max == 0) // TODO 테스트해보기
 	{
-		int client_fd = sockets[k]->handleEvent(event_list);
-		clients[client_fd].clear();
+		std::cout << "max is zero, disconnection!" << std::endl;
+		socket.disconnectClient(event);
 	}
-	else if (clients.find(fd) != clients.end())
+	if (udata->result)
 	{
-		char buf[1024];
-		int n = 1;
-		while (0 < (n = recv(fd, buf, sizeof(buf) - 1, 0)))
-		{
-			buf[n] = '\0';
-			clients[fd] += buf;
-		}
-		if (n < 1)
-		{
-			UData *uData = static_cast<UData *>(event.udata);
-			if (uData->writeEventExist == false)
-			{
-				struct kevent new_event;
-				uData->writeEventExist = true;
-				EV_SET(&new_event, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, event.udata);
-				event_list.push_back(new_event);
-			}
-		}
+		requestHandler(udata, fd);
+		if (udata->keepLive == true)
+			udata->max -= 1;
 	}
-	return true;
-}
-
-bool Worker::eventFilterWrite(int k, struct kevent &event)
-{
-	if (!hasClientFd(k))
-		return false;
-	HTTPRequest *result = parser.parse(clients[fd]);
-	if (!result)
-		return false;
-	// header가 존재하지 않는 경우 다시 요청 다시 받기 위함
-	if (result->method != HEAD && result->headers.size() == 0)
-		return false;
-	if (result->port == -1)
-		result->port = strtod(listen[0].value.c_str(), NULL);
-	responseUData = static_cast<UData *>(event.udata);
-	if (clients.find(fd) != clients.end() && result != NULL)
+	if (udata->max == 0)
 	{
-		if (checkHeaderIsKeepLive(result))
-			registerKeepAlive(result, event, fd);
-		cookieCheck(result);
-		if (responseUData->max == 0)
-		{
-			std::cout << "max is zero, disconnection!" << std::endl;
-			sockets[k]->disconnectClient(fd, clients, event);
-			clients[fd].clear();
-			if (result)
-				delete result;
-			return false;
-		}
-		if (result)
-		{
-			this->requestHandler(*result, fd, k);
-			struct kevent eventToDelete;
-			EV_SET(&eventToDelete, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
-			kevent(kq, &eventToDelete, 1, NULL, 0, NULL);
-			responseUData->writeEventExist = false;
-			if (responseUData->keepLive == true)
-				responseUData->max = responseUData->max - 1;
-		}
-		if (responseUData->max == 0)
-		{
-			std::cout << "communication number of " << fd << " is zero, disconnection!" << std::endl;
-			sockets[k]->disconnectClient(fd, clients, event);
-		}
-		clients[fd].clear();
+		std::cout << "communication number of " << fd << " is zero, disconnection!" << std::endl;
+		socket.disconnectClient(event);
 	}
-	if (result)
-		delete result;
-
-	return true;
 }
 
-bool Worker::eventEOF(int k, struct kevent &event)
+void Worker::eventEOF(Socket &socket, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
-	// std::cout << fd << " client want to disconnect" << std::endl;
-	sockets[k]->disconnectClient(fd, clients, event);
-	return true;
+	const int &fd = event.ident;
+
+	if (fd == socket._serverFd)
+		stderrExit("Server socket EOF");
+	else
+		socket.disconnectClient(event);
 }
 
-bool Worker::eventFilterTimer(int k, struct kevent &event)
+void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 {
-	if (!hasClientFd(k))
-		return false;
+	const int &fd = event.ident;
+
 	std::cout << fd << " is time over" << std::endl;
 	deleteTimer(fd);
-	sockets[k]->disconnectClient(fd, clients, event);
-	return true;
+	socket.disconnectClient(event);
 }
 
 void Worker::run()
 {
-	struct kevent events[10];
+	struct kevent eventList[10];
 	struct kevent event;
 	int nevents;
 
-	config.getAllDirectives(this->listen, config.getDirectives(), "listen");
-	int sockets_size;
+	memset(eventList, 0, sizeof(eventList));
+	memset(&event, 0, sizeof(event));
 	while (true)
 	{
-		nevents = kevent(kq, &event_list[0], event_list.size(), events, 10, NULL);
+		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), NULL);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
 			break;
 		}
-		event_list.clear();
-		sockets_size = sockets.size();
-		for (int k = 0; k < sockets_size; k++)
+		events.clear();
+		for (int i = 0; i < nevents; i++)
 		{
-			for (int i = 0; i < nevents; i++)
-			{
-				event = events[i];
-				fd = event.ident;
+			event = eventList[i];
+			uintptr_t &fd = event.ident;
+			Socket *socket = this->server.findSocket(fd);
 
-				if (event.flags & EV_ERROR)
-					eventEVError(k, event);
-				if (event.flags & EV_EOF)
-				{
-					if (eventEOF(k, event) == false)
-						continue;
-				}
-				else if (event.filter == EVFILT_READ)
-				{
-					if (eventFilterRead(k, event) == false)
-						continue;
-				}
+			if (event.flags & EV_ERROR)
+				eventEVError(*socket, event);
+			else if (event.flags & EV_EOF)
+				eventEOF(*socket, event);
+			else
+			{
+				if (event.filter == EVFILT_READ)
+					eventFilterRead(*socket, event);
 				else if (event.filter == EVFILT_WRITE)
-				{
-					if (eventFilterWrite(k, event) == false)
-						continue;
-				}
+					eventFilterWrite(*socket, event);
 				else if (event.filter == EVFILT_TIMER)
-				{
-					if (eventFilterTimer(k, event) == false)
-						continue;
-				}
+					eventFilterTimer(*socket, event);
 				else if (event.filter == EVFILT_SIGNAL)
-					signal.handleEvent(event, sockets);
+					eventFilterSignal(event);
 			}
 		}
 	}
 }
 
-bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response)
+bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response)
 {
 	std::map<std::string, std::string>::const_iterator it = request.headers.find("content-length");
 	if (it != request.headers.end()) // Client의 request body size가 너무 큰 경우
@@ -214,9 +156,9 @@ bool Worker::checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request
 		size_t requestBodySize;
 		ss >> requestBodySize;
 
-		size_t clientMaxBodySize = server.servers[k].clientMaxBodySize;
-		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(server.servers[k].locations, LOCATION_DIRECTIVE, request.path);
-		if (dir != server.servers[k].locations.end())
+		size_t clientMaxBodySize = response->server.clientMaxBodySize;
+		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
+		if (dir != response->server.locations.end())
 		{
 			std::vector<Directive>::const_iterator dirr;
 			dirr = findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
@@ -244,13 +186,14 @@ std::string toHexString(size_t value)
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
  * @param request request 를 파싱완료한 구조체
- * @param client_fd 서버의 fd
+ * @param clientFd 서버의 fd
  */
-void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, int k)
+void Worker::requestHandler(UData *udata, const int &clientFd)
 {
+	const HTTPRequest &request = *udata->result;
 	Response res;
-	ResponseData *response = res.getResponseData(request, client_fd, config, this->server);
-
+	ResponseData *response = res.getResponseData(request, clientFd, config, this->server);
+	response->udata = udata;
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
@@ -264,20 +207,20 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 	if (isCGIRequest(*response))
 		response->resourcePath = getCGIPath(*response);
 
-	if (checkHttpRequestClientMaxBodySize(k, request, response) == false || invalidResponse(response))
+	if (checkHttpRequestClientMaxBodySize(request, response) == false || invalidResponse(response))
 	{
 		delete response;
 		return;
 	}
 
-	if (response->path == "/session" && responseUData->sessionID.empty() && responseUData->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
-		responseUData->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete" && responseUData->alreadySessionSend == true &&
-			 responseUData->sessionID != "")
-		responseUData->wantToDeleteSessionInCookie = true;
+	if (response->path == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+		udata->sessionID = generateSessionID(32);
+	else if (response->path == "/session/delete" && udata->alreadySessionSend == true &&
+			 udata->sessionID != "")
+		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == DELETE)
+	if (response->method == GET || response->method == POST || response->method == DELETE) // TODO DELETE도 처리해주나
 		sendResponse(response, request);
 	else if (response->method == PUT)
 	{
@@ -288,7 +231,7 @@ void Worker::requestHandler(const HTTPRequest &request, const int &client_fd, in
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, false, udata);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -318,13 +261,18 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	if (isCGIRequest(*response))
 	{
 		// 1
-		resourceContent = cgi.executeCGI(getCGIPath(*response));
-		setResponse(response, resourceContent);
+		// resourceContent = cgi.executeCGI(getCGIPath(*response));
+		// setResponse(response, resourceContent);
 		// 2
-		// setResponse(response, cgi.executeCGI(getCGIPath(*response)));
+		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		// 1, 2 임시로 남겨두기
 		resourceContent = response->body;
-		ftSend(response, generateHeader(response->body, response->contentType, response->statusCode, response->chunked));
+		ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response->chunked, response->udata));
+		// resourceContent = cgi.excuteCGI(getCGIPath(*response));
+		// std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
+		// if (tmpIdx != std::string::npos)
+		// 	resourceContent = resourceContent.substr(tmpIdx + 4);
+		// ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked, response->udata));
 	}
 	else
 	{
@@ -335,7 +283,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		}
 		else
 			resourceContent = readFile(response->resourcePath);
-		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked));
+		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response->chunked, response->udata));
 	}
 	if (response->chunked)
 	{
@@ -379,7 +327,7 @@ std::string Worker::getCGIPath(ResponseData &response)
 	return "";
 }
 
-bool Worker::isCGIRequest(ResponseData &response)
+bool Worker::isCGIRequest(const ResponseData &response)
 {
 	// 이 부분은 CGI 요청을 확인하는 로직을 구현합니다.
 	// 예를 들어, 요청 URL에 특정 확장자(.cgi, .php 등)가 포함되어 있는지 확인할 수 있습니다.
@@ -402,7 +350,7 @@ bool Worker::isCGIRequest(ResponseData &response)
 			// std::cout << "getCGIPath(response) == ./src/cgi-bin/upload.py ?? " << (getCGIPath(response) == "./src/cgi-bin/upload.py" ? "true" : "false") << std::endl;
 			// std::string uploadContent = uploadPageGenerator(getCGIPath(response)); // root + upload + .py
 			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
-			std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
+			std::string response_header = generateHeader(uploadContent, "text/html", 200, false, response.udata);
 			ftSend(response, response_header);
 			ftSend(response, uploadContent);
 		}
@@ -420,7 +368,6 @@ bool Worker::isCGIRequest(ResponseData &response)
 
 void Worker::putResponse(ResponseData *response)
 {
-	// TODO 이거 경로 제대로 되게 해야 함. 임시임
 	if (response->body.length() > 10000)
 		response->body = response->body.substr(0, 10000);
 	if (writeFile(response->resourcePath, response->body))
@@ -429,7 +376,7 @@ void Worker::putResponse(ResponseData *response)
 		std::string resourceContent = readFile(response->resourcePath);
 		if (resourceContent.empty())
 			return errorResponse(response, 404);
-		std::string resource_header = generateHeader(resourceContent, "text/html", 201, false);
+		std::string resource_header = generateHeader(resource_content, "text/html", 201, false, response->udata);
 		ftSend(response, resource_header);
 		ftSend(response, resourceContent);
 	}
@@ -455,7 +402,7 @@ void Worker::deleteResponse(ResponseData *response)
 	{
 		// 삭제에 성공한 경우
 		std::string response_content = "Resource deleted successfully";
-		std::string response_header = generateHeader(response_content, "text/html", 200, false);
+		std::string response_header = generateHeader(response_content, "text/html", 200, false, response->udata);
 		ftSend(response, response_header);
 		ftSend(response, response_content);
 	}
@@ -476,7 +423,7 @@ std::string Worker::uploadPageGenerator(std::string executePath)
 /**
  * 에러 코드에 대한 페이지가 존재하지 않는 경우 페이지 새로 생성
  *
- * @param client_fd 브라우저 포트번호
+ * @param errorCode 에러 코드
  */
 std::string Worker::errorPageGenerator(int errorCode)
 {
@@ -488,7 +435,8 @@ std::string Worker::errorPageGenerator(int errorCode)
 /**
  * 모든 에러에 대한 에러 페이지를 띄워주는 함수
  *
- * @param client_fd 브라우저 포트번호
+ * @param response 응답에 사용될 구조체
+ * @param errorCode 에러 코드
  */
 void Worker::errorResponse(ResponseData *response, int errorCode)
 {
@@ -514,9 +462,8 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
  * @param contentType Content-Type
  * @return 최종완성된 헤더를 반환함
  */
-std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked)
+std::string Worker::generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked, UData *udata)
 {
-	HTTPRequestParser parser;
 	std::ostringstream oss;
 
 	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
@@ -525,28 +472,25 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		oss << "Transfer-Encoding: chunked" << CRLF;
 	else
 		oss << "Content-Length: " << content.length() << CRLF;
-	if (responseUData->alreadySessionSend == true &&
-		responseUData->sessionID != "" &&
-		responseUData->wantToDeleteSessionInCookie == true)
+	if (udata->alreadySessionSend == true && udata->sessionID != "" && udata->wantToDeleteSessionInCookie == true)
 	{
 		std::string expireTime = getExpiryDate(-3600);
-		oss << "Set-Cookie: sessionid="
-			<< "deleted"
+		oss << "Set-Cookie: sessionid=deleted"
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
-		responseUData->alreadySessionSend = false;
-		responseUData->expireTime = "";
-		responseUData->wantToDeleteSessionInCookie = false;
-		responseUData->sessionID = "";
+		udata->alreadySessionSend = false;
+		udata->expireTime = "";
+		udata->wantToDeleteSessionInCookie = false;
+		udata->sessionID = "";
 	}
-	else if (responseUData->alreadySessionSend == false && responseUData->sessionID != "")
+	else if (udata->alreadySessionSend == false && udata->sessionID != "")
 	{
 		std::string expireTime = getExpiryDate(3600);
-		oss << "Set-Cookie: sessionid=" << responseUData->sessionID
+		oss << "Set-Cookie: sessionid=" << udata->sessionID
 			<< "; Expires=" << expireTime << "; Path=/" << CRLF;
-		responseUData->alreadySessionSend = true;
-		responseUData->expireTime = expireTime;
+		udata->alreadySessionSend = true;
+		udata->expireTime = expireTime;
 	}
-	if (responseUData->keepLive)
+	if (udata->keepLive)
 		oss << "Connection: keep-alive" << CRLF2;
 	else
 		oss << "Connection: close" << CRLF2;
@@ -592,13 +536,14 @@ void Worker::broad(ResponseData *response)
 	/* 헤더를 작성해주는과정 */
 	MimeTypesParser mime(config);
 	std::string contentType = mime.getMimeType("html");
-	std::string response_header = generateHeader(tmp, contentType, 200, false);
+	std::string response_header = generateHeader(tmp, contentType, 200, false, response->udata);
 	ftSend(response, response_header);
 	ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
 
-bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
+bool Worker::checkHeaderIsKeepLive(UData *udata)
 {
+	HTTPRequest *request = udata->result;
 	std::map<std::string, std::string>::const_iterator it = request->headers.find("Connection");
 	if (it != request->headers.end())
 	{
@@ -613,15 +558,16 @@ bool Worker::checkHeaderIsKeepLive(const HTTPRequest *request)
 	return false;
 }
 
-bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &event)
+bool Worker::checkKeepLiveOptions(UData *udata)
 {
-	UData *uData = static_cast<UData *>(event.udata);
+	HTTPRequest *request = udata->result;
 	std::map<std::string, std::string>::const_iterator it = request->headers.find("keep-alive"); // 표준이지만, modHeader 이걸로
-	// std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
+																								 // std::map<std::string, std::string>::const_iterator it = request->headers.find("Keep-Alive");
 	std::string timeout;
 	std::string max;
 	size_t timeoutIdx;
 	size_t maxIdx;
+
 	if (it != request->headers.end())
 	{
 		std::string value = it->second;
@@ -641,8 +587,8 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				timeout = options[i].substr(timeoutIdx + 8, options[i].length() - 1);
 				if (timeout.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				uData->timeout = ftStoi(timeout);
-				if (uData->timeout < 0)
+				udata->timeout = ftStoi(timeout.c_str());
+				if (udata->timeout < 0)
 					return false;
 			}
 			if (maxIdx != std::string::npos)
@@ -650,8 +596,8 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 				max = options[i].substr(maxIdx + 4, options[i].length() - 1);
 				if (max.find_first_not_of("0123456789") != std::string::npos)
 					return false;
-				uData->max = ftStoi(max);
-				if (uData->max < 0)
+				udata->max = ftStoi(max.c_str());
+				if (udata->max < 0)
 					return false;
 			}
 		}
@@ -662,33 +608,30 @@ bool Worker::checkKeepLiveOptions(const HTTPRequest *request, struct kevent &eve
 
 void Worker::setTimer(int fd, int timeout)
 {
-	struct kevent timerEvent;
+	struct kevent event;
 	int timer_interval_ms = timeout * 1000;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_ADD | EV_ENABLE | EV_ONESHOT, 0, timer_interval_ms, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+	EV_SET(&event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, timer_interval_ms, NULL);
+	// events.push_back(event);
 }
 
 void Worker::deleteTimer(int fd)
 {
-	struct kevent timerEvent;
-	EV_SET(&timerEvent, fd, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
-	kevent(kq, &timerEvent, 1, NULL, 0, NULL);
+	struct kevent event;
+	EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	// events.push_back(event);
 }
 
-void Worker::registerKeepAlive(const HTTPRequest *request, struct kevent &event, int client_fd)
+void Worker::registerKeepAlive(UData *udata, int clientFd)
 {
-	if (event.udata == NULL)
-		return;
-	UData *uData = static_cast<UData *>(event.udata);
-	if (uData->keepLive == false)
+	if (udata->keepLive == false)
 	{
-		uData->keepLive = true;
-		if (checkKeepLiveOptions(request, event))
+		udata->keepLive = true;
+		if (checkKeepLiveOptions(udata))
 		{
-			if (uData->timeout > 0)
-				setTimer(client_fd, uData->timeout);
+			if (udata->timeout > 0)
+				setTimer(clientFd, udata->timeout);
 		}
-		Socket::enableKeepAlive(client_fd);
+		Socket::enableKeepAlive(clientFd);
 	}
 }
 
@@ -703,27 +646,28 @@ std::string Worker::getExpiryDate(int secondsToAdd)
 	return std::string(buffer);
 }
 
-void Worker::cookieCheck(HTTPRequest *result)
+void Worker::cookieCheck(UData *udata)
 {
-	if (result->headers.find("Cookie") != result->headers.end())
+	HTTPRequest *request = udata->result;
+	if (request->headers.find("Cookie") != request->headers.end())
 	{
-		std::string cookie = result->headers["Cookie"];
+		std::string cookie = request->headers["Cookie"];
 		if (cookie.find("sessionid="))
 		{
 			std::string cookieSessionId = cookie.substr(10, 42);
-			if (responseUData->sessionID == cookieSessionId)
-				responseUData->sesssionValid = true;
+			if (udata->sessionID == cookieSessionId)
+				udata->sesssionValid = true;
 			else
-				responseUData->sesssionValid = false;
+				udata->sesssionValid = false;
 		}
-		responseUData->sesssionValid = isCookieValid(responseUData->expireTime);
-		if (responseUData->sesssionValid)
+		udata->sesssionValid = isCookieValid(udata->expireTime);
+		if (udata->sesssionValid)
 			std::cout << "session is valid" << std::endl;
 		else
 			std::cout << "session is invalid" << std::endl;
 	}
 	else
-		responseUData->sesssionValid = false;
+		udata->sesssionValid = false;
 }
 
 bool Worker::isCookieValid(const std::string &expireTime)
@@ -767,7 +711,7 @@ bool Worker::invalidResponse(ResponseData *response)
 {
 	if (!isFile(response->resourcePath))
 	{
-		if (response->method == POST || response->method == PUT)
+		if (needBody(response->method))
 			return false;
 		if (response->autoindex)
 			broad(response);

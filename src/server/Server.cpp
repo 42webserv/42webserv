@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/09 16:11:08 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/03 13:52:23 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:26:19 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "commonConfig.hpp"
-#include "commonProcess.hpp"
+#include "commonUtils.hpp"
 
 /*
  * A default constructor
@@ -44,6 +44,11 @@ Server &Server::operator=(const Server &ref)
  */
 Server::~Server()
 {
+    for (std::vector<ServerInfo>::const_iterator it = this->servers.begin(); it != this->servers.end(); it++)
+    {
+        ServerInfo server = *it;
+        server.closeSockets();
+    }
 }
 
 /**
@@ -51,11 +56,11 @@ Server::~Server()
  *
  * @param config conf 파일을 파싱한 클래스
  */
-void Server::setServer(Config &config)
+void Server::setServer(Config &config, std::vector<struct kevent> &events)
 {
     std::vector<Directive> server;
     config.getAllDirectives(server, config.getDirectives(), SERVER_DIRECTIVE);
-    setUpServer(server);
+    setUpServer(server, events);
 }
 
 /**
@@ -79,10 +84,10 @@ void Server::setUpListen(ServerInfo &tmpServ, std::vector<Directive> &serverBloc
     }
     if (tmpServ.ports.size() != 0)
         return;
-    if (find(this->validPorts.begin(), this->validPorts.end(), 80) != this->validPorts.end())
+    if (find(this->validPorts.begin(), this->validPorts.end(), DEFAULT_PORT) != this->validPorts.end())
         stderrExit("Error : duplicate port number 80\n");
-    tmpServ.ports.push_back(80);
-    this->validPorts.push_back(80);
+    tmpServ.ports.push_back(DEFAULT_PORT);
+    this->validPorts.push_back(DEFAULT_PORT);
 }
 
 /**
@@ -136,7 +141,7 @@ size_t Server::findClientMaxBodySize(std::vector<Directive> &serverBlocks)
         if (serverBlocks[i].name == CLIENT_MAX_BODY_SIZE_DIRECTIVE)
             return static_cast<size_t>(strtod(serverBlocks[i].value.c_str(), NULL));
     }
-    return 1000000;
+    return DEFAULT_CLIENT_MAX_BODY_SIZE;
 }
 
 /**
@@ -223,20 +228,26 @@ void Server::setUpLocation(ServerInfo &tmpServ, std::vector<Directive> &serverBl
  *
  * @param serverBlocks 파싱된 서버 블록
  */
-void Server::setUpServer(std::vector<Directive> &serverBlocks)
+void Server::setUpServer(std::vector<Directive> &serverBlocks, std::vector<struct kevent> &events)
 {
     for (size_t i = 0; i < serverBlocks.size(); i++)
     {
-        ServerInfo tmpServ;
-        setUpListen(tmpServ, serverBlocks[i].block);
-        tmpServ.serverName = findServerName(serverBlocks[i].block);
-        tmpServ.clientMaxBodySize = findClientMaxBodySize(serverBlocks[i].block);
-        tmpServ.root = findRoot(serverBlocks[i].block);
-        setUpIndex(tmpServ, serverBlocks[i].block);
-        setUpErrorPage(tmpServ, serverBlocks[i].block);
-        setUpLimitExcept(tmpServ, serverBlocks[i].block);
-        setUpLocation(tmpServ, serverBlocks[i].block);
-        this->servers.push_back(tmpServ);
+        ServerInfo server;
+        setUpListen(server, serverBlocks[i].block);
+        server.serverName = findServerName(serverBlocks[i].block);
+        server.clientMaxBodySize = findClientMaxBodySize(serverBlocks[i].block);
+        server.root = findRoot(serverBlocks[i].block);
+        setUpIndex(server, serverBlocks[i].block);
+        setUpErrorPage(server, serverBlocks[i].block);
+        setUpLimitExcept(server, serverBlocks[i].block);
+        setUpLocation(server, serverBlocks[i].block);
+        for (size_t i = 0; i < server.ports.size(); i++)
+        {
+            int &port = server.ports[i];
+            Socket *socket = new Socket(events, port);
+            server.sockets.push_back(socket);
+        }
+        this->servers.push_back(server);
     }
 }
 
@@ -266,4 +277,56 @@ void Server::printServer()
             std::cout << "errorPage : " << iter->first << ", " << iter->second << std::endl;
         std::cout << "===============================\n\n";
     }
+}
+
+ServerInfo &Server::findServer(const int &fd)
+{
+    for (size_t i = 0; i < this->servers.size(); i++)
+    {
+        ServerInfo &server = this->servers[i];
+        std::vector<Socket *> &sockets = server.sockets;
+        for (size_t j = 0; j < sockets.size(); j++)
+        {
+            Socket &socket = *sockets[j];
+            if (socket._serverFd == fd)
+                return server;
+            else
+            {
+                const std::vector<int> &clientFds = socket._clientFds;
+                for (size_t k = 0; k < clientFds.size(); k++)
+                {
+                    const int clientFd = clientFds[k];
+                    if (clientFd == fd)
+                        return server;
+                }
+            }
+        }
+    }
+    // TODO: 예외처리
+    return this->servers[0];
+}
+
+Socket *Server::findSocket(const int &fd)
+{
+    for (size_t i = 0; i < this->servers.size(); i++)
+    {
+        std::vector<Socket *> &sockets = this->servers[i].sockets;
+        for (size_t j = 0; j < sockets.size(); j++)
+        {
+            Socket &socket = *sockets[j];
+            if (socket._serverFd == fd)
+                return &socket;
+            else
+            {
+                const std::vector<int> &clientFds = socket._clientFds;
+                for (size_t k = 0; k < clientFds.size(); k++)
+                {
+                    const int clientFd = clientFds[k];
+                    if (clientFd == fd)
+                        return &socket;
+                }
+            }
+        }
+    }
+    return NULL;
 }

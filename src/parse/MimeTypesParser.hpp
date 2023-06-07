@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   MimeTypesParser.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/03 18:05:34 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/05/08 18:39:19 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 09:10:41 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ private:
     void parseMimeTypes();
 
 public:
-    MimeTypesParser(Config &config);
+    MimeTypesParser(const Config &config);
 
     /*
      * A copy constructor
