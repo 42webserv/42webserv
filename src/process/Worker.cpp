@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 14:06:00 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/07 14:14:24 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,19 +260,9 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 
 	if (isCGIRequest(*response))
 	{
-		// 1
-		// resourceContent = cgi.executeCGI(getCGIPath(*response));
-		// setResponse(response, resourceContent);
-		// 2
 		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
-		// 1, 2 임시로 남겨두기
 		resourceContent = response->body;
 		ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response->chunked, response->udata));
-		// resourceContent = cgi.excuteCGI(getCGIPath(*response));
-		// std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
-		// if (tmpIdx != std::string::npos)
-		// 	resourceContent = resourceContent.substr(tmpIdx + 4);
-		// ftSend(response, generateHeader(resourceContent, "text/html", 200, response->chunked, response->udata));
 	}
 	else
 	{
