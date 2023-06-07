@@ -6,7 +6,7 @@
 #    By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/14 09:52:20 by sunhwang          #+#    #+#              #
-#    Updated: 2023/06/07 15:03:56 by chanwjeo         ###   ########.fr        #
+#    Updated: 2023/06/07 17:25:15 by chanwjeo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,7 +31,7 @@ INC_DIR		= -I$(DIR_SRC) $(SRC_INC_DIR)
 SRC_CONFIG	= CheckConfigValid Config DefaultConfig Directive
 SRC_ERROR	= commonError
 SRC_PARSE	= HTTPRequestParser MimeTypesParser
-SRC_PROCESS	= commonProcess Master Worker Response
+SRC_PROCESS	= Master Worker Response
 SRC_SOCKET	= Socket
 SRC_UTILS	= Signal Utils
 SRC_CGI		= CGI

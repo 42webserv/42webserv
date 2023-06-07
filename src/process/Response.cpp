@@ -6,12 +6,11 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 15:05:06 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "commonConfig.hpp"
-#include "commonProcess.hpp"
 #include "Response.hpp"
 
 /*
@@ -139,7 +138,7 @@ std::string Response::getPath(const HTTPRequest &request, const ResponseData &re
         if (routes != "/")
             path += routes;
     }
-    if ((i == false && isDirectory(path)) || i == true)
+    if ((i == false && Utils::isDirectory(path)) || i == true)
         path = path + "/" + index;
     return (path);
 }

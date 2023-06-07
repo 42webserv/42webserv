@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 15:49:49 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 17:37:50 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,11 +86,168 @@ std::string Utils::getExpiryDate(int secondsToAdd)
     std::strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", expiration);
     return std::string(buffer);
 }
+
+/**
+ *
+ *
+ * @param client_fd 브라우저 포트번호
+ */
+std::string Utils::uploadPageGenerator(std::string executePath)
+{
+    std::stringstream broadHtml;
+    broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
+    return broadHtml.str();
+}
+
+std::vector<Directive>::const_iterator Utils::findDirective(const std::vector<Directive> &directives, const std::string &name)
+{
+    for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
+    {
+        if (isEqual(it->name, name))
+            return it;
+    }
+    return directives.end();
+}
+
+std::vector<Directive>::const_iterator Utils::findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value)
+{
+    for (std::vector<Directive>::const_iterator it = directives.begin(); it != directives.end(); it++)
+    {
+        if (isEqual(it->name, name) && isEqual(it->value, value))
+            return it;
+    }
+    return directives.end();
+}
+
+/**
+ * HTTP 요청 메세지에서 Content-Type 헤더의 값을 반환
+ *
+ * @param request 파싱된 HTTP 요청
+ * @return 문자열의 Content-Type 값 혹은 기본값
+ */
+const std::string Utils::getContentType(const HTTPRequest &request)
+{
+    const std::map<std::string, std::string> &headers = request.headers;
+
+    for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+    {
+        if (Utils::isEqual(it->first, "Content-Type"))
+            return it->second;
+    }
+    return "text/plain";
+}
+
 bool Utils::needBody(const std::string &method)
 {
     if (method.empty())
         return false;
-    if (isEqual(method, POST) || isEqual(method, PUT))
+    if (Utils::isEqual(method, POST) || Utils::isEqual(method, PUT))
         return true;
     return false;
+}
+
+std::string Utils::lower(const std::string &s)
+{
+    std::string lowerS = s;
+
+    for (size_t i = 0; i < lowerS.size(); i++)
+    {
+        lowerS[i] = std::tolower(lowerS[i]);
+    }
+    return lowerS;
+}
+
+bool Utils::isEqual(const std::string &s1, const std::string &s2)
+{
+    std::string lowerS1 = lower(s1);
+    std::string lowerS2 = lower(s2);
+
+    return lowerS1 == lowerS2;
+}
+
+bool Utils::writeFile(const std::string &path, const std::string &contents)
+{
+    std::ofstream file(path.c_str(), std::ios::out | std::ios::trunc);
+
+    if (!file.is_open())
+        return false;
+    file << contents;
+    file.close();
+    return true;
+}
+
+std::string Utils::readFile(const std::string &path)
+{
+    std::ifstream file(path.c_str());
+
+    if (!file.is_open())
+        return "";
+    std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    return contents;
+}
+
+/**
+ * @brief Check if the path is a directory
+ * @param path
+ */
+bool Utils::isDirectory(const std::string &path)
+{
+    struct stat st;
+
+    stat(path.c_str(), &st);
+    if (S_ISDIR(st.st_mode))
+        return true;
+    return false;
+}
+
+/**
+ * @brief Check if the path is a file
+ * @param path
+ */
+bool Utils::isFile(const std::string &path)
+{
+    struct stat st;
+
+    stat(path.c_str(), &st);
+    if (S_ISREG(st.st_mode))
+        return true;
+    return false;
+}
+
+bool Utils::isMethod(const std::string &method)
+{
+    const std::string methods[] = {GET, HEAD, POST, PUT, PATCH, DELETE, CONNECT, TRACE, OPTIONS};
+
+    for (size_t i = 0; i < sizeof(methods) / sizeof(methods[0]); i++)
+        if (method == methods[i])
+            return true;
+    return false;
+}
+
+/**
+ * @brief Send response to client
+ * @param socket
+ * @param buffer
+ */
+void Utils::ftSend(const int &socket, const std::string &buffer)
+{
+    if (buffer.empty())
+        return;
+    send(socket, buffer.c_str(), buffer.length(), 0);
+}
+
+/**
+ * @brief Send response to client
+ * @param response
+ * @param contents
+ */
+void Utils::ftSend(const ResponseData *response, const std::string &contents)
+{
+    Utils::ftSend(response->clientFd, contents);
+}
+
+void Utils::ftSend(const ResponseData &response, const std::string &contents)
+{
+    Utils::ftSend(response.clientFd, contents);
 }
