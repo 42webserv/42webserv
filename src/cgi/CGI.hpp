@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/06/05 13:05:48 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/06 20:37:33 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include "Config.hpp"
 #include "HTTPRequestParser.hpp"
+#include "Utils.hpp"
 
 #define R 0
 #define W 1

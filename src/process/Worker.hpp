@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 09:08:20 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:05:31 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,11 @@
 #include "commonConfig.hpp"
 #include "commonError.hpp"
 #include "commonProcess.hpp"
-#include "commonUtils.hpp"
 #include "HTTPRequestParser.hpp"
 #include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
+#include "Utils.hpp"
 
 #define BUFFER_SIZE 1024
 #define CHUNK_SIZE 500
@@ -55,12 +55,10 @@ private:
 	void postResponse(ResponseData *response, const HTTPRequest &request);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
-	std::string errorPageGenerator(int errorCode);
 	std::string uploadPageGenerator(std::string executePath);
 	void errorResponse(ResponseData *response, int errorCode);
-	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, bool chunked, UData *udata);
-	std::string generateErrorHeader(int status_code, const std::string &message);
-	bool isCGIRequest(const ResponseData &response);
+	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, ResponseData *response);
+	bool isCGIRequest(ResponseData &response);
 	std::string getCGIPath(ResponseData &response);
 	void broad(ResponseData *response);
 	void registerKeepAlive(UData *udata, int clientFd);
