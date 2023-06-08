@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 15:21:29 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 16:53:34 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ struct ResponseData
     std::string body;
     size_t contentLength;
     ServerInfo server;
-    int statusCode;
+    unsigned int statusCode;
     std::string charset;
     UData *udata;
     bool chunked;

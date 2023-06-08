@@ -6,12 +6,13 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 15:12:03 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 16:54:45 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
 #include "Worker.hpp"
+// #include <sys/socket.h>
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
 
@@ -50,7 +51,11 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		// Parse request
 		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
+		{
+			// send 413 error
+			// disconnectx(int, sae_associd_t, sae_connid_t)
 			return;
+		}
 		udata->result = result;
 		// Add write event
 		struct kevent newEvent;

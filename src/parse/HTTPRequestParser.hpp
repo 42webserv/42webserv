@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 22:42:29 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/08 16:53:35 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ struct HTTPRequest
     std::string name;
     bool chunked;
     long long bodySize;
+    unsigned int statusCode;
     //  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
     HTTPRequest &operator=(const HTTPRequest &ref);
 };
@@ -67,6 +68,7 @@ private:
     std::string name_;
     std::string port_;
     long long bodySize_;
+    unsigned int statusCode;
 
     bool parseMethod();
     bool parsePath();
