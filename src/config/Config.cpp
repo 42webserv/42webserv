@@ -3,10 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
+<<<<<<< HEAD
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
 /*   Updated: 2023/06/07 11:13:49 by sanghan          ###   ########.fr       */
+=======
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
+/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
+>>>>>>> develop
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +24,7 @@
 #include <stack>
 #include <sys/stat.h>
 #include "CheckConfigValid.hpp"
-#include "commonProcess.hpp"
+#include "Utils.hpp"
 #include "commonConfig.hpp"
 #include "Config.hpp"
 #include "DefaultConfig.hpp"
@@ -295,7 +302,7 @@ std::vector<std::string> Config::split(std::string input, char delimiter)
 // 필요없을 시 지울 것 //
 // bool Config::_isDirectoryExists(const std::string &directoryPath, std::string directiveName)
 // {
-// 	if (isDirectory(directoryPath))
+// 	if (Utils::isDirectory(directoryPath))
 // 		return true;
 // 	std::cerr << "Error: " << directiveName << " value must be directory " << std::endl;
 // 	exit(1);
@@ -325,7 +332,7 @@ std::vector<std::string> Config::split(std::string input, char delimiter)
 // 	if (filePath[0] != '/' && root != "")
 // 		root += "/";
 // 	root += filePath;
-// 	if (isFile(root))
+// 	if (Utils::isFile(root))
 // 		return true;
 // 	std::cerr << "Error: " << directiveName << " value must be file " << std::endl;
 // 	exit(1);

@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:23:49 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 15:06:51 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,8 @@
 #include "CGI.hpp"
 #include "commonConfig.hpp"
 #include "commonError.hpp"
-#include "commonProcess.hpp"
 #include "HTTPRequestParser.hpp"
+#include "MimeTypesParser.hpp"
 #include "Server.hpp"
 #include "Signal.hpp"
 #include "Socket.hpp"
@@ -55,7 +55,6 @@ private:
 	void postResponse(ResponseData *response, const HTTPRequest &request);
 	void putResponse(ResponseData *response);
 	void deleteResponse(ResponseData *response);
-	std::string uploadPageGenerator(std::string executePath);
 	void errorResponse(ResponseData *response, int errorCode);
 	std::string generateHeader(const std::string &content, const std::string &contentType, int statusCode, ResponseData *response);
 	bool isCGIRequest(ResponseData &response);
@@ -64,8 +63,6 @@ private:
 	void registerKeepAlive(UData *udata, int clientFd);
 	bool checkHeaderIsKeepLive(UData *udata);
 	bool checkKeepLiveOptions(UData *udata);
-	void setTimer(int fd, int timeout);
-	void deleteTimer(int fd);
 	std::string generateSessionID(int length);
 	std::string getExpiryDate(int secondsToAdd);
 	bool isCookieValid(const std::string &expireTime);
