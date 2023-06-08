@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 15:12:03 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 16:52:18 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -429,7 +429,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	std::ostringstream oss;
 
 	UData *udata = response->udata;
-	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
+	oss << "HTTP/1.1 " << statusCode << " " << response->statusCodeMap[statusCode] << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
 	if (response->chunked)
 		oss << "Transfer-Encoding: chunked" << CRLF;
@@ -646,13 +646,12 @@ bool Worker::invalidResponse(ResponseData *response)
 	return false;
 }
 
-//문자열 A에서 문자열 B와 C 사이의 문자열 추출
+// 문자열 A에서 문자열 B와 C 사이의 문자열 추출
 
-
-//Response의 statusCode, contentType, charset, body 세팅
+// Response의 statusCode, contentType, charset, body 세팅
 void Worker::setResponse(ResponseData *response, const std::string &resourceContent)
 {
-	//Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
+	// Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
 	if (Utils::extractSubstring(resourceContent, "Status: ", "\0") == "")
 	{
 		response->statusCode = 200;
