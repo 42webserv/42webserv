@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 13:23:21 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/08 18:36:09 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,28 +148,35 @@ void Worker::run()
 
 bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response)
 {
-	std::map<std::string, std::string>::const_iterator it = request.headers.find("content-length");
-	if (it != request.headers.end()) // Client의 request body size가 너무 큰 경우
-	{
-		std::string str = it->second.substr(0, it->second.find_last_of('\r'));
-		std::stringstream ss(str);
-		size_t requestBodySize;
-		ss >> requestBodySize;
+	const std::map<std::string, std::string> &headers = request.headers;
 
-		size_t clientMaxBodySize = response->server.clientMaxBodySize;
-		std::vector<Directive>::const_iterator dir = Utils::findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
-		if (dir != response->server.locations.end())
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+	{
+		const std::pair<std::string, std::string> &header = *it;
+		if (Utils::isEqual(header.first, "Content-Length"))
 		{
-			std::vector<Directive>::const_iterator dirr;
-			dirr = Utils::findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
-			if (dirr != dir->block.end())
-				clientMaxBodySize = atoi(dirr->value.c_str());
-		}
-		if (requestBodySize > clientMaxBodySize)
-		{
-			std::cout << "It has too big body than client_max_body_size" << std::endl;
-			errorResponse(response, 413);
-			return false;
+			// Client의 request body size가 너무 큰 경우
+			std::string str = header.second.substr(0, header.second.find_last_of('\r'));
+			std::stringstream ss(str);
+			size_t requestBodySize;
+			ss >> requestBodySize;
+
+			size_t clientMaxBodySize = response->server.clientMaxBodySize;
+			std::vector<Directive>::const_iterator dir = Utils::findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
+			if (dir != response->server.locations.end())
+			{
+				std::vector<Directive>::const_iterator dirr;
+				dirr = Utils::findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
+				if (dirr != dir->block.end())
+					clientMaxBodySize = atoi(dirr->value.c_str());
+			}
+			if (requestBodySize > clientMaxBodySize)
+			{
+				std::cout << "It has too big body than client_max_body_size" << std::endl;
+				errorResponse(response, 413);
+				return false;
+			}
+			break;
 		}
 	}
 	return true;
