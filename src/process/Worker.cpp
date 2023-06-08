@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 16:57:11 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 18:31:23 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,21 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		UData *udata = static_cast<UData *>(event.udata);
 		// Parse request
 		HTTPRequest *result = parser.parse(udata->request);
+		if (result.statusCode != 200)
+		{
+			switch(result.statusCode)
+			{
+			case 411:
+				// Utils::ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
+				break;
+
+			case 413:
+				break;
+
+			default:
+				break;
+			}
+		}
 		if (!result)
 		{
 			// send 413 error
