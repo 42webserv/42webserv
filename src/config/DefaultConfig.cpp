@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DefaultConfig.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:59:10 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/05/30 16:34:48 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/08 19:07:33 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,7 @@ void DefaultConfig::addServerDirectives(Directive &server, const std::string nam
 		std::make_pair(SERVER_NAME_DIRECTIVE, "domain1.com www.domain1.com"),
 		std::make_pair(ACCESS_LOG_DIRECTIVE, "logs/domain1.access.log  main"),
 		std::make_pair(ROOT_DIRECTIVE, "html"),
+		std::make_pair(CLIENT_MAX_BODY_SIZE_DIRECTIVE, "1000000"),
 	};
 
 	setDirectivesToMap(dirs, ps, sizeof(ps) / sizeof(ps[0]));
