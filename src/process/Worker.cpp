@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:48:09 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/08 13:23:21 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
+		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
 	}
@@ -156,11 +157,11 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		ss >> requestBodySize;
 
 		size_t clientMaxBodySize = response->server.clientMaxBodySize;
-		std::vector<Directive>::const_iterator dir = findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
+		std::vector<Directive>::const_iterator dir = Utils::findDirectiveNameValue(response->server.locations, LOCATION_DIRECTIVE, request.path);
 		if (dir != response->server.locations.end())
 		{
 			std::vector<Directive>::const_iterator dirr;
-			dirr = findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
+			dirr = Utils::findDirective(dir->block, CLIENT_MAX_BODY_SIZE_DIRECTIVE);
 			if (dirr != dir->block.end())
 				clientMaxBodySize = atoi(dirr->value.c_str());
 		}
@@ -204,15 +205,14 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		delete response;
 		return;
 	}
-
-	if (response->path == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
+	if (response->location->value == "/session" && udata->sessionID.empty() && udata->sesssionValid == false) // 만약 /session 으로 요청이 들어온다면 session을 만들어줌
 		udata->sessionID = generateSessionID(32);
-	else if (response->path == "/session/delete" && udata->alreadySessionSend == true &&
+	else if (response->location->value == "/session/delete" && udata->alreadySessionSend == true &&
 			 udata->sessionID != "")
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == DELETE) // TODO DELETE도 처리해주나
+	if (response->method == GET || response->method == POST || response->method == HEAD) // TODO DELETE도 처리해주나
 		sendResponse(response, request);
 	else if (response->method == PUT)
 	{
@@ -225,8 +225,8 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
 		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		std::string response_header = generateHeader(response_content, "text/html", 200, response);
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		Utils::ftSend(response, response_header);
+		Utils::ftSend(response, response_content);
 	}
 	else if (response->method == DELETE)
 	{
@@ -257,18 +257,18 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
 		if (tmpIdx != std::string::npos)
 			resourceContent = resourceContent.substr(tmpIdx + 4);
-		ftSend(response, generateHeader(resourceContent, "text/html", 200, response));
+		Utils::ftSend(response, generateHeader(resourceContent, "text/html", 200, response));
 	}
 	else
 	{
 		if (response->method == POST)
 		{
 			resourceContent = response->body;
-			writeFile(response->resourcePath, resourceContent);
+			Utils::writeFile(response->resourcePath, resourceContent);
 		}
 		else
-			resourceContent = readFile(response->resourcePath);
-		ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
+			resourceContent = Utils::readFile(response->resourcePath);
+		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, 201, response));
 	}
 	if (response->chunked)
 	{
@@ -280,12 +280,12 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 			else
 				content = resourceContent.substr(contentIndex * CHUNK_SIZE, CHUNK_SIZE);
 			chunkData = Utils::toHexString(content.length()) + "\r\n" + content + "\r\n";
-			ftSend(response, chunkData);
+			Utils::ftSend(response, chunkData);
 		}
-		ftSend(response, "0\r\n\r\n");
+		Utils::ftSend(response, "0\r\n\r\n");
 	}
 	else
-		ftSend(response, resourceContent);
+		Utils::ftSend(response, resourceContent);
 }
 
 /**
@@ -332,11 +332,11 @@ bool Worker::isCGIRequest(ResponseData &response)
 		// ./src/cgi-bin/src/cgi-bin/upload.py
 		if (path == "upload") // uploadFile
 		{
-			std::string uploadContent = uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
+			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
-			ftSend(response, response_header);
-			ftSend(response, uploadContent);
+			Utils::ftSend(response, response_header);
+			Utils::ftSend(response, uploadContent);
 		}
 		return true;
 	}
@@ -354,17 +354,17 @@ void Worker::putResponse(ResponseData *response)
 {
 	if (response->body.length() > 10000)
 		response->body = response->body.substr(0, 10000);
-	if (writeFile(response->resourcePath, response->body))
+	if (Utils::writeFile(response->resourcePath, response->body))
 	{
 		// 리소스 생성에 성공한 경우
-		std::string resource_content = readFile(response->resourcePath);
+		std::string resource_content = Utils::readFile(response->resourcePath);
 		if (resource_content.empty())
 			return errorResponse(response, 404);
 		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
 		response->chunked = false;
 		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
-		ftSend(response, resource_header);
-		ftSend(response, resource_content);
+		Utils::ftSend(response, resource_header);
+		Utils::ftSend(response, resource_content);
 	}
 	else
 	{
@@ -390,21 +390,9 @@ void Worker::deleteResponse(ResponseData *response)
 		std::string response_content = "Resource deleted successfully";
 		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		std::string response_header = generateHeader(response_content, "text/html", 200, response);
-		ftSend(response, response_header);
-		ftSend(response, response_content);
+		Utils::ftSend(response, response_header);
+		Utils::ftSend(response, response_content);
 	}
-}
-
-/**
- *
- *
- * @param client_fd 브라우저 포트번호
- */
-std::string Worker::uploadPageGenerator(std::string executePath)
-{
-	std::stringstream broadHtml;
-	broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
-	return broadHtml.str();
 }
 
 /**
@@ -422,13 +410,13 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	else
 	{
 		const std::string errorPath = response->server.root + it->second;
-		errorContent = readFile(errorPath);
+		errorContent = Utils::readFile(errorPath);
 		if (errorContent.empty())
 			errorContent = Utils::errorPageGenerator(response, errorCode);
 	}
 	response->chunked = false;
-	ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
-	ftSend(response->clientFd, errorContent);
+	Utils::ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
+	Utils::ftSend(response->clientFd, errorContent);
 }
 
 /**
@@ -498,8 +486,8 @@ void Worker::broad(ResponseData *response)
 	std::string contentType = mime.getMimeType("html");
 	// std::string response_header = generateHeader(tmp, contentType, 200, false);
 	std::string response_header = generateHeader(tmp, contentType, 200, response);
-	ftSend(response, response_header);
-	ftSend(response, tmp); // 완성된 html 을 body로 보냄
+	Utils::ftSend(response, response_header);
+	Utils::ftSend(response, tmp); // 완성된 html 을 body로 보냄
 }
 
 bool Worker::checkHeaderIsKeepLive(UData *udata)
@@ -596,9 +584,9 @@ void Worker::cookieCheck(UData *udata)
 				udata->sesssionValid = false;
 		}
 		udata->sesssionValid = isCookieValid(udata->expireTime);
-		if (udata->sesssionValid)
+		if (udata->sesssionValid && udata->alreadySessionSend)
 			std::cout << "session is valid" << std::endl;
-		else
+		else if (udata->alreadySessionSend)
 			std::cout << "session is invalid" << std::endl;
 	}
 	else
@@ -638,13 +626,13 @@ void Worker::redirection(ResponseData *response)
 	oss << "HTTP/1.1 " << response->returnState << " " << response->statusCodeMap[Utils::ftStoi(response->returnState)] << CRLF;
 	oss << "Location: " << response->redirect << CRLF;
 	oss << "Connection: close" << CRLF2;
-	ftSend(response->clientFd, oss.str());
+	Utils::ftSend(response->clientFd, oss.str());
 	return;
 }
 
 bool Worker::invalidResponse(ResponseData *response)
 {
-	if (!isFile(response->resourcePath))
+	if (!Utils::isFile(response->resourcePath))
 	{
 		if (Utils::needBody(response->method))
 

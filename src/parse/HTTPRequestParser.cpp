@@ -6,12 +6,11 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:47:11 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/08 13:23:00 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "commonConfig.hpp"
-#include "commonProcess.hpp"
 #include "Utils.hpp"
 #include "HTTPRequestParser.hpp"
 
@@ -59,7 +58,7 @@ bool HTTPRequestParser::parseMethod()
     if (pos == std::string::npos)
         return false;
     std::string method_str = buffer_.substr(0, pos);
-    if (isMethod(method_str))
+    if (Utils::isMethod(method_str))
         method_ = method_str;
     else
         return false;
