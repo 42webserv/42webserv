@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 15:08:35 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 15:12:03 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,7 +255,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	{
 		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		resourceContent = response->body;
-		ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
+		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
 	}
 	else
 	{

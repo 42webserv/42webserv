@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/08 15:06:41 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/08 15:12:32 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,6 +228,8 @@ std::string Utils::extractSubstring(const std::string &A, const std::string &B, 
 		return "";
 
 	return A.substr(start, end - start);
+}
+
 bool Utils::isMethod(const std::string &method)
 {
     const std::string methods[] = {GET, HEAD, POST, PUT, PATCH, DELETE, CONNECT, TRACE, OPTIONS};
