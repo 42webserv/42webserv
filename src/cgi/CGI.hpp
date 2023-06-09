@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:35:20 by yje               #+#    #+#             */
-/*   Updated: 2023/06/08 22:55:53 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 15:54:38 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,6 @@ public:
 	~CGI(void);
 
 	void setEnvp(std::string key, std::string value);
-	std::string excuteCGI(const std::string &context);
+	std::string executeCGI(const std::string &context);
 };
 #endif

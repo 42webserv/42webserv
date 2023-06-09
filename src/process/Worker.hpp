@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 17:39:15 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/08 15:06:51 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,8 @@ private:
 	void cookieCheck(UData *udata);
 	void redirection(ResponseData *response);
 	bool invalidResponse(ResponseData *response);
+	bool checkHttpRequestClientMaxBodySize(int k, const HTTPRequest &request, ResponseData *response);
+	void setResponse(ResponseData *response, const std::string &resourceContent);
 	bool checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response);
 	void sendResponse(ResponseData *response, const HTTPRequest &request);
 

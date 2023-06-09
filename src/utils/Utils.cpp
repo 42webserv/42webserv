@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:37:50 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/08 15:12:32 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,6 +213,21 @@ bool Utils::isFile(const std::string &path)
     if (S_ISREG(st.st_mode))
         return true;
     return false;
+}
+
+std::string Utils::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
+{
+	size_t start = A.find(B);
+	if (start == std::string::npos)
+		return "";
+	start += B.length();
+	size_t end = A.find(C, start);
+	if (C == "\0")
+		return A.substr(start);
+	if (end == std::string::npos)
+		return "";
+
+	return A.substr(start, end - start);
 }
 
 bool Utils::isMethod(const std::string &method)

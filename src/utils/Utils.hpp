@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:39:51 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/08 15:06:42 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ public:
     static void setTimer(const int &kq, const int &fd, const int &timeout);
     static std::string getExpiryDate(int secondsToAdd);
     static bool needBody(const std::string &method);
+    static std::string extractSubstring(const std::string &A, const std::string &B, const std::string &C);
     static std::string uploadPageGenerator(std::string executePath);
     static std::vector<Directive>::const_iterator findDirective(const std::vector<Directive> &directives, const std::string &name);
     static std::vector<Directive>::const_iterator findDirectiveNameValue(const std::vector<Directive> &directives, const std::string &name, const std::string &value);
