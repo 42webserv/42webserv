@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:32:06 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 15:05:12 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/07 15:21:29 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ struct ResponseData
     std::string body;
     size_t contentLength;
     ServerInfo server;
+    int statusCode;
+    std::string charset;
     UData *udata;
     bool chunked;
     long long bodySize;
@@ -59,7 +61,7 @@ private:
     void setUpAutoindex(ResponseData *response);
     void setUpLimitExcept(ResponseData *response);
     void setUpReturnState(ResponseData *response);
-    void setUpCgiPath(ResponseData *respone);
+    void setUpCgiPath(ResponseData *response);
     Directive *findLocation(const HTTPRequest &request, std::vector<Directive> &locations);
     std::string findMimeType(const std::string &path, const Config &config);
     std::string getPath(const HTTPRequest &request, const ResponseData &response);

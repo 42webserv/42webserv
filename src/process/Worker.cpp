@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 20:01:41 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/09 18:29:46 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,14 +253,14 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 
 	if (isCGIRequest(*response))
 	{
-		resourceContent = cgi.excuteCGI(getCGIPath(*response));
-		std::size_t tmpIdx = resourceContent.find("\r\n\r\n");
-		if (tmpIdx != std::string::npos)
-			resourceContent = resourceContent.substr(tmpIdx + 4);
-		Utils::ftSend(response, generateHeader(resourceContent, "text/html", 200, response));
+		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
+		resourceContent = response->body;
+		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
 	}
 	else
 	{
+		if (Utils::getLastStringSplit(response->path, "/") == "upload")
+			return;
 		if (response->method == POST)
 		{
 			resourceContent = response->body;
@@ -323,20 +323,13 @@ bool Worker::isCGIRequest(ResponseData &response)
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
 	{
-		// upload
-		std::string path;
-		size_t pos = response.path.rfind("/"); // "./src/cgi-bin/upload.py" -> upload.py 추출
-		if (pos != std::string::npos)
-			path = response.path.substr(pos + 1);
-		std::cout << "path " << path << std::endl; // upload.py
-		// ./src/cgi-bin/src/cgi-bin/upload.py
-		if (path == "upload") // uploadFile
+		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile
 		{
 			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
-			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			Utils::ftSend(response, response_header);
 			Utils::ftSend(response, uploadContent);
+			return false;
 		}
 		return true;
 	}
@@ -431,7 +424,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	std::ostringstream oss;
 
 	UData *udata = response->udata;
-	oss << "HTTP/1.1 " << statusCode << " OK" << CRLF;
+	oss << "HTTP/1.1 " << statusCode << " " << response->statusCodeMap[statusCode] << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
 	if (response->chunked)
 		oss << "Transfer-Encoding: chunked" << CRLF;
@@ -646,4 +639,26 @@ bool Worker::invalidResponse(ResponseData *response)
 		return true;
 	}
 	return false;
+}
+
+// 문자열 A에서 문자열 B와 C 사이의 문자열 추출
+
+// Response의 statusCode, contentType, charset, body 세팅
+void Worker::setResponse(ResponseData *response, const std::string &resourceContent)
+{
+	// Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
+	if (Utils::extractSubstring(resourceContent, "Status: ", "\0") == "")
+	{
+		response->statusCode = 200;
+		response->contentType = "text/html";
+		response->charset = "utf-8";
+		response->body = resourceContent;
+	}
+	else
+	{
+		response->statusCode = Utils::ftStoi(Utils::extractSubstring(resourceContent, "Status: ", " OK"));
+		response->contentType = Utils::extractSubstring(resourceContent, "Content-Type: ", ";");
+		response->charset = Utils::extractSubstring(resourceContent, "charset=", CRLF);
+		response->body = Utils::extractSubstring(resourceContent, "\r\n\r\n", "\0");
+	}
 }

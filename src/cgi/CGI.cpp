@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/08 15:12:39 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,37 +65,6 @@ void CGI::setEnvp(std::string key, std::string value)
 	this->envp_[key] = value;
 }
 
-// std::string CGI::getBody() const
-// {
-// 	return body_;
-// }
-
-// void CGI::setBody(const std::string &body)
-// {
-// 	this->body_ = body;
-// }
-
-// std::string CGI::getResponseBody() const
-// {
-// 	return this->body_;
-// }
-
-// void CGI::setEnv(const std::map<std::string, std::string> &envp)
-// {
-// 	this->envp_ = envp;
-// }
-
-// bool CGI::isCgiPath(void) const
-// {
-// 	char *cgiPath = const_cast<char *>(cgiPath_.c_str());
-// 	// const char *filepath = const_cast<char *>(cgiPath_.c_str()); > filepath를 이용하는 경우 사용
-// 	if (access(cgiPath, X_OK) == -1)
-// 	{
-// 		return false;
-// 	}
-// 	return true;
-// }
-
 char **CGI::ENVPChangeStringArray()
 {
 	char **envp = new char *[this->envp_.size() + 1];
@@ -114,7 +83,7 @@ char **CGI::ENVPChangeStringArray()
 /**
  * cgi 실행
  */
-std::string CGI::excuteCGI(const std::string &program)
+std::string CGI::executeCGI(const std::string &program)
 {
 	char **envp;
 	FILE *files[2];
@@ -145,6 +114,7 @@ std::string CGI::excuteCGI(const std::string &program)
 	fileFds[R] = fileno(files[R]);
 	fileFds[W] = fileno(files[W]);
 	write(fileFds[R], body_.c_str(), body_.size());
+	// write(fileFds[R], resource_.c_str(), resource_.size());
 	if (fileFds[R] == -1 || fileFds[W] == -1)
 		throw std::runtime_error("Error creating file descriptor");
 	lseek(fileFds[R], 0, SEEK_SET);

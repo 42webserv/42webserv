@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/09 18:31:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     response->headers = request.headers;
     response->chunked = request.chunked;
     response->bodySize = request.bodySize;
-    response->root = getRootDirectory(request, server);
+    response->root = server.root;
     response->location = findLocation(request, server.locations);
     if (response->location != NULL)
     {
@@ -119,6 +119,8 @@ std::string Response::getPath(const HTTPRequest &request, const ResponseData &re
             if (pos != std::string::npos)
                 routes = routes.substr(0, pos);
         }
+        // std::string extension = Utils::getLastStringSplit(routes, "/");
+
         pos = routes.rfind("/");
         if (pos != std::string::npos)
         {
@@ -335,11 +337,13 @@ std::string Response::delQuery(std::string path)
  */
 Directive *Response::findLocation(const HTTPRequest &request, std::vector<Directive> &locations)
 {
-
+    Directive *defaultLocation = NULL;
     // location 지시문의 value와 request의 path가 일치하는지 확인
     for (std::vector<Directive>::iterator it = locations.begin(); it != locations.end(); it++)
     {
         Directive &location = *it;
+        if (location.value == "/")
+            defaultLocation = &(*it);
         if (location.value == request.path)
             return &location;
     }
@@ -360,7 +364,7 @@ Directive *Response::findLocation(const HTTPRequest &request, std::vector<Direct
         path = path.erase(pos);
         pos = path.rfind('/'); // 이부분 부터는 /를 지우면서 매칭되는 location을 찾음
     }
-    return NULL;
+    return defaultLocation;
 }
 
 void Response::initStatusCodeMap(std::map<int, std::string> &statusCodeMap)

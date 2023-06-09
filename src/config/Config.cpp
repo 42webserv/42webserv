@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/06/07 17:28:00 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/08 15:11:09 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,7 +188,7 @@ void Config::printDirectives(std::vector<Directive> directive, size_t tab)
 		{
 			std::cout << "\t";
 		}
-		std::cout << "  " << directive[i].name << " : " << directive[i].value << " : " << directive[i].pre_name << std::endl;
+		// std::cout << "  " << directive[i].name << " : " << directive[i].value << " : " << directive[i].pre_name << std::endl;
 		if (directive[i].block.empty())
 			continue;
 		Config::printDirectives(directive[i].block, tab + 1);
