@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 19:02:27 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 20:07:51 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@
 Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
     struct kevent event;
-    struct linger linger;
     int opt;
 
     // Create an AF_INET stream socket to receive incoming connections on
@@ -30,13 +29,14 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
         stderrExit("socket() error");
 
     if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) < 0)
-        stderrExit("fcntl non-block failed\n");
+        stderrExit("fcntl() error");
 
     opt = 1;
     // Allow socket descriptor to be reuseable
     if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         stderrExit("setsockopt() error");
 
+    struct linger linger;
     linger.l_onoff = 1;
     linger.l_linger = 0;
     // CLOSE_WAIT 이후 10초가 지나면 소켓을 닫는다.
@@ -99,9 +99,9 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     socklen_t addrlen = sizeof(_serverAddr);
     struct sockaddr_in clientAddr;
     struct kevent event;
-    UData *udata;
 
     // Accept incoming connection
+    memset(&clientAddr, 0, sizeof(clientAddr));
     int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &addrlen);
     if (clientFd < 0)
         stderrExit("accept() error");
@@ -109,18 +109,17 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     if (fcntl(clientFd, F_SETFL, O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
 
-    udata = new UData(clientFd, false, true); // 처음 udata 생성
-    EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
-
-    struct linger lingerOption;
-    lingerOption.l_onoff = 1;  // SO_LINGER 활성화
-    lingerOption.l_linger = 0; // linger 시간을 10초로 설정
+    struct linger linger;
+    linger.l_onoff = 1;  // SO_LINGER 활성화
+    linger.l_linger = 0; // linger 시간을 0초로 설정
 
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
-    if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
+    if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
         stderrExit("setsockopt SO_LINGER error");
 
+    UData *udata = new UData(clientFd, false, true); // 처음 udata 생성
+    EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
     events.push_back(event);
     _clientFds.push_back(clientFd);
 }
