@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/08 15:06:42 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/09 20:56:36 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ public:
     /*
      * Add it if you feel necessary additional member functions.
      */
-    static size_t minPos(size_t p1, size_t p2, size_t p3);
     static std::string toHexString(size_t value);
     static std::string errorPageGenerator(ResponseData *response, int errorCode);
     static void setTimer(const int &kq, const int &fd, const int &timeout);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/08 15:12:32 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/09 20:56:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,6 @@
  * A destructor
  */
 Utils::~Utils() {}
-
-/**
- * 3개의 인자 중 가장 작은 값 반환
- *
- * @param size_t 3개의 양수
- */
-size_t Utils::minPos(size_t p1, size_t p2, size_t p3)
-{
-    return (p1 < p2 && p1 < p3 ? p1 : (p2 < p3 && p2 < p1 ? p2 : p3));
-}
 
 /**
  * 10진수 인자를 16진수 문자열로 반환
@@ -217,17 +207,17 @@ bool Utils::isFile(const std::string &path)
 
 std::string Utils::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
 {
-	size_t start = A.find(B);
-	if (start == std::string::npos)
-		return "";
-	start += B.length();
-	size_t end = A.find(C, start);
-	if (C == "\0")
-		return A.substr(start);
-	if (end == std::string::npos)
-		return "";
+    size_t start = A.find(B);
+    if (start == std::string::npos)
+        return "";
+    start += B.length();
+    size_t end = A.find(C, start);
+    if (C == "\0")
+        return A.substr(start);
+    if (end == std::string::npos)
+        return "";
 
-	return A.substr(start, end - start);
+    return A.substr(start, end - start);
 }
 
 bool Utils::isMethod(const std::string &method)

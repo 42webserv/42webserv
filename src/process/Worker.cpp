@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 19:40:55 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 20:54:57 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,7 +120,7 @@ void Worker::run()
 		if (nevents == -1)
 		{
 			std::cerr << "kevent() error" << std::endl;
-			break;
+			return;
 		}
 		events.clear();
 		for (int i = 0; i < nevents; i++)
@@ -221,7 +221,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == HEAD) // TODO DELETE도 처리해주나
+	if (response->method == GET || response->method == POST || response->method == HEAD)
 		sendResponse(response, request);
 	else if (response->method == PUT)
 	{

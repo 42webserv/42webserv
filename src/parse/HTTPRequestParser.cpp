@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 22:37:41 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 20:53:33 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ HTTPRequestParser::HTTPRequestParser() : state_(METHOD) {}
 HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     reset();
-    buffer_ += data;
+    buffer_ = data;
 
     try
     {
@@ -98,19 +98,11 @@ bool HTTPRequestParser::parsePath()
  */
 bool HTTPRequestParser::parseHTTPVersion()
 {
-    size_t pos = Utils::minPos(buffer_.find("\r", bufferIndex), buffer_.find("\n", bufferIndex), buffer_.find(CRLF, bufferIndex));
+    size_t pos = buffer_.find(CRLF, bufferIndex);
     if (pos == std::string::npos)
         return false;
     httpVersion_ = buffer_.substr(bufferIndex, pos - bufferIndex);
-    bufferIndex = pos;
-
-    // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
-    if (buffer_.find("\n", bufferIndex) == bufferIndex)
-        bufferIndex++;
-    else if (buffer_.find("\r", bufferIndex) == bufferIndex && buffer_.find("\n", bufferIndex) == bufferIndex + 1)
-        bufferIndex += 2;
-    else if (buffer_.find("\r", bufferIndex) == bufferIndex)
-        bufferIndex++;
+    bufferIndex = pos + 2;
     state_ = HEADER_NAME;
     return true;
 }
@@ -122,14 +114,12 @@ bool HTTPRequestParser::parseHTTPVersion()
  */
 bool HTTPRequestParser::parseHeaderName()
 {
-    size_t pos = buffer_.find(':', bufferIndex);
-    // 만약 HTTP요청 메세지에서 헤더가 끝까지 제대로 오지 않는 경우, 그 이전 정보까지만 활용
+    size_t pos = buffer_.find(CRLF, bufferIndex);
     if (pos == std::string::npos)
-    {
-        state_ = Utils::needBody(method_) ? BODY : COMPLETE;
-        buffer_.clear();
-        return false; // 완전한 요청만 받기
-    }
+        return false;
+    pos = buffer_.find(COLON, bufferIndex);
+    if (pos == std::string::npos)
+        return false;
     currentHeaderName_ = buffer_.substr(bufferIndex, pos - bufferIndex);
     if (Utils::isEqual(currentHeaderName_, CONTENT_LENGTH))
         currentHeaderName_ = CONTENT_LENGTH;
@@ -146,31 +136,20 @@ bool HTTPRequestParser::parseHeaderName()
  */
 bool HTTPRequestParser::parseHeaderValue()
 {
-    size_t pos = Utils::minPos(buffer_.find("\r", bufferIndex), buffer_.find("\n", bufferIndex), buffer_.find(CRLF, bufferIndex));
+    size_t pos = buffer_.find(CRLF, bufferIndex);
     if (pos == std::string::npos)
         return false;
     std::string header_value = buffer_.substr(bufferIndex + 1, pos - bufferIndex - 1);
     headers_.insert(std::make_pair(currentHeaderName_, header_value));
-    bufferIndex = pos;
-
-    // 버퍼 개행이 \n, \r, \r\n 에 따라 각각 처리
-    if (buffer_.find("\n", bufferIndex) == bufferIndex)
-        bufferIndex++;
-    else if (buffer_.find("\r", bufferIndex) == bufferIndex && buffer_.find("\n", bufferIndex) == bufferIndex + 1)
-        bufferIndex += 2;
-    else if (buffer_.find("\r", bufferIndex) == bufferIndex)
-        bufferIndex++;
-
+    bufferIndex = pos + 2;
     if (currentHeaderName_ == HOST)
     {
-        pos = header_value.find(":");
+        pos = header_value.find(COLON);
         if (pos != std::string::npos)
         {
             addr_ = header_value.substr(0, pos);
             std::string port = header_value.substr(pos + 1);
-            if (port.empty())
-                port_ = "80";
-            else
+            if (!port.empty())
                 port_ = port;
         }
     }
@@ -201,19 +180,8 @@ HTTPRequest *HTTPRequestParser::makeRequest()
     request->path = path_;
     request->http_version = httpVersion_;
     request->chunked = false;
-    if (request->method == HEAD)
-        return request;
     request->headers = headers_;
     request->port = Utils::ftStoi(port_);
-    if (request->port < 1)
-    {
-        std::map<std::string, std::string>::iterator findHostIterator = request->headers.find(HOST);
-        if (findHostIterator != headers_.end())
-        {
-            size_t pos = findHostIterator->second.find(":");
-            request->port = strtod(findHostIterator->second.substr(pos + 1, findHostIterator->second.size()).c_str(), NULL);
-        }
-    }
     request->body = body_;
     request->bodySize = bodySize_;
     request->addr = addr_;
