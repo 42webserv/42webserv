@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 15:05:57 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/09 19:00:05 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ public:
     Socket &operator=(const Socket &ref);
     Socket(const Socket &ref);
     void connectClient(std::vector<struct kevent> &events);
-    void receiveRequest(struct kevent &event);
+    bool receiveRequest(struct kevent &event);
     void disconnectClient(struct kevent &event);
     static int enableKeepAlive(int socketFd);
     void closeClients() const;

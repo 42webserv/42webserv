@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 22:47:04 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 19:02:27 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     _clientFds.push_back(clientFd);
 }
 
-void Socket::receiveRequest(struct kevent &event)
+bool Socket::receiveRequest(struct kevent &event)
 {
     const int &fd = event.ident;
     UData *udata = static_cast<UData *>(event.udata);
@@ -136,8 +136,8 @@ void Socket::receiveRequest(struct kevent &event)
     while (true)
     {
         n = recv(fd, buf, BUFFER_SIZE - 1, 0);
-        if (n < 0)
-            break;
+        if (n == -1)
+            return false;
         else
         {
             buf[n] = '\0';
@@ -146,6 +146,7 @@ void Socket::receiveRequest(struct kevent &event)
                 break;
         }
     }
+    return true;
 }
 
 void Socket::disconnectClient(struct kevent &event)

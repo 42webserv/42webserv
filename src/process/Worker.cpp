@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 15:54:56 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 19:40:55 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,9 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 	else
 	{
 		// Client socket
-		socket.receiveRequest(event);
+		bool readData = socket.receiveRequest(event);
+		if (!readData)
+			return;
 		UData *udata = static_cast<UData *>(event.udata);
 		// Parse request
 		HTTPRequest *result = parser.parse(udata->request);
@@ -106,7 +108,7 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 
 void Worker::run()
 {
-	struct kevent eventList[10];
+	struct kevent eventList[SOMAXCONN];
 	struct kevent event;
 	int nevents;
 
@@ -114,10 +116,10 @@ void Worker::run()
 	memset(&event, 0, sizeof(event));
 	while (true)
 	{
-		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), NULL);
+		nevents = kevent(kq, &events[0], events.size(), eventList, SOMAXCONN, NULL);
 		if (nevents == -1)
 		{
-			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
+			std::cerr << "kevent() error" << std::endl;
 			break;
 		}
 		events.clear();
