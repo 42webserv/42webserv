@@ -2,9 +2,10 @@
 
 import cgi
 import os
+from urllib.parse import quote
 
 # 허용된 파일 확장자
-ALLOWED_EXTENSIONS = {'txt', 'cpp'} # 파일 형식
+ALLOWED_EXTENSIONS = {'txt', 'cpp', 'png'} # 파일 형식
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -23,14 +24,18 @@ if not isExist:
 
 if fileitem.filename:
     if allowed_file(fileitem.filename):
-        fn = os.path.basename(fileitem.filename)
-        open(os.path.join(path, fn), 'wb').write(fileitem.file.read())
-        message = "The file '{}' was upload successfull".format(fn)
+        encoded_filename = quote(fileitem.filename, encoding='utf-8')
+        fn = os.path.basename(encoded_filename)
+        with open(os.path.join(path, fn), 'wb') as f:
+            f.write(fileitem.file.read())
+        message = "The file '{}' was uploaded successful".format(fn)
     else:
         message = "Invalid file extension. Only the following file extensions are allowed: {}".format(', '.join(ALLOWED_EXTENSIONS))
 else:
-    message = "No file was upload"
+    message = "No file was uploaded"
 
+print("Content-Type: text/html; charset=utf-8")
+print()
 print("""\
 <html><body>
 <p>{}</p>

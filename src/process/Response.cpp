@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 15:33:43 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/07 20:02:43 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/09 18:31:15 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,6 +119,8 @@ std::string Response::getPath(const HTTPRequest &request, const ResponseData &re
             if (pos != std::string::npos)
                 routes = routes.substr(0, pos);
         }
+        // std::string extension = Utils::getLastStringSplit(routes, "/");
+
         pos = routes.rfind("/");
         if (pos != std::string::npos)
         {

@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 17:48:32 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/09 18:29:46 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,11 +259,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	}
 	else
 	{
-		std::string path;
-		size_t pos = response->path.rfind("/"); // "./src/cgi-bin/upload.py" -> upload.py 추출
-		if (pos != std::string::npos)
-			path = response->path.substr(pos + 1);
-		if (path == "upload")
+		if (Utils::getLastStringSplit(response->path, "/") == "upload")
 			return;
 		if (response->method == POST)
 		{
@@ -327,17 +323,9 @@ bool Worker::isCGIRequest(ResponseData &response)
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
 	{
-		// upload
-		std::string path;
-		size_t pos = response.path.rfind("/"); // "./src/cgi-bin/upload.py" -> upload.py 추출
-		if (pos != std::string::npos)
-			path = response.path.substr(pos + 1);
-		std::cout << "path " << path << std::endl; // upload.py
-		// ./src/cgi-bin/src/cgi-bin/upload.py
-		if (path == "upload") // uploadFile
+		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile
 		{
 			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
-			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			Utils::ftSend(response, response_header);
 			Utils::ftSend(response, uploadContent);

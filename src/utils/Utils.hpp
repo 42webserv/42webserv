@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/08 15:06:42 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/09 18:17:02 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@ public:
     static bool isDirectory(const std::string &path);
     static bool isFile(const std::string &path);
     static bool isMethod(const std::string &method);
+    static std::string getLastStringSplit(std::string &str, const char *sep);
 
     static void ftSend(const int &socket, const std::string &buffer);
     static void ftSend(const ResponseData &response, const std::string &contents);

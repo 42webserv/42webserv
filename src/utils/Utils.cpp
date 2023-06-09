@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/09 17:38:03 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/09 18:17:06 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,4 +265,12 @@ void Utils::ftSend(const ResponseData *response, const std::string &contents)
 void Utils::ftSend(const ResponseData &response, const std::string &contents)
 {
     Utils::ftSend(response.clientFd, contents);
+}
+
+std::string Utils::getLastStringSplit(std::string &str, const char *sep)
+{
+    size_t pos = str.rfind(sep);
+    if (pos != std::string::npos)
+        return str.substr(pos + 1);
+    return "";
 }
