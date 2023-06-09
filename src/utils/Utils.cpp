@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/08 15:12:32 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/09 17:38:03 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ std::string Utils::getExpiryDate(int secondsToAdd)
 std::string Utils::uploadPageGenerator(std::string executePath)
 {
     std::stringstream broadHtml;
-    broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>error page</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
+    broadHtml << "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<metaname=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\t<title>Upload</title>\n</head>\n<body>\n\t<form action=\"" << executePath << "\" method=\"post\" enctype=\"multipart/form-data\">\n\t<p><input type=\"file\" name=\"file1\"></p>\n\t<p><button type=\"submit\">Submit</button></p>\n\t</form>\n</body>\n</html>";
     return broadHtml.str();
 }
 
@@ -217,17 +217,17 @@ bool Utils::isFile(const std::string &path)
 
 std::string Utils::extractSubstring(const std::string &A, const std::string &B, const std::string &C)
 {
-	size_t start = A.find(B);
-	if (start == std::string::npos)
-		return "";
-	start += B.length();
-	size_t end = A.find(C, start);
-	if (C == "\0")
-		return A.substr(start);
-	if (end == std::string::npos)
-		return "";
+    size_t start = A.find(B);
+    if (start == std::string::npos)
+        return "";
+    start += B.length();
+    size_t end = A.find(C, start);
+    if (C == "\0")
+        return A.substr(start);
+    if (end == std::string::npos)
+        return "";
 
-	return A.substr(start, end - start);
+    return A.substr(start, end - start);
 }
 
 bool Utils::isMethod(const std::string &method)

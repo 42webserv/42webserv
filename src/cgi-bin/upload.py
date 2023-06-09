@@ -3,40 +3,36 @@
 import cgi
 import os
 
-# 업로드된 파일이 저장된 디렉토리 경로
-upload_dir = "./src/cgi-bin/file"
-# upload_dir = "./assets/test"
+# 허용된 파일 확장자
+ALLOWED_EXTENSIONS = {'txt', 'cpp'} # 파일 형식
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Content-Type 헤더 출력
-print("Content-Type: text/html")
-print()
-
-# HTML 페이지 출력
-print("<html><body>")
-
-# CGI 데이터 가져오기
 form = cgi.FieldStorage()
 
-# 업로드된 파일 처리
-if "file1" in form:
-    fileitem = form["file1"]
+fileitem = form['file1']
 
-    # 파일 저장 경로 설정
-    filepath = os.path.join(upload_dir, fileitem.filename)
+path = "./src/cgi-bin/file"
 
-    # 파일 저장
-    with open(filepath, "wb") as f:
-        f.write(fileitem.file.read())
+isExist = os.path.exists(path)
 
-    # 파일 존재 여부 확인
-    if os.path.exists(filepath):
-        print("<p>file upload success.</p>")
-        print("<p>file path: {}</p>".format(filepath))
+if not isExist:
+    os.makedirs(path)
+
+if fileitem.filename:
+    if allowed_file(fileitem.filename):
+        fn = os.path.basename(fileitem.filename)
+        open(os.path.join(path, fn), 'wb').write(fileitem.file.read())
+        message = "The file '{}' was upload successfull".format(fn)
     else:
-        print("<p>file upload failed.</p>")
+        message = "Invalid file extension. Only the following file extensions are allowed: {}".format(', '.join(ALLOWED_EXTENSIONS))
 else:
-    print("<p>not file.</p>")
+    message = "No file was upload"
 
-print("</body></html>")
-
+print("""\
+<html><body>
+<p>{}</p>
+</body></html>
+""".format(message))

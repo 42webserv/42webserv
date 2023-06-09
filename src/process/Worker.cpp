@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 16:52:18 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/09 17:48:32 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,6 +259,12 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	}
 	else
 	{
+		std::string path;
+		size_t pos = response->path.rfind("/"); // "./src/cgi-bin/upload.py" -> upload.py 추출
+		if (pos != std::string::npos)
+			path = response->path.substr(pos + 1);
+		if (path == "upload")
+			return;
 		if (response->method == POST)
 		{
 			resourceContent = response->body;
@@ -335,6 +341,7 @@ bool Worker::isCGIRequest(ResponseData &response)
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			Utils::ftSend(response, response_header);
 			Utils::ftSend(response, uploadContent);
+			return false;
 		}
 		return true;
 	}
