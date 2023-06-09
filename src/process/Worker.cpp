@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 20:54:57 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/09 23:04:43 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,6 +108,7 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 
 void Worker::run()
 {
+	const timespec timeout = {0, 100000000}; // 0.1s
 	struct kevent eventList[SOMAXCONN];
 	struct kevent event;
 	int nevents;
@@ -116,7 +117,7 @@ void Worker::run()
 	memset(&event, 0, sizeof(event));
 	while (true)
 	{
-		nevents = kevent(kq, &events[0], events.size(), eventList, SOMAXCONN, NULL);
+		nevents = kevent(kq, &events[0], events.size(), eventList, SOMAXCONN, &timeout); // TODO 타임아웃일 경우 disconnect는 어떻게 하나?!
 		if (nevents == -1)
 		{
 			std::cerr << "kevent() error" << std::endl;
