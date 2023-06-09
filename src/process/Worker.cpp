@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 18:29:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/10 02:44:18 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,23 +103,31 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 	std::cout << fd << " is time over" << std::endl;
 	socket.disconnectClient(event);
 }
-
 void Worker::run()
 {
-	struct kevent eventList[10];
 	struct kevent event;
+	std::string loading[10] = {"🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
+	int loadingIndex = 0;
+	struct timespec timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_nsec = 0; // tv_sec = 1, tv_usec = 0
+	struct kevent eventList[10];
 	int nevents;
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
+
 	while (true)
 	{
-		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), NULL);
+		std::cout << "\rWaiting " << loading[loadingIndex++] << std::flush;
+		if (loadingIndex == 8)
+			loadingIndex = 0;
+		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), &timeout);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
-			break;
 		}
+
 		events.clear();
 		for (int i = 0; i < nevents; i++)
 		{
