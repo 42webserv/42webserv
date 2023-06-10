@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 17:28:36 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 17:57:19 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,7 +257,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	std::cout << "\033[1m"
 			  << "\033[32m"
 			  << "127.0.0.1 " << clientFd << " [" << getTime() << "] \"" << response->method << " "
-			  << response->path << " HTTP/1.1"
+			  << response->location->value << " HTTP/1.1"
 			  << "\" "
 			  << response->returnState << " " << bodySize
 			  << std::endl;
