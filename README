@@ -23,7 +23,7 @@ siege 테스트 : 10개의 유저가 100번 요청
 1쪽 터미널
 >> ./webserv assets/conf/tester.conf
 2쪽 터미널
->> ./tester http://localhost:8080
+>> time ./tester http://localhost:8080
 
 Common Log Format 정리
 127.0.0.1 user-identifier frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326
