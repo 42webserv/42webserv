@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/06 22:47:04 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/10 22:26:28 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "commonError.hpp"
 #include "Socket.hpp"
 #include "Server.hpp"
+#include "color.hpp"
 
 Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
@@ -66,7 +67,8 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
     memset(&event, 0, sizeof(struct kevent));
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     events.push_back(event);
-    std::cout << "Server listening on port " << port << std::endl;
+    // std::cout << "Server listening on port " << port << std::endl;
+    std::cout << BBLK"🛠 port " BRED << port << BBLK " ready" << std::endl;
 }
 
 Socket::Socket(const Socket &ref) : _serverFd(ref._serverFd)
@@ -108,10 +110,8 @@ void Socket::connectClient(std::vector<struct kevent> &events)
 
     if (fcntl(clientFd, F_SETFL, O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
-
     udata = new UData(clientFd, false, true); // 처음 udata 생성
     EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
-
     struct linger lingerOption;
     lingerOption.l_onoff = 1;  // SO_LINGER 활성화
     lingerOption.l_linger = 0; // linger 시간을 10초로 설정
@@ -123,6 +123,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
 
     events.push_back(event);
     _clientFds.push_back(clientFd);
+    std::cout << "\r" BYEL "🔌 ACCEPT " << END << std::endl;
 }
 
 void Socket::receiveRequest(struct kevent &event)
@@ -161,6 +162,7 @@ void Socket::disconnectClient(struct kevent &event)
     event.udata = NULL;
     _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), clientFd), _clientFds.end());
     close(clientFd);
+    // std::cout << BRED "\r🔌 disconnect " END << std::endl;
 }
 
 int Socket::enableKeepAlive(int socketFd)
