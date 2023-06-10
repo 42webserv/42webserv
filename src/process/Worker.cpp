@@ -6,12 +6,13 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 14:47:58 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 20:05:35 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
 #include "Worker.hpp"
+#include "Utils.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
 
@@ -177,6 +178,22 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 	return true;
 }
 
+void Worker::printLog(ResponseData *response)
+{
+	long long bodySize;
+	if (response->bodySize == -1)
+		bodySize = 0;
+	else
+		bodySize = response->bodySize;
+	std::cout << "\033[1m"
+			  << "\033[32m"
+			  << "127.0.0.1 " << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
+			  << response->location->value << " HTTP/1.1"
+			  << "\" "
+			  << response->statusCode << " " << bodySize
+			  << std::endl;
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -192,8 +209,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
-		std::cout << "Method not allowed" << std::endl;
+		std::cout << "\033[31mMethod not allowed" << std::endl;
 		errorResponse(response, 405);
+		printLog(response);
 		delete response;
 		return;
 	}
@@ -201,9 +219,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	// /cgi-bin/printEnvp -> /cgi-bin/printEnvp.py로 변경해줘야 404 안걸림
 	if (isCGIRequest(*response))
 		response->resourcePath = getCGIPath(*response);
-
 	if (checkHttpRequestClientMaxBodySize(request, response) == false || invalidResponse(response))
 	{
+		printLog(response);
 		delete response;
 		return;
 	}
@@ -236,6 +254,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	}
 	else
 		stderrExit("Unknown method");
+	printLog(response);
 	delete response;
 }
 
@@ -412,6 +431,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	response->chunked = false;
 	Utils::ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
 	Utils::ftSend(response->clientFd, errorContent);
+	response->statusCode = errorCode;
 }
 
 /**
@@ -630,12 +650,14 @@ bool Worker::invalidResponse(ResponseData *response)
 	if (!Utils::isFile(response->resourcePath))
 	{
 		if (Utils::needBody(response->method))
-
 			return false;
 		if (response->autoindex)
 			broad(response);
 		else if (!response->redirect.empty())
+		{
 			redirection(response);
+			response->statusCode = Utils::ftStoi(response->returnState);
+		}
 		else
 			errorResponse(response, 404);
 		return true;

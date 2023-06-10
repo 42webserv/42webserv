@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 19:34:09 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/10 21:04:05 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ private:
 	void setResponse(ResponseData *response, const std::string &resourceContent);
 	bool checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response);
 	void sendResponse(ResponseData *response, const HTTPRequest &request);
+	void printLog(ResponseData *response);
 
 public:
 	Worker(Master &master);

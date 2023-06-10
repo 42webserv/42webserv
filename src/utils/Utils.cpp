@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/09 18:17:06 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/10 19:58:37 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -273,4 +273,20 @@ std::string Utils::getLastStringSplit(std::string &str, const char *sep)
     if (pos != std::string::npos)
         return str.substr(pos + 1);
     return "";
+}
+
+/**
+ * @brief Get current time
+ */
+std::string Utils::getTime()
+{
+    std::time_t currentTime = std::time(nullptr); // 현재 시간 가져오기
+
+    // tm 구조체로 시간 정보 얻기
+    std::tm *timeInfo = std::localtime(&currentTime);
+
+    // 원하는 형식으로 시간 값을 포맷팅
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", timeInfo);
+    return buffer;
 }
