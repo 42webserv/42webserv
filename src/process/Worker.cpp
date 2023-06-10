@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 18:29:46 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/10 14:47:58 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,8 +62,10 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
-	UData *udata = static_cast<UData *>(event.udata);
 
+	if (fcntl(fd, F_GETFL, 0) == -1)
+		return;
+	UData *udata = static_cast<UData *>(event.udata);
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
