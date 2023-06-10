@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 14:47:58 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 17:15:46 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,6 +177,19 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 	return true;
 }
 
+std::string getTime()
+{
+	std::time_t currentTime = std::time(nullptr); // 현재 시간 가져오기
+
+	// tm 구조체로 시간 정보 얻기
+	std::tm *timeInfo = std::localtime(&currentTime);
+
+	// 원하는 형식으로 시간 값을 포맷팅
+	char buffer[80];
+	std::strftime(buffer, sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", timeInfo);
+	return buffer;
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -236,6 +249,16 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	}
 	else
 		stderrExit("Unknown method");
+	long long bodySize;
+	if (response->bodySize == -1)
+		bodySize = 0;
+	else
+		bodySize = response->bodySize;
+	std::cout << "127.0.0.1 " << clientFd << " [" << getTime() << "] \"" << response->method << " "
+			  << response->path << " HTTP/1.1"
+			  << "\" "
+			  << response->returnState << " " << bodySize
+			  << std::endl;
 	delete response;
 }
 

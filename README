@@ -24,3 +24,13 @@ siege 테스트 : 10개의 유저가 100번 요청
 >> ./webserv assets/conf/tester.conf
 2쪽 터미널
 >> ./tester http://localhost:8080
+
+Common Log Format 정리
+127.0.0.1 user-identifier frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326
+127.0.0.1 : 서버에 요청한 클라이언트(원격 호스트)의 IP 주소 -> 이게 맞나?
+user-identifier : 파일 디스크립트 값을 넣어주면 될 듯.
+; frank :
+[10/Oct/2000:13:55:36 -0700] : 응답 시간
+"GET /apache_pb.gif HTTP/1.0" : 클라이언트의 요청 라인
+200 : HTTP 상태 코드
+2326 : 바이트 단위 로 측정된 클라이언트에 반환된 개체의 크기
