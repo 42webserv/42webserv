@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 15:06:51 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/10 21:04:05 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <sys/event.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "CGI.hpp"
 #include "commonConfig.hpp"
 #include "commonError.hpp"
@@ -29,7 +30,7 @@
 #include "Utils.hpp"
 
 #define BUFFER_SIZE 1024
-#define CHUNK_SIZE 500
+#define CHUNK_SIZE 300
 
 struct ResponseData;
 class Master;
@@ -73,6 +74,7 @@ private:
 	void setResponse(ResponseData *response, const std::string &resourceContent);
 	bool checkHttpRequestClientMaxBodySize(const HTTPRequest &request, ResponseData *response);
 	void sendResponse(ResponseData *response, const HTTPRequest &request);
+	void printLog(ResponseData *response);
 
 public:
 	Worker(Master &master);
