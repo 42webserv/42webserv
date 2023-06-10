@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequestParser.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 14:36:44 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 20:59:58 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,6 +221,8 @@ HTTPRequest *HTTPRequestParser::makeRequest()
     }
     request->body = body_;
     request->bodySize = bodySize_;
+    if (addr_ == "localhost")
+        addr_ = "127.0.0.1";
     request->addr = addr_;
     request->query = query_;
     std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find("Transfer-Encoding");
