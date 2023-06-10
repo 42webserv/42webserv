@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 17:15:46 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 17:28:36 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,7 +205,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
-		std::cout << "Method not allowed" << std::endl;
+		std::cout << "\033[31mMethod not allowed" << std::endl;
 		errorResponse(response, 405);
 		delete response;
 		return;
@@ -254,7 +254,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		bodySize = 0;
 	else
 		bodySize = response->bodySize;
-	std::cout << "127.0.0.1 " << clientFd << " [" << getTime() << "] \"" << response->method << " "
+	std::cout << "\033[1m"
+			  << "\033[32m"
+			  << "127.0.0.1 " << clientFd << " [" << getTime() << "] \"" << response->method << " "
 			  << response->path << " HTTP/1.1"
 			  << "\" "
 			  << response->returnState << " " << bodySize
