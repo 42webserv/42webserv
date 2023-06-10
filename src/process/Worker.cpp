@@ -6,12 +6,13 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 19:45:09 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 19:59:28 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
 #include "Worker.hpp"
+#include "Utils.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
 
@@ -172,24 +173,11 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 			std::cout << "It has too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
 			response->statusCode = 413;
-			response->returnState = "413";
+			// response->returnState = "413";
 			return false;
 		}
 	}
 	return true;
-}
-
-std::string getTime()
-{
-	std::time_t currentTime = std::time(nullptr); // 현재 시간 가져오기
-
-	// tm 구조체로 시간 정보 얻기
-	std::tm *timeInfo = std::localtime(&currentTime);
-
-	// 원하는 형식으로 시간 값을 포맷팅
-	char buffer[80];
-	std::strftime(buffer, sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", timeInfo);
-	return buffer;
 }
 
 void Worker::printLog(ResponseData *response)
@@ -201,10 +189,10 @@ void Worker::printLog(ResponseData *response)
 		bodySize = response->bodySize;
 	std::cout << "\033[1m"
 			  << "\033[32m"
-			  << "127.0.0.1 " << response->clientFd << " [" << getTime() << "] \"" << response->method << " "
+			  << "127.0.0.1 " << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
 			  << response->location->value << " HTTP/1.1"
 			  << "\" "
-			  << response->returnState << " " << bodySize
+			  << response->statusCode << " " << bodySize
 			  << std::endl;
 }
 

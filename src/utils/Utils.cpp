@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/10 19:47:07 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 19:58:37 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,7 +278,7 @@ std::string Utils::getLastStringSplit(std::string &str, const char *sep)
 /**
  * @brief Get current time
  */
-std::string getTime()
+std::string Utils::getTime()
 {
     std::time_t currentTime = std::time(nullptr); // 현재 시간 가져오기
 
