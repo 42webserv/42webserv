@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 19:59:28 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 20:00:31 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 			std::cout << "It has too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
 			response->statusCode = 413;
-			// response->returnState = "413";
 			return false;
 		}
 	}
