@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 20:00:31 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 20:05:35 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,7 +172,6 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		{
 			std::cout << "It has too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
-			response->statusCode = 413;
 			return false;
 		}
 	}
@@ -432,6 +431,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	response->chunked = false;
 	Utils::ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
 	Utils::ftSend(response->clientFd, errorContent);
+	response->statusCode = errorCode;
 }
 
 /**
@@ -659,10 +659,7 @@ bool Worker::invalidResponse(ResponseData *response)
 			response->statusCode = Utils::ftStoi(response->returnState);
 		}
 		else
-		{
 			errorResponse(response, 404);
-			response->statusCode = 404;
-		}
 		return true;
 	}
 	return false;
