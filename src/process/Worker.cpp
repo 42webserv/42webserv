@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 17:57:19 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 19:45:09 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,6 +171,8 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 		{
 			std::cout << "It has too big body than client_max_body_size" << std::endl;
 			errorResponse(response, 413);
+			response->statusCode = 413;
+			response->returnState = "413";
 			return false;
 		}
 	}
@@ -190,6 +192,22 @@ std::string getTime()
 	return buffer;
 }
 
+void Worker::printLog(ResponseData *response)
+{
+	long long bodySize;
+	if (response->bodySize == -1)
+		bodySize = 0;
+	else
+		bodySize = response->bodySize;
+	std::cout << "\033[1m"
+			  << "\033[32m"
+			  << "127.0.0.1 " << response->clientFd << " [" << getTime() << "] \"" << response->method << " "
+			  << response->location->value << " HTTP/1.1"
+			  << "\" "
+			  << response->returnState << " " << bodySize
+			  << std::endl;
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -207,6 +225,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		// 잘못된 메서드일경우
 		std::cout << "\033[31mMethod not allowed" << std::endl;
 		errorResponse(response, 405);
+		printLog(response);
 		delete response;
 		return;
 	}
@@ -214,9 +233,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	// /cgi-bin/printEnvp -> /cgi-bin/printEnvp.py로 변경해줘야 404 안걸림
 	if (isCGIRequest(*response))
 		response->resourcePath = getCGIPath(*response);
-
 	if (checkHttpRequestClientMaxBodySize(request, response) == false || invalidResponse(response))
 	{
+		printLog(response);
 		delete response;
 		return;
 	}
@@ -249,18 +268,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	}
 	else
 		stderrExit("Unknown method");
-	long long bodySize;
-	if (response->bodySize == -1)
-		bodySize = 0;
-	else
-		bodySize = response->bodySize;
-	std::cout << "\033[1m"
-			  << "\033[32m"
-			  << "127.0.0.1 " << clientFd << " [" << getTime() << "] \"" << response->method << " "
-			  << response->location->value << " HTTP/1.1"
-			  << "\" "
-			  << response->returnState << " " << bodySize
-			  << std::endl;
+	printLog(response);
 	delete response;
 }
 
@@ -655,14 +663,19 @@ bool Worker::invalidResponse(ResponseData *response)
 	if (!Utils::isFile(response->resourcePath))
 	{
 		if (Utils::needBody(response->method))
-
 			return false;
 		if (response->autoindex)
 			broad(response);
 		else if (!response->redirect.empty())
+		{
 			redirection(response);
+			response->statusCode = Utils::ftStoi(response->returnState);
+		}
 		else
+		{
 			errorResponse(response, 404);
+			response->statusCode = 404;
+		}
 		return true;
 	}
 	return false;

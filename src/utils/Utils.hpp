@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/09 18:17:02 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/10 19:47:08 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,9 @@ public:
     static void ftSend(const ResponseData *response, const std::string &contents);
 
     static int ftStoi(const std::string &str);
+
+    static std::string getTime();
+
     template <typename T>
     static std::string ftToString(T value)
     {
