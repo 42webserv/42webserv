@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/11 14:29:03 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:49:35 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,7 @@
 #define HEAD "HEAD"
 #define POST "POST"
 #define PUT "PUT"
-#define PATCH "PATCH"
 #define DELETE "DELETE"
-#define CONNECT "CONNECT"
-#define TRACE "TRACE"
-#define OPTIONS "OPTIONS"
 
 struct ResponseData;
 

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 14:28:26 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:49:25 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,27 +115,22 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 void Worker::run()
 {
 	const timespec timeout = {0, 100000000}; // 0.1s
+	const std::string loading[10] = {"", "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
+	// std::string loading[10] = {"3", "4", "5", "6", "7", "8", "9", "10"};
 	struct kevent eventList[SOMAXCONN];
 	struct kevent event;
-	std::string loading[10] = {"", "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
-	// std::string loading[10] = {"3", "4", "5", "6", "7", "8", "9", "10"};
 
 	int loadingIndex = 0;
-	struct timespec timeout;
-	timeout.tv_sec = 1;
-	timeout.tv_nsec = 0; // tv_sec = 1, tv_usec = 0
-	struct kevent eventList[10];
 	int nevents;
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
-
 	while (true)
 	{
 		std::cout << BWHT "\rWaiting " << loading[loadingIndex++] << std::flush;
 		if (loadingIndex == 9)
 			loadingIndex = 1;
-		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), &timeout);
+		nevents = kevent(kq, &events[0], events.size(), eventList, SOMAXCONN, &timeout);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
@@ -259,16 +254,6 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	else if (response->method == PUT)
 	{
 		putResponse(response);
-	}
-	else if (response->method == OPTIONS)
-	{
-		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
-		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
-		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
-		std::string response_header = generateHeader(response_content, "text/html", 200, response);
-		Utils::ftSend(response, response_header);
-		Utils::ftSend(response, response_content);
 	}
 	else if (response->method == DELETE)
 	{
