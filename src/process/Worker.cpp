@@ -6,12 +6,14 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 23:04:43 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:28:26 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
 #include "Worker.hpp"
+#include "Utils.hpp"
+#include "color.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
 
@@ -53,6 +55,7 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
 			return;
+		std::cout << "\r" BBLU "📲 RECEIVE" << std::endl;
 		udata->result = result;
 		// Add write event
 		struct kevent newEvent;
@@ -64,6 +67,9 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
+
+	if (fcntl(fd, F_GETFL, 0) == -1)
+		return;
 	UData *udata = static_cast<UData *>(event.udata);
 
 	if (checkHeaderIsKeepLive(udata))
@@ -77,6 +83,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
+		std::cout << BGRN "\r📝 SEND " << std::endl;
 		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
@@ -105,31 +112,41 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 	std::cout << fd << " is time over" << std::endl;
 	socket.disconnectClient(event);
 }
-
 void Worker::run()
 {
 	const timespec timeout = {0, 100000000}; // 0.1s
 	struct kevent eventList[SOMAXCONN];
 	struct kevent event;
+	std::string loading[10] = {"", "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
+	// std::string loading[10] = {"3", "4", "5", "6", "7", "8", "9", "10"};
+
+	int loadingIndex = 0;
+	struct timespec timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_nsec = 0; // tv_sec = 1, tv_usec = 0
+	struct kevent eventList[10];
 	int nevents;
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
+
 	while (true)
 	{
-		nevents = kevent(kq, &events[0], events.size(), eventList, SOMAXCONN, &timeout); // TODO 타임아웃일 경우 disconnect는 어떻게 하나?!
+		std::cout << BWHT "\rWaiting " << loading[loadingIndex++] << std::flush;
+		if (loadingIndex == 9)
+			loadingIndex = 1;
+		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), &timeout);
 		if (nevents == -1)
 		{
-			std::cerr << "kevent() error" << std::endl;
-			return;
+			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
 		}
+
 		events.clear();
 		for (int i = 0; i < nevents; i++)
 		{
 			event = eventList[i];
 			uintptr_t &fd = event.ident;
 			Socket *socket = this->server.findSocket(fd);
-
 			if (event.flags & EV_ERROR)
 				eventEVError(*socket, event);
 			else if (event.flags & EV_EOF)
@@ -145,6 +162,7 @@ void Worker::run()
 				else if (event.filter == EVFILT_SIGNAL)
 					eventFilterSignal(event);
 			}
+			loadingIndex = 0;
 		}
 	}
 }
@@ -185,6 +203,19 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 	return true;
 }
 
+void Worker::printLog(ResponseData *response)
+{
+	long long bodySize;
+	if (response->bodySize == -1)
+		bodySize = 0;
+	else
+		bodySize = response->bodySize;
+	std::cout << "\r" CYAN "💌 RESPONSE 127.0.0.1 " << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
+			  << response->location->value << " HTTP/1.1"
+			  << "\" "
+			  << response->statusCode << " " << bodySize << std::endl;
+}
+
 /*
  * 각각 method 실행과 해당 포트에 response를 보내줌
  *
@@ -200,8 +231,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
-		std::cout << "Method not allowed" << std::endl;
+		std::cout << "\033[31mMethod not allowed" << std::endl;
 		errorResponse(response, 405);
+		printLog(response);
 		delete response;
 		return;
 	}
@@ -209,9 +241,9 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	// /cgi-bin/printEnvp -> /cgi-bin/printEnvp.py로 변경해줘야 404 안걸림
 	if (isCGIRequest(*response))
 		response->resourcePath = getCGIPath(*response);
-
 	if (checkHttpRequestClientMaxBodySize(request, response) == false || invalidResponse(response))
 	{
+		printLog(response);
 		delete response;
 		return;
 	}
@@ -244,6 +276,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	}
 	else
 		stderrExit("Unknown method");
+	printLog(response);
 	delete response;
 }
 
@@ -269,6 +302,8 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	}
 	else
 	{
+		if (Utils::getLastStringSplit(response->path, "/") == "upload")
+			return;
 		if (response->method == POST)
 		{
 			resourceContent = response->body;
@@ -331,20 +366,13 @@ bool Worker::isCGIRequest(ResponseData &response)
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
 	{
-		// upload
-		std::string path;
-		size_t pos = response.path.rfind("/"); // "./src/cgi-bin/upload.py" -> upload.py 추출
-		if (pos != std::string::npos)
-			path = response.path.substr(pos + 1);
-		std::cout << "path " << path << std::endl; // upload.py
-		// ./src/cgi-bin/src/cgi-bin/upload.py
-		if (path == "upload") // uploadFile
+		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile
 		{
 			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
-			// std::string response_header = generateHeader(uploadContent, "text/html", 200, false);
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
 			Utils::ftSend(response, response_header);
 			Utils::ftSend(response, uploadContent);
+			return false;
 		}
 		return true;
 	}
@@ -425,6 +453,7 @@ void Worker::errorResponse(ResponseData *response, int errorCode)
 	response->chunked = false;
 	Utils::ftSend(response->clientFd, generateHeader(errorContent, "text/html", errorCode, response));
 	Utils::ftSend(response->clientFd, errorContent);
+	response->statusCode = errorCode;
 }
 
 /**
@@ -643,12 +672,14 @@ bool Worker::invalidResponse(ResponseData *response)
 	if (!Utils::isFile(response->resourcePath))
 	{
 		if (Utils::needBody(response->method))
-
 			return false;
 		if (response->autoindex)
 			broad(response);
 		else if (!response->redirect.empty())
+		{
 			redirection(response);
+			response->statusCode = Utils::ftStoi(response->returnState);
+		}
 		else
 			errorResponse(response, 404);
 		return true;

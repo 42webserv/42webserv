@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 20:53:33 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:27:30 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,6 +184,8 @@ HTTPRequest *HTTPRequestParser::makeRequest()
     request->port = Utils::ftStoi(port_);
     request->body = body_;
     request->bodySize = bodySize_;
+    if (addr_ == "localhost")
+        addr_ = "127.0.0.1";
     request->addr = addr_;
     request->query = query_;
     std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find(TRANSFER_ENCODING);

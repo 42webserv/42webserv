@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/09 20:56:36 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:29:03 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,12 +67,16 @@ public:
     static bool isDirectory(const std::string &path);
     static bool isFile(const std::string &path);
     static bool isMethod(const std::string &method);
+    static std::string getLastStringSplit(std::string &str, const char *sep);
 
     static void ftSend(const int &socket, const std::string &buffer);
     static void ftSend(const ResponseData &response, const std::string &contents);
     static void ftSend(const ResponseData *response, const std::string &contents);
 
     static int ftStoi(const std::string &str);
+
+    static std::string getTime();
+
     template <typename T>
     static std::string ftToString(T value)
     {

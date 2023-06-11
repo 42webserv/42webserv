@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/09 20:07:51 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:28:44 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "commonError.hpp"
 #include "Socket.hpp"
 #include "Server.hpp"
+#include "color.hpp"
 
 Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
@@ -66,7 +67,8 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
     memset(&event, 0, sizeof(struct kevent));
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     events.push_back(event);
-    std::cout << "Server listening on port " << port << std::endl;
+    // std::cout << "Server listening on port " << port << std::endl;
+    std::cout << BBLK "🛠 port " BRED << port << BBLK " ready" << std::endl;
 }
 
 Socket::Socket(const Socket &ref) : _serverFd(ref._serverFd)
@@ -122,6 +124,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
     events.push_back(event);
     _clientFds.push_back(clientFd);
+    std::cout << "\r" BYEL "🔌 ACCEPT " << END << std::endl;
 }
 
 bool Socket::receiveRequest(struct kevent &event)
@@ -161,6 +164,7 @@ void Socket::disconnectClient(struct kevent &event)
     event.udata = NULL;
     _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), clientFd), _clientFds.end());
     close(clientFd);
+    // std::cout << BRED "\r🔌 disconnect " END << std::endl;
 }
 
 int Socket::enableKeepAlive(int socketFd)
