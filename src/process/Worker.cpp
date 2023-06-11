@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 16:15:50 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/11 20:18:07 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
-		std::cout << BGRN "\r📝 SEND " <<  std::endl;
+		std::cout << BGRN "\r📝 SEND " << std::endl;
 		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
@@ -113,7 +113,7 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 void Worker::run()
 {
 	struct kevent event;
-	std::string loading[10] = {"","🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
+	std::string loading[10] = {"", "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
 	// std::string loading[10] = {"3", "4", "5", "6", "7", "8", "9", "10"};
 
 	int loadingIndex = 0;
@@ -128,7 +128,7 @@ void Worker::run()
 
 	while (true)
 	{
-		std::cout << BWHT "\rWaiting " << loading[loadingIndex++]  << std::flush;
+		std::cout << BWHT "\rWaiting " << loading[loadingIndex++] << std::flush;
 		if (loadingIndex == 9)
 			loadingIndex = 1;
 		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), &timeout);
@@ -199,10 +199,10 @@ void Worker::printLog(const HTTPRequest &request, ResponseData *response)
 		bodySize = 0;
 	else
 		bodySize = response->bodySize;
-	std::cout << "\r"CYAN "💌 RESPONSE " << request.addr << std::setw(4) <<  response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
+	std::cout << "\r" CYAN "💌 RESPONSE " << request.addr << std::setw(4) << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
 			  << response->location->value << " HTTP/1.1"
 			  << "\" "
-			  << response->statusCode << " " << bodySize <<std::endl;
+			  << response->statusCode << " " << bodySize << std::endl;
 }
 
 /*
@@ -300,8 +300,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		}
 		else
 			resourceContent = Utils::readFile(response->resourcePath);
-		response->statusCode = 200;
-		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
+		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, 200, response));
 	}
 	if (response->chunked)
 	{
@@ -388,8 +387,7 @@ void Worker::putResponse(ResponseData *response)
 			return errorResponse(response, 404);
 		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
 		response->chunked = false;
-		response->statusCode = 201;
-		std::string resource_header = generateHeader(resource_content, "text/html", response->statusCode, response);
+		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
 		Utils::ftSend(response, resource_header);
 		Utils::ftSend(response, resource_content);
 	}
@@ -459,6 +457,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	std::ostringstream oss;
 
 	UData *udata = response->udata;
+	response->statusCode = statusCode;
 	oss << "HTTP/1.1 " << statusCode << " " << response->statusCodeMap[statusCode] << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
 	if (response->chunked)
