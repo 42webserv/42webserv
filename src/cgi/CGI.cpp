@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGI.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/11 14:28:25 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/11 23:25:31 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,8 @@ std::string CGI::executeCGI(const std::string &program)
 
 	fileFds[R] = fileno(files[R]);
 	fileFds[W] = fileno(files[W]);
-	write(fileFds[R], body_.c_str(), body_.size());
+	if (write(fileFds[R], body_.c_str(), body_.size()) < 0)
+		throw(std::runtime_error("Error writing to file"));
 	// write(fileFds[R], resource_.c_str(), resource_.size());
 	if (fileFds[R] == -1 || fileFds[W] == -1)
 		throw std::runtime_error("Error creating file descriptor");
@@ -152,6 +153,8 @@ void CGI::parentProcess(const pid_t &pid, const int fileFds[2], std::string &bod
 	{
 		memset(buffer, 0, 100001);
 		bytes = read(fileFds[W], buffer, 100000);
+		if (bytes < 0)
+			throw std::runtime_error("Error reading from file");
 		body += buffer;
 	}
 }

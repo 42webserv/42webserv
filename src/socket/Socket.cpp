@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 16:22:22 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/11 21:32:43 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     events.push_back(event);
     // std::cout << "Server listening on port " << port << std::endl;
-    std::cout << BBLK"🛠 port " BRED << port << BBLK " ready" << std::endl;
+    std::cout << BBLK "🛠 port " BRED << port << BBLK " ready" << std::endl;
 }
 
 Socket::Socket(const Socket &ref) : _serverFd(ref._serverFd)
@@ -106,10 +106,10 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     // Accept incoming connection
     int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &addrlen);
     if (clientFd < 0)
-        stderrExit("accept() error");
+        throw(std::runtime_error("accept() error"));
 
     if (fcntl(clientFd, F_SETFL, O_NONBLOCK) < 0)
-        stderrExit("fcntl() error");
+        throw(std::runtime_error("fcntl non-block failed\n"));
     udata = new UData(clientFd, false, true); // 처음 udata 생성
     EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
     struct linger lingerOption;
@@ -119,7 +119,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     // 소켓에 SO_LINGER 옵션 적용
     // SO_LINGER은 소켓이 close() 함수로 닫힐 때 송신 버퍼에 데이터가 남아있는 경우, 해당 데이터를 어떻게 처리할지를 제어하는 소켓 옵션입니다.
     if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &lingerOption, sizeof(lingerOption)) < 0)
-        stderrExit("setsockopt SO_LINGER error");
+        throw(std::runtime_error("setsockopt SO_LINGER error"));
 
     events.push_back(event);
     _clientFds.push_back(clientFd);
@@ -138,7 +138,7 @@ void Socket::receiveRequest(struct kevent &event)
     {
         n = recv(fd, buf, BUFFER_SIZE - 1, 0);
         if (n < 0)
-            break;
+            throw std::runtime_error("recv() error");
         else
         {
             buf[n] = '\0';
@@ -172,10 +172,10 @@ int Socket::enableKeepAlive(int socketFd)
 
     // SO_KEEPALIVE 옵션 활성화
     if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive)) < 0)
-        stderrExit("setsockopt SO_KEEPALIVE error");
+        throw(std::runtime_error("setsockopt SO_KEEPALIVE error"));
     // TCP_KEEPINTVL 옵션 설정 (유휴 상태에서 keep-alive 패킷 간의 간격)
     if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPINTVL, &keepAliveInterval, sizeof(keepAliveInterval)) < 0)
-        stderrExit("setsockopt TCP_KEEPINTVL error");
+        throw(std::runtime_error("setsockopt TCP_KEEPINTVL error"));
     return 0;
 }
 

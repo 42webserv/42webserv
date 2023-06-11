@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/10 19:58:37 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/11 21:02:07 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,7 +249,8 @@ void Utils::ftSend(const int &socket, const std::string &buffer)
 {
     if (buffer.empty())
         return;
-    send(socket, buffer.c_str(), buffer.length(), 0);
+    if (send(socket, buffer.c_str(), buffer.length(), 0) < 0)
+        throw std::runtime_error("send() error");
 }
 
 /**
