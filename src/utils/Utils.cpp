@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/11 21:02:07 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/12 00:45:48 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,8 +249,13 @@ void Utils::ftSend(const int &socket, const std::string &buffer)
 {
     if (buffer.empty())
         return;
-    if (send(socket, buffer.c_str(), buffer.length(), 0) < 0)
+    ssize_t sendSize = send(socket, buffer.c_str(), buffer.length(), 0);
+    if (sendSize < 0)
         throw std::runtime_error("send() error");
+    else if (sendSize != (ssize_t)buffer.length())
+        throw std::runtime_error("send() error: sent unexpected number of bytes");
+    else if (sendSize == 0)
+        throw std::runtime_error("send() error: sent 0 bytes");
 }
 
 /**
