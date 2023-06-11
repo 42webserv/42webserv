@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signal.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/17 16:41:37 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/02 21:37:10 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/10 22:03:02 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include "commonError.hpp"
 #include "Server.hpp"
 #include "Signal.hpp"
+#include "color.hpp"
 
 Signal::Signal(std::vector<struct kevent> &events)
 {
@@ -51,6 +52,7 @@ void Signal::handleEvent(const int &signal, const std::vector<ServerInfo> &serve
 				const ServerInfo &server = *it;
 				server.closeSockets();
 			}
+		    std::cout << BRED "\r🔌 server disconnect " END << std::endl;
 			exit(EXIT_SUCCESS);
 		}
 		// QUIT: 정상적인 종료
@@ -61,6 +63,7 @@ void Signal::handleEvent(const int &signal, const std::vector<ServerInfo> &serve
 				const ServerInfo &server = *it;
 				server.closeSockets();
 			}
+		    std::cout << BRED "\r🔌 server disconnect " END << std::endl;
 			exit(EXIT_SUCCESS);
 		}
 		// Nginx 미구현 목록

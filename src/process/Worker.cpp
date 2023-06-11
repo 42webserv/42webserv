@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: yje <yje@student.42seoul.kr>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/10 20:05:35 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/10 22:23:38 by yje              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Master.hpp"
 #include "Worker.hpp"
 #include "Utils.hpp"
+#include "color.hpp"
 
 Worker::Worker(Master &master) : kq(master.kq), signal(master.getEvents()), config(master.getConfig()), events(master.getEvents()), server(master.getServer()) {}
 
@@ -52,6 +53,7 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
 			return;
+		std::cout << "\r" BBLU "📲 RECEIVE" << std::endl;
 		udata->result = result;
 		// Add write event
 		struct kevent newEvent;
@@ -67,6 +69,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (fcntl(fd, F_GETFL, 0) == -1)
 		return;
 	UData *udata = static_cast<UData *>(event.udata);
+
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
@@ -78,6 +81,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
+		std::cout << BGRN "\r📝 SEND " <<  std::endl;
 		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
@@ -106,30 +110,39 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 	std::cout << fd << " is time over" << std::endl;
 	socket.disconnectClient(event);
 }
-
 void Worker::run()
 {
-	struct kevent eventList[10];
 	struct kevent event;
+	std::string loading[10] = {"","🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
+	// std::string loading[10] = {"3", "4", "5", "6", "7", "8", "9", "10"};
+
+	int loadingIndex = 0;
+	struct timespec timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_nsec = 0; // tv_sec = 1, tv_usec = 0
+	struct kevent eventList[10];
 	int nevents;
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
+
 	while (true)
 	{
-		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), NULL);
+		std::cout << BWHT "\rWaiting " << loading[loadingIndex++]  << std::flush;
+		if (loadingIndex == 9)
+			loadingIndex = 1;
+		nevents = kevent(kq, &events[0], events.size(), eventList, sizeof(eventList) / sizeof(eventList[0]), &timeout);
 		if (nevents == -1)
 		{
 			std::cerr << "Error waiting for events: " << strerror(errno) << std::endl;
-			break;
 		}
+
 		events.clear();
 		for (int i = 0; i < nevents; i++)
 		{
 			event = eventList[i];
 			uintptr_t &fd = event.ident;
 			Socket *socket = this->server.findSocket(fd);
-
 			if (event.flags & EV_ERROR)
 				eventEVError(*socket, event);
 			else if (event.flags & EV_EOF)
@@ -145,6 +158,7 @@ void Worker::run()
 				else if (event.filter == EVFILT_SIGNAL)
 					eventFilterSignal(event);
 			}
+			loadingIndex = 0;
 		}
 	}
 }
@@ -185,13 +199,10 @@ void Worker::printLog(ResponseData *response)
 		bodySize = 0;
 	else
 		bodySize = response->bodySize;
-	std::cout << "\033[1m"
-			  << "\033[32m"
-			  << "127.0.0.1 " << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
+	std::cout << "\r"CYAN "💌 RESPONSE 127.0.0.1 " << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
 			  << response->location->value << " HTTP/1.1"
 			  << "\" "
-			  << response->statusCode << " " << bodySize
-			  << std::endl;
+			  << response->statusCode << " " << bodySize <<std::endl;
 }
 
 /*
