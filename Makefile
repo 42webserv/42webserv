@@ -41,7 +41,7 @@ INC_DIR			= -I$(DIR_SRC) $(SRC_INC_DIR)
 
 SRC_CONFIG		= CheckConfigValid Config DefaultConfig Directive
 SRC_ERROR		= commonError
-SRC_PARSE		= HTTPRequestParser MimeTypesParser
+SRC_PARSE		= CheckHeader HTTPRequest HTTPRequestParser MimeTypesParser
 SRC_PROCESS		= Master Worker Response
 SRC_SOCKET		= Socket
 SRC_UTILS		= Signal Utils

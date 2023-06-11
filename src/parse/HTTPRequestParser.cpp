@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 14:27:30 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 20:49:04 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,23 +175,16 @@ HTTPRequest *HTTPRequestParser::makeRequest()
 {
     if (state_ != COMPLETE)
         return NULL;
-    HTTPRequest *request = new HTTPRequest;
-    request->method = method_;
-    request->path = path_;
-    request->http_version = httpVersion_;
-    request->chunked = false;
-    request->headers = headers_;
-    request->port = Utils::ftStoi(port_);
-    request->body = body_;
-    request->bodySize = bodySize_;
-    if (addr_ == "localhost")
-        addr_ = "127.0.0.1";
-    request->addr = addr_;
-    request->query = query_;
-    std::map<std::string, std::string>::iterator findChunkedIterator = request->headers.find(TRANSFER_ENCODING);
-    if (findChunkedIterator != request->headers.end() && findChunkedIterator->second == CHUNKED)
-        request->chunked = true;
-    return request;
+    try
+    {
+        HTTPRequest *request = new HTTPRequest(*this);
+        return request;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    return NULL;
 }
 
 void HTTPRequestParser::parseStartLine()
@@ -336,14 +329,12 @@ void HTTPRequestParser::reset()
     currentHeaderName_.clear();
     query_.clear();
     addr_.clear();
-    name_.clear();
     port_ = "80";
     path_.clear();
     httpVersion_.clear();
     chunkedData = "";
     bufferIndex = 0;
-    bodySize_ = -1;
-    statusCode_ = 200;
+    bodySize_ = 0;
 }
 
 void HTTPRequestParser::checkHeaders()
@@ -382,7 +373,7 @@ void HTTPRequestParser::printResult(const HTTPRequest &result)
     std::cout << "Request method: " << result.method << std::endl;
     std::cout << "Request path: " << result.path << std::endl;
     std::cout << "Request port: [" << result.port << "]" << std::endl;
-    std::cout << "Request HTTP version: " << result.http_version << std::endl;
+    std::cout << "Request HTTP version: " << result.httpVersion << std::endl;
 
     for (std::map<std::string, std::string>::const_iterator it = result.headers.begin(); it != result.headers.end(); ++it)
         std::cout << "Header: " << it->first << " = " << it->second << std::endl;
@@ -393,4 +384,34 @@ void HTTPRequestParser::printResult(const HTTPRequest &result)
 const char *HTTPRequestParser::ParseException::what() const throw()
 {
     return "HTTP Request Parse Exception";
+}
+
+std::string HTTPRequestParser::getMethod() const
+{
+    return method_;
+}
+
+std::string HTTPRequestParser::getPath() const
+{
+    return path_;
+}
+
+std::string HTTPRequestParser::getQuery() const
+{
+    return query_;
+}
+
+std::string HTTPRequestParser::getHttpVersion() const
+{
+    return httpVersion_;
+}
+
+std::map<std::string, std::string> HTTPRequestParser::getHeaders() const
+{
+    return headers_;
+}
+
+std::string HTTPRequestParser::getBody() const
+{
+    return body_;
 }

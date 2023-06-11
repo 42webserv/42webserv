@@ -6,14 +6,13 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/01 14:47:40 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/08 18:39:06 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 22:42:24 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef HTTP_REQUEST_PARSER
 #define HTTP_REQUEST_PARSER
 
-#include <cstring>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -21,24 +20,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-struct HTTPRequest
-{
-    std::string method;
-    int port;
-    std::string path;
-    std::string http_version;
-    std::map<std::string, std::string> headers;
-    std::string body;
-    std::string query;
-    std::string addr;
-    std::string name;
-    bool chunked;
-    long long bodySize;
-    unsigned int statusCode;
-    //  SERVER_NAME 요청을 수신한 서버의 호스트 이름. -> conf에서 가져올것
-    HTTPRequest &operator=(const HTTPRequest &ref);
-};
+#include "HTTPRequest.hpp"
 
 class HTTPRequestParser
 {
@@ -65,10 +47,8 @@ private:
     std::string currentHeaderName_;
     std::string query_;
     std::string addr_;
-    std::string name_;
     std::string port_;
-    long long bodySize_;
-    unsigned int statusCode_;
+    unsigned long long bodySize_;
 
     bool parseMethod();
     bool parsePath();
@@ -89,9 +69,17 @@ private:
 
 public:
     HTTPRequestParser();
-
     HTTPRequest *parse(const std::string &data);
     void printResult(const HTTPRequest &request);
+    // Start line
+    std::string getMethod() const;
+    std::string getPath() const;
+    std::string getQuery() const;
+    std::string getHttpVersion() const;
+    // Headers
+    std::map<std::string, std::string> getHeaders() const;
+    // Body
+    std::string getBody() const;
 };
 
 #endif
