@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/06/08 15:11:09 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/11 14:48:35 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,7 @@ Config::Config()
 
 Config::~Config()
 {
-	// TODO clearBlock을 만들고 재귀로 돌면서 가장 안쪽 블록부터 지워나가기
-	for (size_t i = 0; i < this->_directives.size(); i++)
-		this->_directives[i].block.clear();
-	this->_directives.clear();
+	clearBlock(this->_directives);
 }
 
 Directive Config::_parseDirective(const std::string &line)
@@ -422,9 +419,8 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
 			std::vector<std::string> excepts = split(directives[i].value, ' ');
 			for (size_t i = 0; i < excepts.size(); i++)
 			{
-				// TODO : GET, POST, DELETE, PUT 외에 다른 메소드가 들어오면 에러 처리를 잡아주는 함수로 변경하기.
-				if (excepts[i] != GET && excepts[i] != POST && excepts[i] != DELETE && excepts[i] != PUT)
-					stderrExit("Error: limit_except value must be GET or POST or DELETE");
+				if (!Utils::isMethod(excepts[i]))
+					stderrExit("Error: limit_except value must be GET, HEAD, POST, PUT, DELETE");
 			}
 		}
 		if (directives[i].name == RETURN_DIRECTIVE)
@@ -481,4 +477,17 @@ void Config::_checkRealtion(std::vector<Directive> &directive)
 		_checkRealtion(directive[i].block);
 	}
 	_checkValidValue(directive);
+}
+
+void Config::clearBlock(std::vector<Directive> &directives)
+{
+	for (std::vector<Directive>::iterator it = directives.begin(); it != directives.end(); it++)
+	{
+		Directive &directive = *it;
+		if (directive.block.empty())
+			continue;
+		clearBlock(directive.block);
+		directive.block.clear();
+	}
+	directives.clear();
 }

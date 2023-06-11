@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 20:16:55 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/07 09:10:31 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 14:40:22 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,7 @@ private:
     void _checkEmpty(std::string &value, std::string directiveName, bool exist);
     bool _isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName, std::vector<Directive> &preDirective);
     bool _isDirectoryExists(const std::string &directoryPath, std::string directiveName);
+    void clearBlock(std::vector<Directive> &directives);
 
 public:
     Config();
