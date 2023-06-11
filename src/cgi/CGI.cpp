@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/09 15:53:53 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 19:38:22 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	this->envp_["PATH_INFO"] = request.path;
 	// this->envp_["PATH_TRANSLATED"] = request.path;
 	this->envp_["QUERY_STRING"] = request.query;
-	// this->envp_["QUERY_STRING"] = request.query;
 	this->envp_["REMOTE_ADDR"] = request.addr;
 	// this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
 	// this->envp_["REMOTE_USER"] = "";
