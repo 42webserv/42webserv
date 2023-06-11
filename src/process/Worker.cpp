@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 19:38:35 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 20:08:26 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,15 +200,10 @@ bool Worker::checkHttpRequestClientMaxBodySize(const HTTPRequest &request, Respo
 
 void Worker::printLog(const HTTPRequest &request, ResponseData *response)
 {
-	long long bodySize;
-	if (response->bodySize == -1)
-		bodySize = 0;
-	else
-		bodySize = response->bodySize;
 	std::cout << "\r" CYAN "💌 RESPONSE " << request.addr << std::setw(4) << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
 			  << response->location->value << " HTTP/1.1"
 			  << "\" "
-			  << response->statusCode << " " << bodySize << std::endl;
+			  << response->statusCode << " " << response->bodySize << std::endl;
 }
 
 /*

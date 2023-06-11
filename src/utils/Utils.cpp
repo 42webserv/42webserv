@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/11 14:47:32 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/11 21:18:26 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,7 +241,9 @@ void Utils::ftSend(const int &socket, const std::string &buffer)
 {
     if (buffer.empty())
         return;
-    send(socket, buffer.c_str(), buffer.length(), 0);
+    int n = send(socket, buffer.c_str(), buffer.length(), 0);
+    if (n < 0)
+        throw std::runtime_error("Error writing to socket");
 }
 
 /**
