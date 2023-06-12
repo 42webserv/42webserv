@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 14:22:41 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/12 15:21:31 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,7 +162,7 @@ void Socket::disconnectClient(struct kevent &event)
     event.udata = NULL;
     _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), clientFd), _clientFds.end());
     close(clientFd);
-    // std::cout << BRED "\r🔌 disconnect " END << std::endl;
+    // std::cout << BRED "\r🔌" << clientFd << " disconnect " END << std::endl;
 }
 
 int Socket::enableKeepAlive(int socketFd)
