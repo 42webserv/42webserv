@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 15:07:25 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/12 18:14:48 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,7 +207,7 @@ void Worker::printLog(const HTTPRequest &request, ResponseData *response)
 		bodySize = 0;
 	else
 		bodySize = response->bodySize;
-	std::cout << "\r" CYAN "💌 RESPONSE " << request.addr << std::setw(4) << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
+	std::cout << "\r" CYAN "💌 RESPONSE " << std::setw(4) << request.port << std::setw(4) << response->clientFd << " [" << Utils::getTime() << "] \"" << response->method << " "
 			  << response->location->value << " HTTP/1.1"
 			  << "\" "
 			  << response->statusCode << " " << bodySize << std::endl;
