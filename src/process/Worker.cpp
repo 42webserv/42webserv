@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 18:14:48 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/12 18:31:11 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -251,18 +251,13 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == HEAD) // TODO DELETE도 처리해주나
+	if (response->method == GET || response->method == POST || response->method == HEAD || response->method == PUT) // TODO DELETE도 처리해주나
 		sendResponse(response, request);
-	else if (response->method == PUT)
-	{
-		putResponse(response);
-	}
 	else if (response->method == OPTIONS)
 	{
 		// OPTIONS 메소드는 서버가 지원하는 메소드를 확인하기 위한 메소드입니다.
 		// 따라서 서버가 지원하는 메소드를 응답해주면 됩니다.
 		std::string response_content = "GET, POST, HEAD, PUT, DELETE, OPTIONS";
-		// std::string response_header = generateHeader(response_content, "text/html", 200, false);
 		std::string response_header = generateHeader(response_content, "text/html", 200, response);
 		Utils::ftSend(response, response_header);
 		Utils::ftSend(response, response_content);
@@ -291,7 +286,24 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	if (XHeaderIterator != response->headers.end())
 		cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", XHeaderIterator->second);
 
-	if (isCGIRequest(*response))
+	if (response->method == "PUT")
+	{
+		if (Utils::writeFile(response->resourcePath, response->body))
+		{
+			// 리소스 생성에 성공한 경우
+			resourceContent = Utils::readFile(response->resourcePath);
+			if (resourceContent.empty())
+				return errorResponse(response, 404);
+			Utils::ftSend(response, generateHeader(resourceContent, "text/html", 201, response));
+		}
+		else
+		{
+			// 리소스 생성에 실패한 경우
+			std::cout << "Failed to create the resource" << std::endl;
+			return errorResponse(response, 500);
+		}
+	}
+	else if (isCGIRequest(*response))
 	{
 		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		resourceContent = response->body;
@@ -381,30 +393,6 @@ bool Worker::isCGIRequest(ResponseData &response)
 	if (std::find(response.cgiPath.begin(), response.cgiPath.end(), tmp) != response.cgiPath.end())
 		return true;
 	return false;
-}
-
-void Worker::putResponse(ResponseData *response)
-{
-	if (response->body.length() > 10000)
-		response->body = response->body.substr(0, 10000);
-	if (Utils::writeFile(response->resourcePath, response->body))
-	{
-		// 리소스 생성에 성공한 경우
-		std::string resource_content = Utils::readFile(response->resourcePath);
-		if (resource_content.empty())
-			return errorResponse(response, 404);
-		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
-		response->chunked = false;
-		std::string resource_header = generateHeader(resource_content, "text/html", 201, response);
-		Utils::ftSend(response, resource_header);
-		Utils::ftSend(response, resource_content);
-	}
-	else
-	{
-		// 리소스 생성에 실패한 경우
-		std::cout << "Failed to create the resource" << std::endl;
-		errorResponse(response, 500);
-	}
 }
 
 void Worker::deleteResponse(ResponseData *response)
