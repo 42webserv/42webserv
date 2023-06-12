@@ -332,11 +332,11 @@ std::string Worker::getCGIPath(ResponseData &response)
 		{
 			if (response.cgiPath.size() == 1)
 			{
-				size_t pos = response.path.find(".", response.path.find_last_of("/"));
+				size_t pos = response.resourcePath.find(".", response.resourcePath.find_last_of("/"));
 				if (pos == std::string::npos)
-					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/")) + response.cgiPath.back();
+					return response.location->block[i].value + response.resourcePath.substr(response.resourcePath.find_last_of("/")) + response.cgiPath.back();
 				else
-					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/"));
+					return response.location->block[i].value + response.resourcePath.substr(response.resourcePath.find_last_of("/"));
 			}
 			else
 				return response.location->block[i].value + "/" + response.cgiPath.back();
@@ -355,7 +355,7 @@ bool Worker::isCGIRequest(ResponseData &response)
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
 	{
-		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile
+		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile1
 		{
 			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
@@ -401,8 +401,7 @@ void Worker::putResponse(ResponseData *response)
 
 void Worker::deleteResponse(ResponseData *response)
 {
-	// std::string resourcePath = response->resourcePath;
-	std::string resourcePath = response->path;
+	std::string resourcePath = response->resourcePath;
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우

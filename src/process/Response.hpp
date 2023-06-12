@@ -36,7 +36,6 @@ struct ResponseData
     std::string returnState;
     std::string redirect;
     Directive *location;
-    std::string locationName;
     std::string path; // request의 path그대로 가져옴
     bool autoindex;
     std::string body;
