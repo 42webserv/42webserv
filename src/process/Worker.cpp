@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 18:31:11 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/12 18:53:57 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,7 +228,6 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
-		std::cout << "\033[31mMethod not allowed" << std::endl;
 		errorResponse(response, 405);
 		printLog(request, response);
 		delete response;

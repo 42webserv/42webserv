@@ -6,7 +6,7 @@
 /*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 18:32:09 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/12 18:54:04 by chanwjeo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ HTTPRequest *HTTPRequestParser::parse(const std::string &data)
 {
     reset();
     buffer_ += data;
+
     try
     {
         parseStartLine();

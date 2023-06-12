@@ -5,7 +5,7 @@ import os
 from urllib.parse import quote
 
 # 허용된 파일 확장자
-ALLOWED_EXTENSIONS = {'txt', 'cpp', 'png'} # 파일 형식
+ALLOWED_EXTENSIONS = {'txt', 'cpp'} # 파일 형식
 
 def allowed_file(filename):
     return '.' in filename and \
