@@ -504,7 +504,7 @@ void Worker::broad(ResponseData *response)
 	}
 	while ((file = readdir(dirPtr)))
 	{
-		broadHtml << "<p><a href=" << response->locationName << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+		broadHtml << "<p><a href=" << response->location->value << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 	}
 	broadHtml << "</body></html>";
 	std::string tmp = broadHtml.str();
