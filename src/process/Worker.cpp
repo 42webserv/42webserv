@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 23:21:16 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/12 15:07:25 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,10 +66,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
 
-	if (fcntl(fd, F_GETFL, 0) == -1)
-		return;
 	UData *udata = static_cast<UData *>(event.udata);
-
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
@@ -153,7 +150,7 @@ void Worker::run()
 				else
 				{
 					if (fcntl(fd, F_GETFL, 0) == -1)
-						return;
+						;
 					if (event.filter == EVFILT_READ)
 						eventFilterRead(*socket, event);
 					else if (event.filter == EVFILT_WRITE)
