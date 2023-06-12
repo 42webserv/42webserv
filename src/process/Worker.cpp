@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 20:18:07 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/12 15:07:25 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,10 +66,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
 
-	if (fcntl(fd, F_GETFL, 0) == -1)
-		return;
 	UData *udata = static_cast<UData *>(event.udata);
-
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
@@ -122,6 +119,7 @@ void Worker::run()
 	timeout.tv_nsec = 0; // tv_sec = 1, tv_usec = 0
 	struct kevent eventList[10];
 	int nevents;
+	Socket *socket;
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
@@ -140,25 +138,35 @@ void Worker::run()
 		events.clear();
 		for (int i = 0; i < nevents; i++)
 		{
-			event = eventList[i];
-			uintptr_t &fd = event.ident;
-			Socket *socket = this->server.findSocket(fd);
-			if (event.flags & EV_ERROR)
-				eventEVError(*socket, event);
-			else if (event.flags & EV_EOF)
-				eventEOF(*socket, event);
-			else
+			try
 			{
-				if (event.filter == EVFILT_READ)
-					eventFilterRead(*socket, event);
-				else if (event.filter == EVFILT_WRITE)
-					eventFilterWrite(*socket, event);
-				else if (event.filter == EVFILT_TIMER)
-					eventFilterTimer(*socket, event);
-				else if (event.filter == EVFILT_SIGNAL)
-					eventFilterSignal(event);
+				event = eventList[i];
+				uintptr_t &fd = event.ident;
+				socket = this->server.findSocket(fd);
+				if (event.flags & EV_ERROR)
+					eventEVError(*socket, event);
+				else if (event.flags & EV_EOF)
+					eventEOF(*socket, event);
+				else
+				{
+					if (fcntl(fd, F_GETFL, 0) == -1)
+						;
+					if (event.filter == EVFILT_READ)
+						eventFilterRead(*socket, event);
+					else if (event.filter == EVFILT_WRITE)
+						eventFilterWrite(*socket, event);
+					else if (event.filter == EVFILT_TIMER)
+						eventFilterTimer(*socket, event);
+					else if (event.filter == EVFILT_SIGNAL)
+						eventFilterSignal(event);
+				}
+				loadingIndex = 0;
 			}
-			loadingIndex = 0;
+			catch (std::runtime_error &err)
+			{
+				std::cout << "Error: " << err.what() << std::endl;
+				socket->disconnectClient(event);
+			}
 		}
 	}
 }
@@ -264,7 +272,7 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		deleteResponse(response);
 	}
 	else
-		stderrExit("Unknown method");
+		throw(std::runtime_error("Unknown method"));
 	printLog(request, response);
 	delete response;
 }
