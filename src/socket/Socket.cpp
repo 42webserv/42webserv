@@ -6,7 +6,7 @@
 /*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 21:32:43 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/12 14:22:41 by seokchoi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,7 +138,7 @@ void Socket::receiveRequest(struct kevent &event)
     {
         n = recv(fd, buf, BUFFER_SIZE - 1, 0);
         if (n < 0)
-            throw std::runtime_error("recv() error");
+            break;
         else
         {
             buf[n] = '\0';
