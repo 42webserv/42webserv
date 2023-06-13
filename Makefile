@@ -41,22 +41,22 @@ INC_DIR			= -I$(DIR_SRC) $(SRC_INC_DIR)
 
 SRC_CONFIG		= CheckConfigValid Config DefaultConfig Directive
 SRC_ERROR		= commonError
-SRC_PARSE		= CheckHeader HTTPRequest HTTPRequestParser MimeTypesParser
-SRC_PROCESS		= Master Worker Response
+SRC_PARSE		= CheckHeaders HTTPRequest HTTPRequestParser MimeTypesParser
+SRC_PROCESS		= Master Worker Response Udata
 SRC_SOCKET		= Socket
 SRC_UTILS		= Signal Utils
 SRC_CGI			= CGI
 SRC_SERVER		= Server ServerInfo
 
 
-SRCS_LIST		= $(addprefix $(DIR_SRC)/,						\
+SRCS_LIST		= $(addprefix $(DIR_SRC)/,							\
 					$(addprefix $(DIR_CONFIG)/,		$(SRC_CONFIG))	\
 					$(addprefix $(DIR_ERROR)/,		$(SRC_ERROR))	\
 					$(addprefix $(DIR_PARSE)/,		$(SRC_PARSE))	\
 					$(addprefix $(DIR_PROCESS)/,	$(SRC_PROCESS))	\
 					$(addprefix $(DIR_SOCKET)/,		$(SRC_SOCKET))	\
-					$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS)) 	\
-					$(addprefix $(DIR_CGI)/,		$(SRC_CGI)) 	\
+					$(addprefix $(DIR_UTILS)/,		$(SRC_UTILS))	\
+					$(addprefix $(DIR_CGI)/,		$(SRC_CGI))		\
 					$(addprefix $(DIR_SERVER)/,		$(SRC_SERVER))	\
 					$(addprefix $(DIR_COLOR)/,		$(SRC_COLOR)))	\
 
