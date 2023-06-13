@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 20:08:26 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 15:30:23 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,10 +68,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 {
 	const int &fd = event.ident;
 
-	if (fcntl(fd, F_GETFL, 0) == -1)
-		return;
 	UData *udata = static_cast<UData *>(event.udata);
-
 	if (checkHeaderIsKeepLive(udata))
 		registerKeepAlive(udata, fd);
 	cookieCheck(udata);
@@ -122,6 +119,7 @@ void Worker::run()
 
 	int loadingIndex = 0;
 	int nevents;
+	Socket *socket;
 
 	memset(eventList, 0, sizeof(eventList));
 	memset(&event, 0, sizeof(event));
@@ -139,25 +137,35 @@ void Worker::run()
 		events.clear();
 		for (int i = 0; i < nevents; i++)
 		{
-			event = eventList[i];
-			uintptr_t &fd = event.ident;
-			Socket *socket = this->server.findSocket(fd);
-			if (event.flags & EV_ERROR)
-				eventEVError(*socket, event);
-			else if (event.flags & EV_EOF)
-				eventEOF(*socket, event);
-			else
+			try
 			{
-				if (event.filter == EVFILT_READ)
-					eventFilterRead(*socket, event);
-				else if (event.filter == EVFILT_WRITE)
-					eventFilterWrite(*socket, event);
-				else if (event.filter == EVFILT_TIMER)
-					eventFilterTimer(*socket, event);
-				else if (event.filter == EVFILT_SIGNAL)
-					eventFilterSignal(event);
+				event = eventList[i];
+				uintptr_t &fd = event.ident;
+				socket = this->server.findSocket(fd);
+				if (event.flags & EV_ERROR)
+					eventEVError(*socket, event);
+				else if (event.flags & EV_EOF)
+					eventEOF(*socket, event);
+				else
+				{
+					if (fcntl(fd, F_GETFL, 0) == -1)
+						;
+					if (event.filter == EVFILT_READ)
+						eventFilterRead(*socket, event);
+					else if (event.filter == EVFILT_WRITE)
+						eventFilterWrite(*socket, event);
+					else if (event.filter == EVFILT_TIMER)
+						eventFilterTimer(*socket, event);
+					else if (event.filter == EVFILT_SIGNAL)
+						eventFilterSignal(event);
+				}
+				loadingIndex = 0;
 			}
-			loadingIndex = 0;
+			catch (std::runtime_error &err)
+			{
+				std::cout << "Error: " << err.what() << std::endl;
+				socket->disconnectClient(event);
+			}
 		}
 	}
 }
@@ -221,7 +229,6 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 	if (std::find(response->limitExcept.begin(), response->limitExcept.end(), request.method) == response->limitExcept.end()) // limitExcept에 method가 없는 경우
 	{
 		// 잘못된 메서드일경우
-		std::cout << "\033[31mMethod not allowed" << std::endl;
 		errorResponse(response, 405);
 		printLog(request, response);
 		delete response;
@@ -244,18 +251,14 @@ void Worker::requestHandler(UData *udata, const int &clientFd)
 		udata->wantToDeleteSessionInCookie = true;
 
 	// 메서드에 따른 응답처리
-	if (response->method == GET || response->method == POST || response->method == HEAD)
+	if (response->method == GET || response->method == POST || response->method == HEAD || response->method == PUT)
 		sendResponse(response, request);
-	else if (response->method == PUT)
-	{
-		putResponse(response);
-	}
 	else if (response->method == DELETE)
 	{
 		deleteResponse(response);
 	}
 	else
-		stderrExit("Unknown method");
+		throw(std::runtime_error("Unknown method"));
 	printLog(request, response);
 	delete response;
 }
@@ -274,7 +277,24 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	if (XHeaderIterator != response->headers.end())
 		cgi.setEnvp("HTTP_X_SECRET_HEADER_FOR_TEST", XHeaderIterator->second);
 
-	if (isCGIRequest(*response))
+	if (response->method == "PUT")
+	{
+		if (Utils::writeFile(response->resourcePath, response->body))
+		{
+			// 리소스 생성에 성공한 경우
+			resourceContent = Utils::readFile(response->resourcePath);
+			if (resourceContent.empty())
+				return errorResponse(response, 404);
+			Utils::ftSend(response, generateHeader(resourceContent, "text/html", 201, response));
+		}
+		else
+		{
+			// 리소스 생성에 실패한 경우
+			std::cout << "Failed to create the resource" << std::endl;
+			return errorResponse(response, 500);
+		}
+	}
+	else if (isCGIRequest(*response))
 	{
 		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
 		resourceContent = response->body;
@@ -291,8 +311,7 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 		}
 		else
 			resourceContent = Utils::readFile(response->resourcePath);
-		response->statusCode = 200;
-		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
+		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, 200, response));
 	}
 	if (response->chunked)
 	{
@@ -324,11 +343,11 @@ std::string Worker::getCGIPath(ResponseData &response)
 		{
 			if (response.cgiPath.size() == 1)
 			{
-				size_t pos = response.path.find(".", response.path.find_last_of("/"));
+				size_t pos = response.resourcePath.find(".", response.resourcePath.find_last_of("/"));
 				if (pos == std::string::npos)
-					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/")) + response.cgiPath.back();
+					return response.location->block[i].value + response.resourcePath.substr(response.resourcePath.find_last_of("/")) + response.cgiPath.back();
 				else
-					return response.location->block[i].value + response.path.substr(response.path.find_last_of("/"));
+					return response.location->block[i].value + response.resourcePath.substr(response.resourcePath.find_last_of("/"));
 			}
 			else
 				return response.location->block[i].value + "/" + response.cgiPath.back();
@@ -347,7 +366,7 @@ bool Worker::isCGIRequest(ResponseData &response)
 	// /cgi_bin 로케이션을 위함
 	if (response.cgiPath.size() == 1)
 	{
-		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile
+		if (Utils::getLastStringSplit(response.path, "/") == "upload") // uploadFile1
 		{
 			std::string uploadContent = Utils::uploadPageGenerator("/cgi-bin/upload.py"); // root + upload + .py
 			std::string response_header = generateHeader(uploadContent, "text/html", 200, &response);
@@ -367,35 +386,9 @@ bool Worker::isCGIRequest(ResponseData &response)
 	return false;
 }
 
-void Worker::putResponse(ResponseData *response)
-{
-	if (response->body.length() > 10000)
-		response->body = response->body.substr(0, 10000);
-	if (Utils::writeFile(response->resourcePath, response->body))
-	{
-		// 리소스 생성에 성공한 경우
-		std::string resource_content = Utils::readFile(response->resourcePath);
-		if (resource_content.empty())
-			return errorResponse(response, 404);
-		// std::string resource_header = generateHeader(resource_content, "text/html", 201, false);
-		response->chunked = false;
-		response->statusCode = 201;
-		std::string resource_header = generateHeader(resource_content, "text/html", response->statusCode, response);
-		Utils::ftSend(response, resource_header);
-		Utils::ftSend(response, resource_content);
-	}
-	else
-	{
-		// 리소스 생성에 실패한 경우
-		std::cout << "Failed to create the resource" << std::endl;
-		errorResponse(response, 500);
-	}
-}
-
 void Worker::deleteResponse(ResponseData *response)
 {
-	// std::string resourcePath = response->resourcePath;
-	std::string resourcePath = response->path;
+	std::string resourcePath = response->resourcePath;
 	if (remove(resourcePath.c_str()) != 0)
 	{
 		// 삭제에 실패한 경우
@@ -450,6 +443,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 	std::ostringstream oss;
 
 	UData *udata = response->udata;
+	response->statusCode = statusCode;
 	oss << "HTTP/1.1 " << statusCode << " " << response->statusCodeMap[statusCode] << CRLF;
 	oss << "Content-Type: " << contentType << CRLF; // MIME type can be changed as needed
 	if (response->chunked)
@@ -496,7 +490,7 @@ void Worker::broad(ResponseData *response)
 	}
 	while ((file = readdir(dirPtr)))
 	{
-		broadHtml << "<p><a href=" << response->locationName << "/" << file->d_name << ">" << file->d_name << "</a></p>";
+		broadHtml << "<p><a href=" << response->location->value << "/" << file->d_name << ">" << file->d_name << "</a></p>";
 	}
 	broadHtml << "</body></html>";
 	std::string tmp = broadHtml.str();

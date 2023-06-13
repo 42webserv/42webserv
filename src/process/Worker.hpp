@@ -6,7 +6,7 @@
 /*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:09:59 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 16:14:52 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/12 18:14:08 by sanghan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 #include "Utils.hpp"
 
 #define BUFFER_SIZE 1024
-#define CHUNK_SIZE 150
+#define CHUNK_SIZE 500
 
 struct ResponseData;
 class Master;

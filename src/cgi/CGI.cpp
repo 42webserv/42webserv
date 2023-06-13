@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 17:29:58 by yje               #+#    #+#             */
-/*   Updated: 2023/06/11 19:38:22 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 15:29:29 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,12 +32,9 @@ void CGI::initEnvp(const HTTPRequest &request) // request config 이름 확인�
 	// this->envp_["PATH_TRANSLATED"] = request.path;
 	this->envp_["QUERY_STRING"] = request.query;
 	this->envp_["REMOTE_ADDR"] = request.addr;
-	// this->envp_["REMOTE_IDENT"] = ""; //-> 권한 부여
-	// this->envp_["REMOTE_USER"] = "";
 	this->envp_["REQUEST_METHOD"] = request.method;
-	this->envp_["REQUEST_URI"] = request.path;	//
-	this->envp_["SCRIPT_NAME"] = "webserv/1.1"; //
-	// this->envp_["SERVER_NAME"] = config._server.; // 요청을 수신한 서버의 호스트 이름.
+	this->envp_["REQUEST_URI"] = request.path;					  //
+	this->envp_["SCRIPT_NAME"] = "webserv/1.1";					  //
 	this->envp_["SERVER_PORT"] = Utils::ftToString(request.port); // 요청을 수신한 서버의 포트 번호.
 	this->envp_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->envp_["SERVER_SOFTWARE"] = "webserv/1.1";
@@ -96,7 +93,8 @@ std::string CGI::executeCGI(const std::string &program)
 
 	fileFds[R] = fileno(files[R]);
 	fileFds[W] = fileno(files[W]);
-	write(fileFds[R], body_.c_str(), body_.size());
+	if (write(fileFds[R], body_.c_str(), body_.size()) < 0)
+		throw(std::runtime_error("Error writing to file"));
 	// write(fileFds[R], resource_.c_str(), resource_.size());
 	if (fileFds[R] == -1 || fileFds[W] == -1)
 		throw std::runtime_error("Error creating file descriptor");
@@ -147,6 +145,8 @@ void CGI::parentProcess(const pid_t &pid, const int fileFds[2], std::string &bod
 	{
 		memset(buffer, 0, 100001);
 		bytes = read(fileFds[W], buffer, 100000);
+		if (bytes < 0)
+			throw std::runtime_error("Error reading from file");
 		body += buffer;
 	}
 }

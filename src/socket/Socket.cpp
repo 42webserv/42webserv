@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 19:38:39 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 15:31:39 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     memset(&clientAddr, 0, sizeof(clientAddr));
     int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &addrlen);
     if (clientFd < 0)
-        stderrExit("accept() error");
+        throw(std::runtime_error("accept() error"));
 
     if (fcntl(clientFd, F_SETFL, O_NONBLOCK) < 0)
         stderrExit("fcntl() error");
@@ -164,7 +164,7 @@ void Socket::disconnectClient(struct kevent &event)
     event.udata = NULL;
     _clientFds.erase(std::remove(_clientFds.begin(), _clientFds.end(), clientFd), _clientFds.end());
     close(clientFd);
-    // std::cout << BRED "\r🔌 disconnect " END << std::endl;
+    // std::cout << BRED "\r🔌" << clientFd << " disconnect " END << std::endl;
 }
 
 int Socket::enableKeepAlive(int socketFd)
@@ -174,10 +174,10 @@ int Socket::enableKeepAlive(int socketFd)
 
     // SO_KEEPALIVE 옵션 활성화
     if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive)) < 0)
-        stderrExit("setsockopt SO_KEEPALIVE error");
+        throw(std::runtime_error("setsockopt SO_KEEPALIVE error"));
     // TCP_KEEPINTVL 옵션 설정 (유휴 상태에서 keep-alive 패킷 간의 간격)
     if (setsockopt(socketFd, IPPROTO_TCP, TCP_KEEPINTVL, &keepAliveInterval, sizeof(keepAliveInterval)) < 0)
-        stderrExit("setsockopt TCP_KEEPINTVL error");
+        throw(std::runtime_error("setsockopt TCP_KEEPINTVL error"));
     return 0;
 }
 

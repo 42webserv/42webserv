@@ -84,11 +84,11 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     if (response->limitExcept.size() < 1)
         response->limitExcept = server.limitExcepts;
     // 경로에서 확장자 찾아준 뒤, Content-Type 찾기
-    response->path = getPath(request, *response);
-    response->contentType = findMimeType(response->path, config);
+    response->resourcePath = getPath(request, *response);
+    response->contentType = findMimeType(response->resourcePath, config);
     response->body = request.body;
     response->contentLength = response->body.length();
-    response->resourcePath = response->path;
+    response->path = request.path;
     return (response);
 }
 
