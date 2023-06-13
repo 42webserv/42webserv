@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 15:31:39 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 15:58:37 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "Socket.hpp"
 #include "Server.hpp"
 #include "color.hpp"
+#include "Udata.hpp"
 
 Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(socket(AF_INET, SOCK_STREAM, 0))
 {
@@ -142,6 +143,10 @@ bool Socket::receiveRequest(struct kevent &event)
             return false;
         else
         {
+            if (n == 0)
+            {
+                std::cout << "Hello" << std::endl;
+            }
             buf[n] = '\0';
             udata->request.append(buf);
             if (n < BUFFER_SIZE - 1)
