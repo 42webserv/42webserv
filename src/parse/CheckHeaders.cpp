@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 15:09:08 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 23:11:13 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 16:43:54 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,9 @@ CheckHeaders::CheckHeaders(const std::map<std::string, std::string> &headers, HT
 	if (headers.empty())
 		throw std::invalid_argument("Headers are empty");
 
-	const std::string checkHeaders[] = {"Host", "Connection", "Content-Length", "Transfer-Encoding", "Cookie"};
-	void (CheckHeaders::*headerfns[])(const Header &header) = {&CheckHeaders::processHost, &CheckHeaders::processConnection, &CheckHeaders::processContentLength, &CheckHeaders::processTransferEncoding, &CheckHeaders::processCookie};
+	checkHasChunkInHeaders();
+	const std::string checkHeaders[] = {"Host", "Connection", "Content-Length", "Cookie"};
+	void (CheckHeaders::*headerfns[])(const Header &header) = {&CheckHeaders::processHost, &CheckHeaders::processConnection, &CheckHeaders::processContentLength, &CheckHeaders::processCookie};
 
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 	{
@@ -43,6 +44,23 @@ CheckHeaders::CheckHeaders(const std::map<std::string, std::string> &headers, HT
 			}
 		}
 	}
+}
+
+/**
+ * @brief Chunk를 사용하는지 확인한다.Content-Length 보다 먼저 확인되어야 한다.
+ */
+void CheckHeaders::checkHasChunkInHeaders()
+{
+	const std::string header = "Transfer-Encoding";
+	std::map<std::string, std::string>::const_iterator it = headers.find(header);
+
+	if (it != headers.end())
+	{
+		const Header &header = Header(*it);
+		processTransferEncoding(header);
+	}
+	else
+		this->request.chunked = false;
 }
 
 CheckHeaders::~CheckHeaders() {}
@@ -66,6 +84,7 @@ void CheckHeaders::processHost(const Header &header)
 	this->request.addr = host;
 	if (!port.empty())
 	{
+		this->request.port = 80;
 		if (port.find_first_not_of("0123456789") != std::string::npos)
 			throw std::invalid_argument("Port is not digit");
 		if (5 < port.size())
@@ -89,8 +108,14 @@ void CheckHeaders::processConnection(const Header &header)
 		throw std::invalid_argument("Connection is invalid");
 }
 
+// HTTP 요청에서 Content-Length는 선택사항입니다. GET 또는 DELETE의 경우 길이가 0이어야 합니다.
+// POST의 경우, Content-Length가 지정되고 메시지 행의 길이와 일치하지 않으면 메시지는 잘리거나 지정된 길이까지 널로 채워집니다.
+
+// Content-Length는 컨텐츠가 없는 경우(값이 0인 경우)에도 항상 HTTP 응답에서 리턴됩니다. -> Response에 해당하는 부분
 void CheckHeaders::processContentLength(const Header &header)
 {
+	if (!this->request.chunked)
+		return;
 	const std::string &value = header.value;
 	if (value.find_first_not_of("0123456789") != std::string::npos)
 		throw std::invalid_argument("Content-Length is not digit");
@@ -102,7 +127,7 @@ void CheckHeaders::processContentLength(const Header &header)
 		const size_t bodySize = this->request.body.size();
 		if (contentLength < bodySize)
 			throw std::invalid_argument("Content-Length is too short");
-		else if (contentLength > bodySize)
+		else if (bodySize < contentLength)
 			throw std::invalid_argument("Content-Length is too long");
 		this->request.bodySize = bodySize;
 	}
@@ -116,16 +141,16 @@ void CheckHeaders::processTransferEncoding(const Header &header)
 	for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++)
 	{
 		if (value == values[i])
+		{
+			if (value == "chunked")
+			{
+				this->request.chunked = true;
+				this->request.bodySize = this->request.body.size();
+			}
 			return;
+		}
 	}
 	throw std::invalid_argument("Transfer-Encoding is invalid");
-
-	if (value == "chunked")
-	{
-		if (this->request.body.empty())
-			throw std::invalid_argument("Body is empty");
-		this->request.bodySize = this->request.body.size();
-	}
 }
 
 void CheckHeaders::processCookie(const Header &header)

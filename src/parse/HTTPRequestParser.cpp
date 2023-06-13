@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:15:13 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 15:29:39 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 16:45:17 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,6 +183,7 @@ HTTPRequest *HTTPRequestParser::makeRequest()
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
+        // TODO Bad Request
     }
     return NULL;
 }
@@ -273,16 +274,13 @@ bool HTTPRequestParser::parseBody()
                         throw ParseException();
 
                     // chunk_size_str을 숫자로 변환
-                    std::istringstream iss(chunkSize);
-                    size_t chunk_size;
-                    if (!(iss >> std::hex >> chunk_size))
-                        throw ParseException();
+                    size_t chunk_size = Utils::toHexInt(chunkSize);
                     if (chunk_size == 0)
                     {
                         buffer_.clear();
                         state_ = COMPLETE;
                         bodySize_ = body_.size();
-                        // 만들어주면 안됌.
+                        // TODO Response가 만들어줘야함
                         headers_.insert(std::make_pair(CONTENT_LENGTH, Utils::ftToString(bodySize_)));
                         return true;
                     }
@@ -300,7 +298,7 @@ bool HTTPRequestParser::parseBody()
         }
         else if (Utils::isEqual(header.first, CONTENT_LENGTH))
         {
-            int contentLength = Utils::ftStoi(header.second);
+            size_t contentLength = Utils::ftStoi(header.second);
 
             body_ = buffer_.substr(bufferIndex, contentLength);
             bodySize_ = body_.size();

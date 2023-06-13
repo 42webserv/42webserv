@@ -6,10 +6,11 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:21:43 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 23:12:32 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 16:32:39 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "CheckHeaders.hpp"
 #include "HTTPRequest.hpp"
 #include "Utils.hpp"
 
@@ -45,7 +46,6 @@ HTTPRequest::HTTPRequest(const HTTPRequestParser &parser)
 
 	// Headers
 	this->keepAlive = false;
-	this->chunked = false;
 	std::map<std::string, std::string> headers = parser.getHeaders();
 	CheckHeaders checkHeaders(headers, *this);
 	this->headers = headers;
@@ -54,7 +54,4 @@ HTTPRequest::HTTPRequest(const HTTPRequestParser &parser)
 	// TODO PUT과 POST에 Body가 있는 상태인데 header에 Content-Length와 Transfer가 없는 경우
 	this->body = parser.getBody();
 	this->bodySize = this->body.size();
-	std::map<std::string, std::string>::iterator findChunkedIterator = this->headers.find(TRANSFER_ENCODING);
-	if (findChunkedIterator != this->headers.end() && findChunkedIterator->second == CHUNKED)
-		this->chunked = true;
 }

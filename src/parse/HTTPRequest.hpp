@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 19:45:27 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 23:08:49 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/12 15:00:49 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "CheckHeaders.hpp"
+
+class HTTPRequestParser;
 
 struct HTTPRequest
 {

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 15:09:15 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/11 22:53:36 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 16:07:05 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ private:
 	const std::map<std::string, std::string> &headers;
 	HTTPRequest &request;
 
-public:
 	// HTTP_HEADERS_IN
 	void processHost(const Header &header);
 	void processConnection(const Header &header);
@@ -39,6 +38,7 @@ public:
 	void processContentType(const Header &header);
 	void processTransferEncoding(const Header &header);
 	void processCookie(const Header &header);
+	void checkHasChunkInHeaders();
 
 public:
 	CheckHeaders(const std::map<std::string, std::string> &headers, HTTPRequest &request);
