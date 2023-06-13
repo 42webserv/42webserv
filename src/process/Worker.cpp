@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 15:30:23 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 16:52:02 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 		requestHandler(udata, fd);
 		std::cout << BGRN "\r📝 SEND " << std::endl;
 		udata->request.clear();
-		if (udata->keepLive == true)
+		if (udata->keepAlive == true)
 			udata->max -= 1;
 	}
 	if (udata->max == 0)
@@ -469,7 +469,7 @@ std::string Worker::generateHeader(const std::string &content, const std::string
 		udata->alreadySessionSend = true;
 		udata->expireTime = expireTime;
 	}
-	if (udata->keepLive)
+	if (udata->keepAlive)
 		oss << "Connection: keep-alive" << CRLF2;
 	else
 		oss << "Connection: close" << CRLF2;
@@ -570,9 +570,9 @@ bool Worker::checkKeepLiveOptions(UData *udata)
 
 void Worker::registerKeepAlive(UData *udata, int clientFd)
 {
-	if (udata->keepLive == false)
+	if (udata->keepAlive == false)
 	{
-		udata->keepLive = true;
+		udata->keepAlive = true;
 		if (checkKeepLiveOptions(udata))
 		{
 			if (udata->timeout > 0)

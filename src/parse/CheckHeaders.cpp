@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/11 15:09:08 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 16:43:54 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 18:07:57 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,6 +170,7 @@ void CheckHeaders::processCookie(const Header &header)
 		cookie[1].erase(cookie[1].length() - 1);
 		if (cookie[0].empty() || cookie[1].empty())
 			throw std::invalid_argument("Cookie is invalid");
-		this->request.cookies.insert(std::pair<std::string, std::string>(cookie[0], cookie[1]));
+
+		this->request.cookies.push_back(Cookie(cookie[0], cookie[1]));
 	}
 }

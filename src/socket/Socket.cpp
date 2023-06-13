@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 15:58:37 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 16:55:28 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
         stderrExit("setsockopt SO_LINGER error");
 
-    UData *udata = new UData(clientFd, false, true); // 처음 udata 생성
+    UData *udata = new UData(clientFd, false); // 처음 udata 생성
     EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
     events.push_back(event);
     _clientFds.push_back(clientFd);
@@ -143,10 +143,6 @@ bool Socket::receiveRequest(struct kevent &event)
             return false;
         else
         {
-            if (n == 0)
-            {
-                std::cout << "Hello" << std::endl;
-            }
             buf[n] = '\0';
             udata->request.append(buf);
             if (n < BUFFER_SIZE - 1)
