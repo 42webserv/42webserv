@@ -1,28 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Udata.cpp                                          :+:      :+:    :+:   */
+/*   RequestProcessor.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/06/13 15:55:39 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 18:13:26 by sunhwang         ###   ########.fr       */
+/*   Created: 2023/06/13 19:13:10 by sunhwang          #+#    #+#             */
+/*   Updated: 2023/06/13 19:13:23 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Udata.hpp"
+#include "RequestProcessor.hpp"
 
-UData::UData(bool keepAlive, enum EventState state)
+RequestProcessor::RequestProcessor(/* args */)
 {
-	this->state = state;
-	this->keepAlive = keepAlive;
-	this->max = -1;
-	this->timeout = -1;
-	this->sessionID = "";
-	this->alreadySessionSend = false;
-	this->sesssionValid = false;
-	this->expireTime = "";
-	this->wantToDeleteSessionInCookie = false;
-	this->request = "";
-	this->result = NULL;
+}
+
+RequestProcessor::~RequestProcessor()
+{
 }

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 16:55:28 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 19:36:02 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
     if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) < 0)
         stderrExit("setsockopt SO_LINGER error");
 
-    UData *udata = new UData(clientFd, false); // 처음 udata 생성
+    UData *udata = new UData(false, SOCKET_READ); // 처음 udata 생성
     EV_SET(&event, clientFd, EVFILT_READ, EV_ADD, 0, 0, udata);
     events.push_back(event);
     _clientFds.push_back(clientFd);
@@ -149,6 +149,7 @@ bool Socket::receiveRequest(struct kevent &event)
                 break;
         }
     }
+    checkRequest(event);
     return true;
 }
 
@@ -189,4 +190,23 @@ void Socket::closeClients() const
         const int &clientFd = *it;
         close(clientFd);
     }
+}
+
+void Socket::checkRequest(struct kevent &event)
+{
+    UData *udata = static_cast<UData *>(event.udata);
+    const enum EventState &state = udata->state;
+
+    if (state == SOCKET_READ)
+    {
+        updateRequest(udata);
+    }
+    else if (state == SOCKET_WRITE)
+    {
+    }
+}
+
+void Socket::updateRequest(UData *udata)
+{
+    std::string &request = udata->request;
 }

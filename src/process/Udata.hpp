@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/13 15:55:05 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 16:55:04 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 19:15:46 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,15 @@
 #include "HTTPRequest.hpp"
 #include "CookieManager.hpp"
 
+enum EventState
+{
+	SOCKET_READ,
+	SOCKET_WRITE,
+	FILE_READ,
+	FILE_WRITE,
+	END
+};
+
 /*
  * event에 같이 들고 다닐 user에 대한 데이터이다.
  *
@@ -25,7 +34,7 @@
  */
 struct UData
 {
-	int fd;
+	enum EventState state;
 	int max;
 	int timeout;
 	bool keepAlive;
@@ -39,7 +48,7 @@ struct UData
 	HTTPRequest *result;
 	CookieManager *cookieManager;
 
-	UData(int fd, bool keepAlive);
+	UData(bool keepAlive, enum EventState state);
 };
 
 #endif

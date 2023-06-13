@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 16:52:02 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 19:48:10 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,8 +148,6 @@ void Worker::run()
 					eventEOF(*socket, event);
 				else
 				{
-					if (fcntl(fd, F_GETFL, 0) == -1)
-						;
 					if (event.filter == EVFILT_READ)
 						eventFilterRead(*socket, event);
 					else if (event.filter == EVFILT_WRITE)
