@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:15:56 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/11 14:49:35 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/12 17:58:02 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,7 @@ public:
     static void ftSend(const ResponseData *response, const std::string &contents);
 
     static int ftStoi(const std::string &str);
+    static int toHexInt(const std::string &str);
 
     static std::string getTime();
 

@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/06 15:16:36 by chanwjeo          #+#    #+#             */
-/*   Updated: 2023/06/13 15:31:57 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/13 15:33:56 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,4 +286,16 @@ std::string Utils::getTime()
     char buffer[80];
     std::strftime(buffer, sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", timeInfo);
     return buffer;
+}
+
+/**
+ * @brief Get hex value from string
+ */
+int Utils::toHexInt(const std::string &str)
+{
+    std::stringstream ss;
+    int value = 0;
+    ss << std::hex << str;
+    ss >> value;
+    return value;
 }
