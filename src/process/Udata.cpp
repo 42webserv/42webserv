@@ -6,15 +6,14 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/13 15:55:39 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 18:13:26 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/14 11:20:50 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Udata.hpp"
 
-UData::UData(bool keepAlive, enum EventState state)
+UData::UData(bool keepAlive)
 {
-	this->state = state;
 	this->keepAlive = keepAlive;
 	this->max = -1;
 	this->timeout = -1;

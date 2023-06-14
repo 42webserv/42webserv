@@ -6,7 +6,7 @@
 /*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/13 18:14:56 by sunhwang         ###   ########.fr       */
+/*   Updated: 2023/06/14 11:21:06 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,6 @@ public:
     void disconnectClient(struct kevent &event);
     static int enableKeepAlive(int socketFd);
     void closeClients() const;
-    void checkRequest(struct kevent &event);
 };
 
 #endif
