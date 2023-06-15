@@ -31,7 +31,7 @@ private:
 	void initEnvp(const HTTPRequest &request);
 	char **ENVPChangeStringArray();
 	void childProcess(const int fileFds[2], const std::string &program, char **envp);
-	void parentProcess(const pid_t &pid, const int fileFds[2], std::string &body);
+	void parentProcess(const pid_t &pid, const int fileFds[2], std::string &body, ResponseData *response);
 
 	std::map<std::string, std::string> envp_;
 	std::string body_;
@@ -41,6 +41,6 @@ public:
 	~CGI(void);
 
 	void setEnvp(std::string key, std::string value);
-	std::string executeCGI(const std::string &context);
+	std::string executeCGI(const std::string &context, ResponseData *response);
 };
 #endif

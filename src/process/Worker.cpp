@@ -303,7 +303,8 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	}
 	else if (isCGIRequest(*response))
 	{
-		setResponse(response, cgi.executeCGI(getCGIPath(*response)));
+		setResponse(response, cgi.executeCGI(getCGIPath(*response), response));
+		//std::cout << "response->statusCode" << response->statusCode << std::endl;
 		resourceContent = response->body;
 		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
 	}

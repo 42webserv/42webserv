@@ -64,50 +64,49 @@ char **CGI::ENVPChangeStringArray()
 /**
  * cgi 실행
  */
-std::string CGI::executeCGI(const std::string &program)
+std::string CGI::executeCGI(const std::string& program, ResponseData *response)
 {
-	char **envp;
-	FILE *files[2];
-	int fileFds[2];
-	int stdFds[2] = {dup(STDIN_FILENO), dup(STDOUT_FILENO)};
-	std::string body;
+    char** envp;
+    FILE* files[2];
+    int fileFds[2];
+    int stdFds[2] = { dup(STDIN_FILENO), dup(STDOUT_FILENO) };
+    std::string body;
 
-	try
-	{
-		envp = this->ENVPChangeStringArray();
-	}
-	catch (std::bad_alloc &e)
-	{
-		std::cerr << e.what() << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	// 입력과 출력 스트림의 사본을 생성하고 저장
-	stdFds[R] = dup(STDIN_FILENO);
-	stdFds[W] = dup(STDOUT_FILENO);
-	if (stdFds[R] == -1 || stdFds[W] == -1)
-		throw std::runtime_error("Error saving file descriptor");
-	// 파일 데이터 스트림을 생성
-	files[R] = tmpfile();
-	files[W] = tmpfile();
-	if (!files[0] || !files[1])
-		throw std::runtime_error("Error creating file for temporary work");
+    try
+    {
+        envp = this->ENVPChangeStringArray();
+    }
+    catch (std::bad_alloc& e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-	fileFds[R] = fileno(files[R]);
-	fileFds[W] = fileno(files[W]);
-	if (write(fileFds[R], body_.c_str(), body_.size()) < 0)
-		throw(std::runtime_error("Error writing to file"));
-	// write(fileFds[R], resource_.c_str(), resource_.size());
-	if (fileFds[R] == -1 || fileFds[W] == -1)
-		throw std::runtime_error("Error creating file descriptor");
-	lseek(fileFds[R], 0, SEEK_SET);
+    // 입력과 출력 스트림의 사본을 생성하고 저장
+    stdFds[R] = dup(STDIN_FILENO);
+    stdFds[W] = dup(STDOUT_FILENO);
+    if (stdFds[R] == -1 || stdFds[W] == -1)
+        throw std::runtime_error("Error saving file descriptor");
 
-	const pid_t pid = fork();
-	if (pid == -1) // Error
-		throw std::runtime_error("Error create child process");
-	else if (pid == 0) // Child process
-		childProcess(fileFds, program, envp);
-	else if (0 < pid) // Parent process
-		parentProcess(pid, fileFds, body);
+    // 파일 데이터 스트림을 생성
+    files[R] = tmpfile();
+    files[W] = tmpfile();
+    if (!files[0] || !files[1])
+        throw std::runtime_error("Error creating file for temporary work");
+
+    fileFds[R] = fileno(files[R]);
+    fileFds[W] = fileno(files[W]);
+    if (write(fileFds[R], body_.c_str(), body_.size()) < 0)
+        throw std::runtime_error("Error writing to file");
+    lseek(fileFds[R], 0, SEEK_SET);
+
+    const pid_t pid = fork();
+    if (pid == -1) // Error
+        throw std::runtime_error("Error creating child process");
+    else if (pid == 0) // Child process
+        childProcess(fileFds, program, envp);
+    else if (0 < pid) // Parent process
+		parentProcess(pid, fileFds, body, response);
 	dup2(stdFds[R], STDIN_FILENO), dup2(stdFds[W], STDOUT_FILENO);
 	close(stdFds[R]), close(stdFds[W]);
 
@@ -124,20 +123,110 @@ std::string CGI::executeCGI(const std::string &program)
 	return (body);
 }
 
-void CGI::childProcess(const int fileFds[2], const std::string &program, char **envp)
+
+
+// std::string CGI::executeCGI(const std::string &program)
+// {
+// 	char **envp;
+// 	FILE *files[2];
+// 	int fileFds[2];
+// 	int stdFds[2] = {dup(STDIN_FILENO), dup(STDOUT_FILENO)};
+// 	std::string body;
+
+// 	try
+// 	{
+// 		envp = this->ENVPChangeStringArray();
+// 	}
+// 	catch (std::bad_alloc &e)
+// 	{
+// 		std::cerr << e.what() << std::endl;
+// 		exit(EXIT_FAILURE);
+// 	}
+// 	// 입력과 출력 스트림의 사본을 생성하고 저장
+// 	stdFds[R] = dup(STDIN_FILENO);
+// 	stdFds[W] = dup(STDOUT_FILENO);
+// 	if (stdFds[R] == -1 || stdFds[W] == -1)
+// 		throw std::runtime_error("Error saving file descriptor");
+// 	// 파일 데이터 스트림을 생성
+// 	files[R] = tmpfile();
+// 	files[W] = tmpfile();
+// 	if (!files[0] || !files[1])
+// 		throw std::runtime_error("Error creating file for temporary work");
+
+// 	fileFds[R] = fileno(files[R]);
+// 	fileFds[W] = fileno(files[W]);
+// 	if (write(fileFds[R], body_.c_str(), body_.size()) < 0)
+// 		throw(std::runtime_error("Error writing to file"));
+// 	// write(fileFds[R], resource_.c_str(), resource_.size());
+// 	if (fileFds[R] == -1 || fileFds[W] == -1)
+// 		throw std::runtime_error("Error creating file descriptor");
+// 	lseek(fileFds[R], 0, SEEK_SET);
+// 	time_t startTime = time(NULL);
+// 	const pid_t pid = fork();
+// 	if (pid == -1) // Error
+// 		throw std::runtime_error("Error create child process");
+// 	else if (pid == 0) // Child process
+// 		childProcess(fileFds, program, envp);
+// 	else if (0 < pid) // Parent process
+// 		parentProcess(pid, fileFds, body);
+
+// 	dup2(stdFds[R], STDIN_FILENO), dup2(stdFds[W], STDOUT_FILENO);
+// 	close(stdFds[R]), close(stdFds[W]);
+
+// 	fclose(files[R]), fclose(files[W]);
+// 	close(fileFds[R]), close(fileFds[W]);
+
+// 	// delete envp
+// 	for (int i = 0; envp[i]; ++i)
+// 		delete[] envp[i];
+// 	delete[] envp;
+
+// 	if (pid == 0)
+// 		exit(EXIT_SUCCESS);
+// 	return (body);
+// }
+
+void CGI::childProcess(const int fileFds[2], const std::string& program, char** envp)
 {
-	dup2(fileFds[R], STDIN_FILENO);
-	dup2(fileFds[W], STDOUT_FILENO);
-	execve(program.c_str(), NULL, envp);
-	std::cerr << "Error execute child process: " << strerror(errno) << std::endl;
-	exit(EXIT_FAILURE);
+    dup2(fileFds[R], STDIN_FILENO);
+    dup2(fileFds[W], STDOUT_FILENO);
+
+    // 파이썬 파일 실행
+    if (execve(program.c_str(), NULL, envp) == -1)
+    {
+        // execve() 실행에 실패한 경우 오류 처리
+        std::cerr << "Error executing child process: " << strerror(errno) << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
-void CGI::parentProcess(const pid_t &pid, const int fileFds[2], std::string &body)
+void CGI::parentProcess(const pid_t &pid, const int fileFds[2], std::string &body,ResponseData *response)
 {
-	// wait for child process to finish
-	if (waitpid(pid, NULL, 0) == -1)
-		throw std::runtime_error("Error waiting for child process");
+	int childStatus;
+    if (waitpid(pid, &childStatus, 0) == -1)
+        throw std::runtime_error("Error waiting for child process");
+
+    if (WIFEXITED(childStatus))
+	{
+		int exitStatus = WEXITSTATUS(childStatus);
+		if (exitStatus != 0)
+		{
+			// Child process exited with non-zero status (indicating an error)
+			std::cerr << "Child process exited with error status: " << exitStatus << std::endl;
+			response->statusCode = 500;
+			body = Utils::errorPageGenerator(response, response->statusCode);
+			return;
+		}
+	}
+	// else if (WIFSIGNALED(childStatus))
+	// {
+	// 	int signalNumber = WTERMSIG(childStatus);
+	// 	std::cerr << "Child process terminated with signal: " << signalNumber << std::endl;
+	// 	response->statusCode = 500;
+	// 	body = Utils::errorPageGenerator(response, response->statusCode);
+	// 	// return body;
+	// 	return;
+	// }
 	char buffer[100001];
 	lseek(fileFds[W], 0, SEEK_SET);
 	// read output from the file descriptor and print it to console
