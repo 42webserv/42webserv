@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanghan <sanghan@student.42seoul.kr>       +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 13:55:04 by seokchoi          #+#    #+#             */
-/*   Updated: 2023/06/08 15:11:09 by sanghan          ###   ########.fr       */
+/*   Updated: 2023/06/15 13:14:16 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,46 +292,6 @@ std::vector<std::string> Config::split(std::string input, char delimiter)
 	return answer;
 }
 
-// 필요없을 시 지울 것 //
-// bool Config::_isDirectoryExists(const std::string &directoryPath, std::string directiveName)
-// {
-// 	if (Utils::isDirectory(directoryPath))
-// 		return true;
-// 	std::cerr << "Error: " << directiveName << " value must be directory " << std::endl;
-// 	exit(1);
-// 	return false;
-// }
-
-// 필요없을 시 지울 것 //
-// bool Config::_isFileExists(const std::vector<Directive> directives, const std::string &filePath, std::string directiveName, std::vector<Directive> &preDirective)
-// {
-// 	std::string root = "";
-// 	for (size_t k = 0; k < preDirective.size(); k++)
-// 	{
-// 		if (preDirective[k].name == ROOT_DIRECTIVE)
-// 		{
-// 			root = preDirective[k].value;
-// 			break;
-// 		}
-// 	}
-// 	for (size_t k = 0; k < directives.size(); k++)
-// 	{
-// 		if (directives[k].name == ROOT_DIRECTIVE)
-// 		{
-// 			root = directives[k].value;
-// 			break;
-// 		}
-// 	}
-// 	if (filePath[0] != '/' && root != "")
-// 		root += "/";
-// 	root += filePath;
-// 	if (Utils::isFile(root))
-// 		return true;
-// 	std::cerr << "Error: " << directiveName << " value must be file " << std::endl;
-// 	exit(1);
-// 	return false;
-// }
-
 void Config::_checkEmpty(std::string &value, std::string directiveName, bool exist)
 {
 	if (value.empty() && exist)
@@ -449,8 +409,6 @@ void Config::_checkValidValue(std::vector<Directive> &directives)
  *
  *	directive : 확인할 지시자들
  */
-// 필요없을 시 지울 것 //
-// void Config::_checkRealtion(std::vector<Directive> &directive, std::vector<Directive> &preDirective)
 void Config::_checkRealtion(std::vector<Directive> &directive)
 {
 	for (size_t i = 0; i < directive.size(); i++)

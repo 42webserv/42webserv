@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seokchoi <seokchoi@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/15 21:42:30 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 15:21:31 by seokchoi         ###   ########.fr       */
+/*   Updated: 2023/06/15 13:14:47 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
 
     events.push_back(event);
     _clientFds.push_back(clientFd);
-    std::cout << "\r" BYEL "🔌 ACCEPT " << END << std::endl;
+    // std::cout << "\r" BYEL "🔌 ACCEPT " << END << std::endl;
 }
 
 void Socket::receiveRequest(struct kevent &event)

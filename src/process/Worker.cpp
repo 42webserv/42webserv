@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chanwjeo <chanwjeo@student.42seoul.kr>     +#+  +:+       +#+        */
+/*   By: sunhwang <sunhwang@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/21 21:10:20 by sunhwang          #+#    #+#             */
-/*   Updated: 2023/06/12 18:53:57 by chanwjeo         ###   ########.fr       */
+/*   Updated: 2023/06/15 13:17:50 by sunhwang         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
 			return;
-		std::cout << "\r" BBLU "📲 RECEIVE" << std::endl;
+		// std::cout << "\r" BBLU "📲 RECEIVE" << std::endl;
 		udata->result = result;
 		// Add write event
 		struct kevent newEvent;
@@ -78,7 +78,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
-		std::cout << BGRN "\r📝 SEND " << std::endl;
+		// std::cout << BGRN "\r📝 SEND " << std::endl;
 		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
@@ -109,15 +109,14 @@ void Worker::eventFilterTimer(Socket &socket, struct kevent &event)
 }
 void Worker::run()
 {
-	struct kevent event;
 	std::string loading[10] = {"", "🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"};
-	// std::string loading[10] = {"3", "4", "5", "6", "7", "8", "9", "10"};
-
 	int loadingIndex = 0;
+
 	struct timespec timeout;
 	timeout.tv_sec = 1;
 	timeout.tv_nsec = 0; // tv_sec = 1, tv_usec = 0
 	struct kevent eventList[10];
+	struct kevent event;
 	int nevents;
 	Socket *socket;
 
