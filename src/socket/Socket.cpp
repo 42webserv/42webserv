@@ -67,7 +67,6 @@ Socket::Socket(std::vector<struct kevent> &events, const int &port) : _serverFd(
     memset(&event, 0, sizeof(struct kevent));
     EV_SET(&event, _serverFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
     events.push_back(event);
-    // std::cout << "Server listening on port " << port << std::endl;
     std::cout << BBLK "🛠 port " BRED << port << BBLK " ready" << std::endl;
 }
 
@@ -123,7 +122,7 @@ void Socket::connectClient(std::vector<struct kevent> &events)
 
     events.push_back(event);
     _clientFds.push_back(clientFd);
-    // std::cout << "\r" BYEL "🔌 ACCEPT " << END << std::endl;
+    std::cout << "\r" BYEL "🔌 ACCEPT " << END << std::endl;
 }
 
 void Socket::receiveRequest(struct kevent &event)

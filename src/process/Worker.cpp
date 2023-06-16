@@ -53,7 +53,7 @@ void Worker::eventFilterRead(Socket &socket, struct kevent &event)
 		HTTPRequest *result = parser.parse(udata->request);
 		if (!result)
 			return;
-		// std::cout << "\r" BBLU "📲 RECEIVE" << std::endl;
+		std::cout << "\r" BBLU "📲 RECEIVE" << std::endl;
 		udata->result = result;
 		// Add write event
 		struct kevent newEvent;
@@ -78,7 +78,7 @@ void Worker::eventFilterWrite(Socket &socket, struct kevent &event)
 	if (udata->result)
 	{
 		requestHandler(udata, fd);
-		// std::cout << BGRN "\r📝 SEND " << std::endl;
+		std::cout << BGRN "\r📝 SEND " << std::endl;
 		udata->request.clear();
 		if (udata->keepLive == true)
 			udata->max -= 1;
