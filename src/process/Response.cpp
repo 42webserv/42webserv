@@ -63,6 +63,7 @@ ResponseData *Response::getResponseData(const HTTPRequest &request, const int &c
     ServerInfo &server = serverManger.servers[index];
     ResponseData *response = new ResponseData();
     initStatusCodeMap(response->statusCodeMap);
+    response->statusCode = 200;
     response->server = server;
     response->index = server.index;
     response->method = request.method;

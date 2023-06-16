@@ -304,7 +304,6 @@ void Worker::sendResponse(ResponseData *response, const HTTPRequest &request)
 	else if (isCGIRequest(*response))
 	{
 		setResponse(response, cgi.executeCGI(getCGIPath(*response), response));
-		//std::cout << "response->statusCode" << response->statusCode << std::endl;
 		resourceContent = response->body;
 		Utils::ftSend(response, generateHeader(resourceContent, response->contentType, response->statusCode, response));
 	}
@@ -679,7 +678,6 @@ void Worker::setResponse(ResponseData *response, const std::string &resourceCont
 	// Status Content-Type charset 없는 경우에 대한 처리 추가에 대한 논의 필요
 	if (Utils::extractSubstring(resourceContent, "Status: ", "\0") == "")
 	{
-		response->statusCode = 200;
 		response->contentType = "text/html";
 		response->charset = "utf-8";
 		response->body = resourceContent;

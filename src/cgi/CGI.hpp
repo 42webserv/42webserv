@@ -25,6 +25,8 @@
 #define R 0
 #define W 1
 
+struct ResponseData;
+
 class CGI
 {
 private:
