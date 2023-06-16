@@ -384,7 +384,8 @@ void HTTPRequestParser::reset()
     http_version_.clear();
     chunked_data = "";
     bufferIndex = 0;
-    bodySize_ = -1;
+    // bodySize_ = -1;
+    bodySize_ = 0;
 }
 
 /**
