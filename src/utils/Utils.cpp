@@ -230,16 +230,6 @@ std::string Utils::extractSubstring(const std::string &A, const std::string &B, 
     return A.substr(start, end - start);
 }
 
-bool Utils::isMethod(const std::string &method)
-{
-    const std::string methods[] = {GET, HEAD, POST, PUT, PATCH, DELETE, CONNECT, TRACE, OPTIONS};
-
-    for (size_t i = 0; i < sizeof(methods) / sizeof(methods[0]); i++)
-        if (method == methods[i])
-            return true;
-    return false;
-}
-
 /**
  * @brief Send response to client
  * @param socket

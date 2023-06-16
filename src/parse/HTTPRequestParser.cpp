@@ -53,11 +53,7 @@ bool HTTPRequestParser::parseMethod()
     size_t pos = buffer_.find(' ', bufferIndex);
     if (pos == std::string::npos)
         return false;
-    std::string method_str = buffer_.substr(0, pos);
-    if (Utils::isMethod(method_str))
-        method_ = method_str;
-    else
-        return false;
+    method_ = buffer_.substr(0, pos);
     bufferIndex = pos + 1;
     state_ = PATH;
     return true;
